@@ -19,6 +19,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [nombre, setNombre] = useState("");
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ function Register() {
     const res = await fetch(`${API_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ nombre, email, password }),
     });
 
     const data = await res.json();
@@ -73,6 +74,14 @@ function Register() {
             )}
 
             <Box component="form" onSubmit={handleRegister}>
+
+              <TextField
+                fullWidth
+                label="Nombre"
+                margin="normal"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+              />
 
               <TextField
                 fullWidth
