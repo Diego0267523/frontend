@@ -14,18 +14,22 @@ function App() {
     <BrowserRouter>
       <Routes>
 
+        {/* 🔥 SIEMPRE DISPONIBLE */}
+        <Route path="/register" element={<Register />} />
+
         {!token ? (
           <>
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
           </>
         ) : (
           <>
             <Route path="/" element={<Home />} />
-            <Route path="*" element={<Navigate to="/" />} />
           </>
         )}
+
+        {/* 🔥 fallback */}
+        <Route path="*" element={<Navigate to="/" />} />
 
       </Routes>
     </BrowserRouter>

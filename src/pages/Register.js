@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import API_URL from "../config";
+import { useNavigate } from "react-router-dom";
 
 import {
   Container,
@@ -13,6 +14,8 @@ import {
 } from "@mui/material";
 
 function Register() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
@@ -28,7 +31,17 @@ function Register() {
 
     const data = await res.json();
 
-    setMsg(data.message || "GYM user created");
+    if (res.ok) {
+      setMsg("Usuario creado correctamente ✅");
+
+      // 🔥 REDIRECCIÓN AUTOMÁTICA
+      setTimeout(() => {
+        navigate("/login");
+      }, 1200);
+
+    } else {
+      setMsg(data.message || "Error al registrar ❌");
+    }
   };
 
   return (
@@ -42,8 +55,7 @@ function Register() {
       }}
     >
       <Container maxWidth="xs">
-        <Card style={{ background: "#121212", padding: "20px" }}>
-
+        <Card style={{ background: "#121212", padding: "20px", borderRadius: "18px" }}>
           <CardContent>
 
             <Typography variant="h4" align="center" style={{ color: "#00ff88" }}>
@@ -54,7 +66,11 @@ function Register() {
               create gym account
             </Typography>
 
-            {msg && <Alert style={{ marginTop: 10 }}>{msg}</Alert>}
+            {msg && (
+              <Alert style={{ marginTop: 10 }}>
+                {msg}
+              </Alert>
+            )}
 
             <Box component="form" onSubmit={handleRegister}>
 
@@ -64,6 +80,7 @@ function Register() {
                 margin="normal"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                InputProps={{ style: { color: "#fff" } }}
               />
 
               <TextField
@@ -73,6 +90,7 @@ function Register() {
                 margin="normal"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                InputProps={{ style: { color: "#fff" } }}
               />
 
               <Button
@@ -81,16 +99,32 @@ function Register() {
                 style={{
                   marginTop: 20,
                   background: "#00ff88",
-                  color: "#000"
+                  color: "#000",
+                  fontWeight: "bold",
+                  borderRadius: "10px"
                 }}
               >
-                CREATE GYM
+                CREATE GYM 🚀
+              </Button>
+
+              {/* 🔥 BOTÓN VOLVER AL LOGIN */}
+              <Button
+                fullWidth
+                onClick={() => navigate("/login")}
+                style={{
+                  marginTop: 10,
+                  border: "1px solid #00ff88",
+                  color: "#00ff88",
+                  fontWeight: "bold",
+                  borderRadius: "10px"
+                }}
+              >
+                BACK TO LOGIN
               </Button>
 
             </Box>
 
           </CardContent>
-
         </Card>
       </Container>
     </Box>
