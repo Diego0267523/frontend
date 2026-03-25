@@ -15,8 +15,23 @@ const theme = createTheme({
       secondary: "#aaaaaa",
     },
   },
+
   typography: {
-    fontFamily: "Arial",
+    fontFamily: "Inter, Arial, sans-serif",
+  },
+
+  shape: {
+    borderRadius: 12,
+  },
+
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: "#0f0f0f",
+        },
+      },
+    },
   },
 });
 
