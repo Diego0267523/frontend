@@ -1,24 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import API_URL from "../config";
 
 function ChatAssistant() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    return JSON.parse(localStorage.getItem("chat")) || [];
+  });
   const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
 
   const token = localStorage.getItem("token");
+  const chatRef = useRef(null);
+
+  // 🔥 AUTO SCROLL
+  useEffect(() => {
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: "smooth"
+    });
+  }, [messages, typing]);
+
+  // 🔥 GUARDAR HISTORIAL
+  useEffect(() => {
+    localStorage.setItem("chat", JSON.stringify(messages));
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const newMessages = [...messages, { from: "user", text: input }];
     setMessages(newMessages);
+    setInput("");
+    setTyping(true);
 
     try {
       const res = await fetch(`${API_URL}/api/ai/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": token // 🔥 NO SE TOCA
+          "Authorization": token
         },
         body: JSON.stringify({ pregunta: input })
       });
@@ -31,128 +50,165 @@ function ChatAssistant() {
       ]);
 
     } catch (error) {
-      console.log(error);
-
       setMessages([
         ...newMessages,
-        { from: "ai", text: "Error al conectar con el asistente 😢" }
+        { from: "ai", text: "Error al conectar 😢" }
       ]);
+    } finally {
+      setTyping(false);
     }
-
-    setInput("");
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>🤖 Asistente Fitness</h2>
+    <div style={styles.wrapper}>
+      <div style={styles.container}>
+        
+        <h2 style={styles.title}>🤖 Asistente Fitness</h2>
 
-      <div style={styles.chatBox}>
-        {messages.length === 0 && (
-          <p style={styles.placeholder}>
-            Pregunta algo sobre entrenamiento 💪
-          </p>
-        )}
+        <div style={styles.chatBox} ref={chatRef}>
+          {messages.length === 0 && (
+            <p style={styles.placeholder}>
+              Pregunta algo sobre entrenamiento 💪
+            </p>
+          )}
 
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={
-              msg.from === "user"
-                ? styles.userWrapper
-                : styles.aiWrapper
-            }
-          >
+          {messages.map((msg, index) => (
             <div
+              key={index}
               style={
                 msg.from === "user"
-                  ? styles.userMessage
-                  : styles.aiMessage
+                  ? styles.userWrapper
+                  : styles.aiWrapper
               }
             >
-              {msg.text}
+              <div
+                style={
+                  msg.from === "user"
+                    ? styles.userMessage
+                    : styles.aiMessage
+                }
+              >
+                {msg.text}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
 
-      <div style={styles.inputArea}>
-        <input
-          type="text"
-          placeholder="Escribe tu pregunta..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          style={styles.input}
-        />
+          {/* 🤖 TYPING */}
+          {typing && (
+            <div style={styles.aiWrapper}>
+              <div style={styles.typing}>
+                <span>.</span><span>.</span><span>.</span>
+              </div>
+            </div>
+          )}
+        </div>
 
-        <button onClick={sendMessage} style={styles.button}>
-          ➤
-        </button>
+        <div style={styles.inputArea}>
+          <input
+            type="text"
+            placeholder="Escribe tu pregunta..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            style={styles.input}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
+
+          <button onClick={sendMessage} style={styles.button}>
+            ➤
+          </button>
+        </div>
+
       </div>
     </div>
   );
 }
 
 const styles = {
+  wrapper: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    padding: "10px"
+  },
+
   container: {
-    width: "420px",
-    margin: "auto",
+    width: "100%",
+    maxWidth: "600px",
+    height: "90vh",
     background: "#121212",
-    padding: "20px",
     borderRadius: "16px",
     boxShadow: "0 0 25px rgba(0,255,136,0.08)",
-    color: "#fff"
-  },
-  title: {
-    color: "#00ff88",
-    marginBottom: "10px"
-  },
-  chatBox: {
-    height: "350px",
-    overflowY: "auto",
-    padding: "10px",
-    borderRadius: "12px",
-    background: "#0f0f0f",
-    border: "1px solid #222",
-    marginBottom: "10px",
     display: "flex",
     flexDirection: "column",
-    gap: "8px"
+    overflow: "hidden"
   },
+
+  title: {
+    color: "#00ff88",
+    padding: "15px",
+    borderBottom: "1px solid #1f1f1f",
+    margin: 0
+  },
+
+  chatBox: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "15px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px"
+  },
+
   placeholder: {
     color: "#666",
-    fontSize: "14px",
     textAlign: "center",
-    marginTop: "120px"
+    marginTop: "50%"
   },
+
   userWrapper: {
     display: "flex",
     justifyContent: "flex-end"
   },
+
   aiWrapper: {
     display: "flex",
     justifyContent: "flex-start"
   },
+
   userMessage: {
     background: "#00ff88",
     color: "#000",
     padding: "10px 14px",
     borderRadius: "16px 16px 0 16px",
-    maxWidth: "70%",
-    fontSize: "14px",
-    fontWeight: "500"
+    maxWidth: "75%",
+    wordBreak: "break-word"
   },
+
   aiMessage: {
     background: "#1f1f1f",
     color: "#fff",
     padding: "10px 14px",
     borderRadius: "16px 16px 16px 0",
-    maxWidth: "70%",
-    fontSize: "14px"
+    maxWidth: "75%",
+    wordBreak: "break-word"
   },
+
+  typing: {
+    background: "#1f1f1f",
+    padding: "10px 14px",
+    borderRadius: "16px",
+    color: "#aaa",
+    display: "flex",
+    gap: "5px"
+  },
+
   inputArea: {
     display: "flex",
+    padding: "10px",
+    borderTop: "1px solid #1f1f1f",
     gap: "10px"
   },
+
   input: {
     flex: 1,
     padding: "12px",
@@ -162,8 +218,9 @@ const styles = {
     color: "#fff",
     outline: "none"
   },
+
   button: {
-    padding: "12px 16px",
+    padding: "0 16px",
     borderRadius: "10px",
     border: "none",
     background: "#00ff88",
