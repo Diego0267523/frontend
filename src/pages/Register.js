@@ -16,32 +16,55 @@ import {
 function Register() {
   const navigate = useNavigate();
 
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
-  const [nombre, setNombre] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setMsg("");
 
-    const res = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, email, password }),
-    });
+    // 🔥 VALIDACIÓN
+    if (!nombre || !email || !password) {
+      setMsg("¡Completa todos los campos ⚠️");
+      return;
+    }
 
-    const data = await res.json();
+    try {
+      setLoading(true);
 
-    if (res.ok) {
-      setMsg("Usuario creado correctamente ✅");
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre,
+          email,
+          password,
+        }),
+      });
 
-      // 🔥 REDIRECCIÓN AUTOMÁTICA
-      setTimeout(() => {
-        navigate("/login");
-      }, 1200);
+      const data = await res.json();
 
-    } else {
-      setMsg(data.message || "Error al registrar ❌");
+      if (res.ok) {
+        setMsg("Usuario creado correctamente ✅");
+
+        // 🔥 REDIRECCIÓN AUTOMÁTICA
+        setTimeout(() => {
+          navigate("/");
+        }, 1200);
+
+      } else {
+        setMsg(data.message || "Error al registrar ❌");
+      }
+
+    } catch (error) {
+      setMsg("Error de conexión 🚨");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,10 +79,21 @@ function Register() {
       }}
     >
       <Container maxWidth="xs">
-        <Card style={{ background: "#121212", padding: "20px", borderRadius: "18px" }}>
+        <Card
+          style={{
+            background: "#121212",
+            padding: "20px",
+            borderRadius: "18px",
+            boxShadow: "0 0 25px rgba(0,255,136,0.08)"
+          }}
+        >
           <CardContent>
 
-            <Typography variant="h4" align="center" style={{ color: "#00ff88" }}>
+            <Typography
+              variant="h4"
+              align="center"
+              style={{ color: "#00ff88", fontWeight: "bold" }}
+            >
               GYM
             </Typography>
 
@@ -67,8 +101,12 @@ function Register() {
               create gym account
             </Typography>
 
+            {/* 🔥 MENSAJE */}
             {msg && (
-              <Alert style={{ marginTop: 10 }}>
+              <Alert
+                severity={msg.includes("correctamente") ? "success" : "error"}
+                style={{ marginTop: 10 }}
+              >
                 {msg}
               </Alert>
             )}
@@ -81,45 +119,51 @@ function Register() {
                 margin="normal"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
+                InputProps={{ style: { color: "#fff" } }}
+                InputLabelProps={{ style: { color: "#aaa" } }}
               />
 
               <TextField
                 fullWidth
-                label="gym email"
+                label="Email"
                 margin="normal"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 InputProps={{ style: { color: "#fff" } }}
+                InputLabelProps={{ style: { color: "#aaa" } }}
               />
 
               <TextField
                 fullWidth
-                label="gym password"
+                label="Password"
                 type="password"
                 margin="normal"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 InputProps={{ style: { color: "#fff" } }}
+                InputLabelProps={{ style: { color: "#aaa" } }}
               />
 
               <Button
                 fullWidth
                 type="submit"
+                disabled={loading}
                 style={{
                   marginTop: 20,
                   background: "#00ff88",
                   color: "#000",
                   fontWeight: "bold",
-                  borderRadius: "10px"
+                  borderRadius: "10px",
+                  opacity: loading ? 0.7 : 1
                 }}
               >
-                CREATE GYM 🚀
+                {loading ? "Creando..." : "CREATE GYM 🚀"}
               </Button>
 
-              {/* 🔥 BOTÓN VOLVER AL LOGIN */}
+              {/* 🔥 VOLVER AL LOGIN */}
               <Button
                 fullWidth
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/")}
                 style={{
                   marginTop: 10,
                   border: "1px solid #00ff88",
