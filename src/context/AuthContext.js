@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import  API_URL from "../config"; 
 
 export const AuthContext = createContext();
 
@@ -15,8 +16,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
  
-  // 🔥 CAMBIA esto cuando deployes:
-  const API = "https://tu-backend.onrender.com/api";
+  
+  
 
   // ==========================
   // 🔐 LOGIN
@@ -40,7 +41,7 @@ export function AuthProvider({ children }) {
   // ==========================
   const getProfile = async () => {
     try {
-      const res = await axios.get(`${API}/auth/profile`, {
+      const res = await axios.get(`${API_URL}/auth/profile`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
