@@ -6,21 +6,28 @@ import { motion } from "framer-motion";
 function Profile() {
   const { user } = useContext(AuthContext);
 
+  if (!user) {
+    return (
+      <Box sx={{ color: "#fff", p: 3 }}>
+        Cargando perfil...
+      </Box>
+    );
+  }
+
   const stats = [
-    { label: "🔥 Racha", value: "7 días" },
-    { label: "💪 Nivel", value: "Nivel 3" },
-    { label: "🏋️ Entrenos", value: "24" },
-    { label: "🔥 Calorías", value: "12,300 kcal" }
+    { label: "🔥 Racha", value: `${user.racha || 0} días` },
+    { label: "💪 Nivel", value: user.nivelActividad || "N/A" },
+    { label: "⚖️ Peso", value: user.peso ? `${user.peso} kg` : "N/A" },
+    { label: "📏 Altura", value: user.altura ? `${user.altura} cm` : "N/A" }
   ];
 
   return (
     <Box sx={{ p: 3, bgcolor: "#0f0f0f", minHeight: "100vh" }}>
 
-      {/* HEADER RESPONSIVE */}
+      {/* HEADER */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
       >
         <Box
           display="flex"
@@ -33,28 +40,27 @@ function Profile() {
           }}
         >
           <Avatar sx={{ width: 70, height: 70, bgcolor: "#00ff88" }}>
-            {user?.nombre?.[0] || "U"}
+            {user.nombre?.[0]}
           </Avatar>
 
           <Box>
             <Typography sx={nameStyle}>
-              {user?.nombre || "Usuario"}
+              {user.nombre}
             </Typography>
 
             <Typography sx={emailStyle}>
-              {user?.email || "correo@email.com"}
+              {user.email}
             </Typography>
           </Box>
         </Box>
       </motion.div>
 
-      {/* STATS RESPONSIVE */}
+      {/* STATS */}
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr 1fr",
-            sm: "repeat(2, 1fr)",
             md: "repeat(4, 1fr)"
           },
           gap: 2
@@ -66,10 +72,7 @@ function Profile() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            whileHover={{
-              scale: 1.05,
-              y: -5
-            }}
+            whileHover={{ scale: 1.05 }}
           >
             <Card sx={cardStyle}>
               <CardContent>
@@ -89,8 +92,10 @@ function Profile() {
       >
         <Card sx={{ ...cardStyle, mt: 3 }}>
           <CardContent>
-            <Typography sx={label}>🎯 Objetivo actual</Typography>
-            <Typography sx={value}>Definición</Typography>
+            <Typography sx={label}>🎯 Objetivo</Typography>
+            <Typography sx={value}>
+              {user.objetivo || "No definido"}
+            </Typography>
           </CardContent>
         </Card>
       </motion.div>
@@ -104,11 +109,6 @@ const cardStyle = {
   bgcolor: "#121212",
   borderRadius: 3,
   boxShadow: "0 0 20px rgba(0,255,136,0.08)",
-  transition: "0.3s",
-  padding: {
-    xs: 2,
-    sm: 1
-  },
   "&:hover": {
     boxShadow: "0 0 30px rgba(0,255,136,0.25)"
   }
