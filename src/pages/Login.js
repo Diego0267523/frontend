@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import API_URL from "../config";
+import { useNavigate } from "react-router-dom";
 
 import {
   Box,
@@ -14,6 +15,7 @@ import {
 
 function Login() {
   const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +52,6 @@ function Login() {
       }}
     >
       <Container maxWidth="sm">
-
         <Card
           style={{
             background: "#121212",
@@ -75,7 +76,6 @@ function Login() {
             </Typography>
 
             <form onSubmit={handleLogin}>
-
               <TextField
                 fullWidth
                 label="Email"
@@ -84,9 +84,7 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 margin="normal"
                 InputLabelProps={{ style: { color: "#aaa" } }}
-                InputProps={{
-                  style: { color: "#fff" }
-                }}
+                InputProps={{ style: { color: "#fff" } }}
               />
 
               <TextField
@@ -98,9 +96,7 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 margin="normal"
                 InputLabelProps={{ style: { color: "#aaa" } }}
-                InputProps={{
-                  style: { color: "#fff" }
-                }}
+                InputProps={{ style: { color: "#fff" } }}
               />
 
               <Button
@@ -117,26 +113,25 @@ function Login() {
                 ENTER GYM 💪
               </Button>
 
-                            {/* 🔥 BOTÓN REGISTRO */}
+              {/* BOTÓN REGISTER 👇 */}
               <Button
                 fullWidth
+                onClick={() => navigate("/register")}
                 style={{
                   marginTop: "10px",
                   border: "1px solid #00ff88",
                   color: "#00ff88",
-                  borderRadius: "10px",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
+                  borderRadius: "10px"
                 }}
-                onClick={() => window.location.href = "/register"}
               >
-                CREAR CUENTA 🏋️
+                CREATE ACCOUNT 🚀
               </Button>
 
             </form>
 
           </CardContent>
         </Card>
-
       </Container>
     </Box>
   );
