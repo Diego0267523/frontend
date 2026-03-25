@@ -1,120 +1,80 @@
 import React, { useState } from "react";
-import API_URL from "../config";
+import { TextField, Button, Box, Typography } from "@mui/material";
 
 function ChatAssistant() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-
-  const token = localStorage.getItem("token"); // si usas auth
+  const [message, setMessage] = useState("");
+  const [chat, setChat] = useState([]);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!message) return;
 
-    const newMessages = [...messages, { from: "user", text: input }];
-    setMessages(newMessages);
+    const newChat = [...chat, { sender: "user", text: message }];
+    setChat(newChat);
 
     try {
-      const res = await fetch(`${API_URL}/api/ai/chat`, {
+      const res = await fetch("https://gym-app-gytx.onrender.com/api/ai/chat", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": token
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ pregunta: input })
+        body: JSON.stringify({ message })
       });
 
       const data = await res.json();
 
-      setMessages([
-        ...newMessages,
-        { from: "ai", text: data.respuesta }
+      setChat([
+        ...newChat,
+        { sender: "ai", text: data.reply || "No response" }
       ]);
-
-    } catch (error) {
-      console.log(error);
-
-      setMessages([
-        ...newMessages,
-        { from: "ai", text: "Error al conectar con el asistente 😢" }
-      ]);
+    } catch (err) {
+      console.log(err);
     }
 
-    setInput("");
+    setMessage("");
   };
 
   return (
-    <div style={styles.container}>
-      <h2>🤖 Asistente Fitness</h2>
-
-      <div style={styles.chatBox}>
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={
-              msg.from === "user"
-                ? styles.userMessage
-                : styles.aiMessage
-            }
+    <Box>
+      {/* MENSAJES */}
+      <Box
+        style={{
+          height: "200px",
+          overflowY: "auto",
+          marginBottom: "10px"
+        }}
+      >
+        {chat.map((msg, i) => (
+          <Typography
+            key={i}
+            align={msg.sender === "user" ? "right" : "left"}
+            style={{
+              margin: "5px",
+              padding: "8px",
+              borderRadius: "10px",
+              background:
+                msg.sender === "user" ? "#1976d2" : "#e0e0e0",
+              color: msg.sender === "user" ? "white" : "black"
+            }}
           >
             {msg.text}
-          </div>
+          </Typography>
         ))}
-      </div>
+      </Box>
 
-      <div style={styles.inputArea}>
-        <input
-          type="text"
-          placeholder="Pregunta algo..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          style={styles.input}
+      {/* INPUT */}
+      <Box display="flex" gap={1}>
+        <TextField
+          fullWidth
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          label="Pregunta rápida..."
         />
-
-        <button onClick={sendMessage} style={styles.button}>
+        <Button variant="contained" onClick={sendMessage}>
           Enviar
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Box>
+    </Box>
   );
 }
-
-const styles = {
-  container: {
-    width: "400px",
-    margin: "auto",
-    textAlign: "center"
-  },
-  chatBox: {
-    height: "300px",
-    overflowY: "auto",
-    border: "1px solid #ccc",
-    padding: "10px",
-    marginBottom: "10px"
-  },
-  userMessage: {
-    textAlign: "right",
-    background: "#DCF8C6",
-    padding: "8px",
-    margin: "5px",
-    borderRadius: "10px"
-  },
-  aiMessage: {
-    textAlign: "left",
-    background: "#eee",
-    padding: "8px",
-    margin: "5px",
-    borderRadius: "10px"
-  },
-  inputArea: {
-    display: "flex"
-  },
-  input: {
-    flex: 1,
-    padding: "10px"
-  },
-  button: {
-    padding: "10px"
-  }
-};
 
 export default ChatAssistant;
