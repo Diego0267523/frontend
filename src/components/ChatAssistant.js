@@ -18,14 +18,14 @@ function ChatAssistant() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ pregunta: message })
       });
 
       const data = await res.json();
 
       setChat([
         ...newChat,
-        { sender: "ai", text: data.reply || "No response" }
+        { sender: "ai", text: data.respuesta || "No response" }
       ]);
     } catch (err) {
       console.log(err);
