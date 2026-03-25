@@ -18,15 +18,15 @@ function CreateTraining() {
         Authorization: token,
       },
       body: JSON.stringify({
-  fecha: new Date(), // o input si quieres
-  series: [
-    {
-      ejercicio,
-      peso: Number(peso),
-      repeticiones: Number(repeticiones)
-    }
-  ]
-}),
+        fecha: new Date(),
+        series: [
+          {
+            ejercicio,
+            peso: Number(peso),
+            repeticiones: Number(repeticiones),
+          },
+        ],
+      }),
     });
 
     const data = await res.json();
@@ -40,34 +40,78 @@ function CreateTraining() {
   };
 
   return (
-    <div style={{ margin: "20px 0" }}>
-      <h2>💪 Crear entrenamiento</h2>
+    <div style={styles.container}>
+      <h2 style={styles.title}>💪 Crear entrenamiento</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={styles.form}>
         <input
-          placeholder="Ejercicio"
+          style={styles.input}
+          placeholder="Ejercicio (ej: Press banca)"
           value={ejercicio}
           onChange={(e) => setEjercicio(e.target.value)}
         />
 
         <input
-          placeholder="Peso"
+          style={styles.input}
+          placeholder="Peso (kg)"
           type="number"
           value={peso}
           onChange={(e) => setPeso(e.target.value)}
         />
 
         <input
+          style={styles.input}
           placeholder="Repeticiones"
           type="number"
           value={repeticiones}
           onChange={(e) => setRepeticiones(e.target.value)}
         />
 
-        <button type="submit">Guardar</button>
+        <button type="submit" style={styles.button}>
+          Guardar entrenamiento
+        </button>
       </form>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    background: "#121212",
+    padding: "20px",
+    borderRadius: "16px",
+    boxShadow: "0 0 20px rgba(0,255,136,0.08)",
+    marginTop: "10px",
+  },
+  title: {
+    color: "#00ff88",
+    marginBottom: "15px",
+    fontWeight: "bold",
+    letterSpacing: "1px",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  input: {
+    padding: "12px",
+    borderRadius: "10px",
+    border: "1px solid #333",
+    background: "#1a1a1a",
+    color: "#fff",
+    outline: "none",
+  },
+  button: {
+    padding: "12px",
+    borderRadius: "10px",
+    border: "none",
+    background: "#00ff88",
+    color: "#000",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "0.2s",
+  },
+};
 
 export default CreateTraining;
