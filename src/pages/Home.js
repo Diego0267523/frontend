@@ -38,7 +38,7 @@ function Home() {
         {/* CARDS */}
         <Card style={cardStyle}>
           <CardContent>
-            <Typography style={titleStyle}>NEW GYM</Typography>
+           
             <CreateTraining />
           </CardContent>
         </Card>
