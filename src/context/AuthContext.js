@@ -40,19 +40,21 @@ export function AuthProvider({ children }) {
   // 👤 GET PROFILE
   // ==========================
   const getProfile = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/auth/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      setUser(res.data);
-
-    } catch (error) {
-        console.error("ERROR PROFILE:", error.response?.data || error.message);
+  try {
+    const res = await axios.get(`${API_URL}/api/auth/profile`, {
+      headers: {
+        Authorization: token // 👈 como tú quieres
       }
-  };
+    });
+
+    console.log("PROFILE RESPONSE:", res.data); // 👈 🔥 IMPORTANTE
+
+    setUser(res.data);
+
+  } catch (error) {
+    console.error("ERROR PROFILE:", error.response?.data || error.message);
+  }
+};
 
   // ==========================
   // 🔄 AUTO LOAD PROFILE
