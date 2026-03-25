@@ -42,20 +42,30 @@ function TrainingList() {
   return (
     <Container maxWidth="md" style={{ marginTop: "20px" }}>
       
-      <Typography variant="h5" gutterBottom>
+      <Typography
+        variant="h5"
+        gutterBottom
+        style={{
+          color: "#00ff88",
+          fontWeight: "bold",
+          letterSpacing: "1px"
+        }}
+      >
         🏋️ Tus Entrenamientos
       </Typography>
 
       {/* LOADING */}
       {loading && (
-        <Box display="flex" justifyContent="center" marginTop={3}>
-          <CircularProgress />
+        <Box display="flex" justifyContent="center" marginTop={5}>
+          <CircularProgress style={{ color: "#00ff88" }} />
         </Box>
       )}
 
       {/* VACÍO */}
       {!loading && trainings.length === 0 && (
-        <Typography>No hay entrenamientos todavía...</Typography>
+        <Typography style={{ color: "#aaa", textAlign: "center", marginTop: "30px" }}>
+          No hay entrenamientos todavía... 💭
+        </Typography>
       )}
 
       {/* LISTA */}
@@ -64,13 +74,22 @@ function TrainingList() {
           key={t.id || index}
           style={{
             marginTop: "15px",
-            borderRadius: "15px",
-            boxShadow: "0px 3px 10px rgba(0,0,0,0.1)",
+            borderRadius: "16px",
+            background: "#121212",
+            boxShadow: "0 0 20px rgba(0,255,136,0.08)",
+            border: "1px solid #1f1f1f"
           }}
         >
           <CardContent>
 
-            <Typography variant="h6">
+            {/* FECHA */}
+            <Typography
+              variant="h6"
+              style={{
+                color: "#00ff88",
+                marginBottom: "10px"
+              }}
+            >
               📅 {t.fecha
                 ? new Date(t.fecha).toLocaleDateString()
                 : "Sin fecha"}
@@ -78,13 +97,31 @@ function TrainingList() {
 
             {/* SERIES */}
             {t.series?.length > 0 ? (
-              t.series.map((s, i) => (
-                <Typography key={i} style={{ marginLeft: "10px" }}>
-                  👉 {s.ejercicio} - {s.peso}kg x {s.repeticiones}
-                </Typography>
-              ))
+              <Box display="flex" flexDirection="column" gap="6px">
+                {t.series.map((s, i) => (
+                  <Box
+                    key={i}
+                    style={{
+                      background: "#1a1a1a",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
+                    <Typography style={{ color: "#fff" }}>
+                      {s.ejercicio}
+                    </Typography>
+
+                    <Typography style={{ color: "#aaa", fontSize: "14px" }}>
+                      {s.peso}kg × {s.repeticiones}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
             ) : (
-              <Typography style={{ marginLeft: "10px" }}>
+              <Typography style={{ color: "#666" }}>
                 Sin series
               </Typography>
             )}
