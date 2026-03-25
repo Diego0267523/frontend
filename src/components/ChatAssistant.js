@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API_URL from "../config";
 import { TextField, Button, Box, Typography } from "@mui/material";
 
 function ChatAssistant() {
@@ -12,7 +13,7 @@ function ChatAssistant() {
     setChat(newChat);
 
     try {
-      const res = await fetch("https://gym-app-gytx.onrender.com/api/ai/chat", {
+      const res = await fetch(`${API_URL}/api/ai/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
