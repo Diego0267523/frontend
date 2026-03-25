@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
         }
       });
 
-      setUser(res.data.data);
+      setUser(res.data);
 
     } catch (error) {
         console.error("ERROR PROFILE:", error.response?.data || error.message);
