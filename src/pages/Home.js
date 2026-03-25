@@ -42,7 +42,7 @@ function Home() {
   ];
 
   const SidebarContent = () => (
-    <Box sx={{ width: 250, bgcolor: "#121212", height: "100%", p: 2 }}>
+    <Box sx={{ width: 250, bgcolor: "#0f0f0f", height: "100%", p: 2 }}>
 
       {/* PERFIL */}
       <motion.div whileHover={{ scale: 1.03 }}>
@@ -51,9 +51,6 @@ function Home() {
           <Box>
             <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
               {user?.nombre || "Usuario"}
-            </Typography>
-            <Typography sx={{ color: "#888", fontSize: 12 }}>
-              Nivel 3 🔥
             </Typography>
           </Box>
         </Box>
@@ -106,7 +103,11 @@ function Home() {
       )}
 
       {/* DRAWER */}
-      <Drawer open={open} onClose={() => setOpen(false)}>
+      <Drawer
+        open={open}
+        onClose={() => setOpen(false)}
+        PaperProps={{ sx: { backgroundColor: "#0f0f0f" } }}
+      >
         <SidebarContent />
       </Drawer>
 
@@ -158,12 +159,17 @@ function Home() {
           )}
         </Box>
 
-        {/* AI MODAL */}
+        {/* AI MODAL FIXED */}
         {showAI && (
-          <Box sx={aiOverlay} onClick={() => setShowAI(false)}>
+          <Box sx={aiOverlay}>
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-              <Box sx={aiBox} onClick={(e) => e.stopPropagation()}>
-                <Typography sx={titleStyle}>GYM AI</Typography>
+              <Box sx={aiBox}>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography sx={titleStyle}>GYM AI</Typography>
+                  <Button onClick={() => setShowAI(false)} sx={{ color: "#00ff88" }}>
+                    Cerrar
+                  </Button>
+                </Box>
                 <ChatAssistant />
               </Box>
             </motion.div>
@@ -175,7 +181,7 @@ function Home() {
   );
 }
 
-// 🎨 STYLES PRO
+// 🎨 STYLES
 const cardStyleHover = {
   borderRadius: 4,
   bgcolor: "#121212",
@@ -264,7 +270,7 @@ const topBar = {
   right: 0,
   p: 1,
   zIndex: 10,
-  bgcolor: "rgba(15,15,15,0.8)",
+  bgcolor: "rgba(15,15,15,0.9)",
   backdropFilter: "blur(10px)"
 };
 
@@ -274,7 +280,7 @@ const aiOverlay = {
   left: 0,
   right: 0,
   bottom: 0,
-  bgcolor: "rgba(0,0,0,0.7)",
+  backgroundColor: "rgba(0,0,0,0.9)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
