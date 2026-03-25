@@ -16,20 +16,31 @@ import {
 function Register() {
   const navigate = useNavigate();
 
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    nombre: "",
+    email: "",
+    password: "",
+    peso: "",
+    altura: ""
+  });
+
   const [msg, setMsg] = useState("");
-  const [type, setType] = useState("error"); // success | error
+  const [type, setType] = useState("error");
   const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMsg("");
 
-    // 🔥 VALIDACIÓN
-    if (!nombre || !email || !password) {
-      setMsg("¡Completa todos los campos! ⚠️");
+    if (!form.nombre || !form.email || !form.password) {
+      setMsg("¡Completa los campos obligatorios!");
       setType("error");
       return;
     }
@@ -40,13 +51,9 @@ function Register() {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          nombre,
-          email,
-          password,
-        }),
+        body: JSON.stringify(form)
       });
 
       const data = await res.json();
@@ -55,16 +62,13 @@ function Register() {
         setMsg("Usuario creado correctamente ✅");
         setType("success");
 
-        setTimeout(() => {
-          navigate("/");
-        }, 1200);
-
+        setTimeout(() => navigate("/"), 1200);
       } else {
-        setMsg(data.message || "Error al registrar ❌");
-        setType("error"); // 🔥 IMPORTANTE
+        setMsg(data.message || "Error ❌");
+        setType("error");
       }
 
-    } catch (error) {
+    } catch (err) {
       setMsg("Error de conexión 🚨");
       setType("error");
     } finally {
@@ -73,106 +77,33 @@ function Register() {
   };
 
   return (
-    <Box
-      style={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0f0f0f"
-      }}
-    >
+    <Box sx={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#0f0f0f" }}>
       <Container maxWidth="xs">
-        <Card
-          style={{
-            background: "#121212",
-            padding: "20px",
-            borderRadius: "18px",
-            boxShadow: "0 0 25px rgba(0,255,136,0.08)"
-          }}
-        >
+        <Card sx={{ bgcolor: "#121212", p: 2, borderRadius: 3 }}>
           <CardContent>
 
-            <Typography
-              variant="h4"
-              align="center"
-              style={{ color: "#00ff88", fontWeight: "bold" }}
-            >
+            <Typography variant="h4" align="center" sx={{ color: "#00ff88", fontWeight: "bold" }}>
               GYM
             </Typography>
 
-            <Typography align="center" style={{ color: "#aaa" }}>
-              create gym account
-            </Typography>
-
-            {/* 🔥 MENSAJE CORREGIDO */}
-            {msg && (
-              <Alert severity={type} style={{ marginTop: 10 }}>
-                {msg}
-              </Alert>
-            )}
+            {msg && <Alert severity={type} sx={{ mt: 2 }}>{msg}</Alert>}
 
             <Box component="form" onSubmit={handleRegister}>
 
-              <TextField
-                fullWidth
-                label="Nombre"
-                margin="normal"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                InputProps={{ style: { color: "#fff" } }}
-                InputLabelProps={{ style: { color: "#aaa" } }}
-              />
+              <TextField fullWidth label="Nombre" name="nombre" margin="normal" onChange={handleChange} />
+              <TextField fullWidth label="Email" name="email" margin="normal" onChange={handleChange} />
+              <TextField fullWidth label="Password" type="password" name="password" margin="normal" onChange={handleChange} />
 
-              <TextField
-                fullWidth
-                label="Email"
-                margin="normal"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                InputProps={{ style: { color: "#fff" } }}
-                InputLabelProps={{ style: { color: "#aaa" } }}
-              />
+              {/* 🔥 MEDIDAS */}
+              <TextField fullWidth label="Peso (kg)" name="peso" margin="normal" onChange={handleChange} />
+              <TextField fullWidth label="Altura (cm)" name="altura" margin="normal" onChange={handleChange} />
 
-              <TextField
-                fullWidth
-                label="Password"
-                type="password"
-                margin="normal"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                InputProps={{ style: { color: "#fff" } }}
-                InputLabelProps={{ style: { color: "#aaa" } }}
-              />
-
-              <Button
-                fullWidth
-                type="submit"
-                disabled={loading}
-                style={{
-                  marginTop: 20,
-                  background: "#00ff88",
-                  color: "#000",
-                  fontWeight: "bold",
-                  borderRadius: "10px",
-                  opacity: loading ? 0.7 : 1
-                }}
-              >
-                {loading ? "Creando..." : "CREATE GYM 🚀"}
+              <Button fullWidth type="submit" disabled={loading} sx={{ mt: 2, bgcolor: "#00ff88", color: "#000" }}>
+                {loading ? "Creando..." : "REGISTRAR 🚀"}
               </Button>
 
-              <Button
-                fullWidth
-                onClick={() => navigate("/")}
-                style={{
-                  marginTop: 10,
-                  border: "1px solid #00ff88",
-                  color: "#00ff88",
-                  fontWeight: "bold",
-                  borderRadius: "10px"
-                }}
-              >
-                BACK TO LOGIN
+              <Button fullWidth onClick={() => navigate("/")} sx={{ mt: 1, color: "#00ff88" }}>
+                VOLVER
               </Button>
 
             </Box>
