@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await axios.get(`${API_URL}/api/auth/profile`, {
         headers: {
-          Authorization: token
+          Authorization: `Bearer ${token}`
         }
       });
 
