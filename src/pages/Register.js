@@ -20,6 +20,7 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
+  const [type, setType] = useState("error"); // success | error
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
@@ -28,7 +29,8 @@ function Register() {
 
     // 🔥 VALIDACIÓN
     if (!nombre || !email || !password) {
-      setMsg("¡Completa todos los campos ⚠️");
+      setMsg("¡Completa todos los campos! ⚠️");
+      setType("error");
       return;
     }
 
@@ -51,18 +53,20 @@ function Register() {
 
       if (res.ok) {
         setMsg("Usuario creado correctamente ✅");
+        setType("success");
 
-        // 🔥 REDIRECCIÓN AUTOMÁTICA
         setTimeout(() => {
           navigate("/");
         }, 1200);
 
       } else {
         setMsg(data.message || "Error al registrar ❌");
+        setType("error"); // 🔥 IMPORTANTE
       }
 
     } catch (error) {
       setMsg("Error de conexión 🚨");
+      setType("error");
     } finally {
       setLoading(false);
     }
@@ -101,12 +105,9 @@ function Register() {
               create gym account
             </Typography>
 
-            {/* 🔥 MENSAJE */}
+            {/* 🔥 MENSAJE CORREGIDO */}
             {msg && (
-              <Alert
-                severity={msg.includes("correctamente") ? "success" : "error"}
-                style={{ marginTop: 10 }}
-              >
+              <Alert severity={type} style={{ marginTop: 10 }}>
                 {msg}
               </Alert>
             )}
@@ -160,7 +161,6 @@ function Register() {
                 {loading ? "Creando..." : "CREATE GYM 🚀"}
               </Button>
 
-              {/* 🔥 VOLVER AL LOGIN */}
               <Button
                 fullWidth
                 onClick={() => navigate("/")}
