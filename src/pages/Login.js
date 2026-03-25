@@ -50,6 +50,7 @@ function Login() {
       if (res.ok && data.token) {
         localStorage.setItem("token", data.token);
         login(data.token);
+        navigate("/");
       } else {
         setError(data.message || "Credenciales incorrectas ❌");
       }

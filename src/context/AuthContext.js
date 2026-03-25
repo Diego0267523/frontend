@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
   // ==========================
   const getProfile = async () => {
     try {
-      const res = await axios.get(`${API_URL}/auth/profile`, {
+      const res = await axios.get(`${API_URL}/api/auth/profile`, {
         headers: {
           Authorization: token
         }
