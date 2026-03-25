@@ -14,9 +14,9 @@ export function AuthProvider({ children }) {
 
   const [user, setUser] = useState(null);
 
-  const API = "http://localhost:3000/api"; 
+ 
   // 🔥 CAMBIA esto cuando deployes:
-  // const API = "https://tu-backend.onrender.com/api";
+  const API = "https://tu-backend.onrender.com/api";
 
   // ==========================
   // 🔐 LOGIN
