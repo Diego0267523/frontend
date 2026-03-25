@@ -117,6 +117,21 @@ function Login() {
                 ENTER GYM 💪
               </Button>
 
+                            {/* 🔥 BOTÓN REGISTRO */}
+              <Button
+                fullWidth
+                style={{
+                  marginTop: "10px",
+                  border: "1px solid #00ff88",
+                  color: "#00ff88",
+                  borderRadius: "10px",
+                  fontWeight: "bold"
+                }}
+                onClick={() => window.location.href = "/register"}
+              >
+                CREAR CUENTA 🏋️
+              </Button>
+
             </form>
 
           </CardContent>
