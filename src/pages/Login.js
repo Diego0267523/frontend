@@ -10,7 +10,8 @@ import {
   TextField,
   Button,
   Card,
-  CardContent
+  CardContent,
+  Alert
 } from "@mui/material";
 
 function Login() {
@@ -19,25 +20,44 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    // 🔥 VALIDACIÓN
+    if (!email || !password) {
+      setError("Completa todos los campos ⚠️");
+      return;
+    }
 
-    const data = await res.json();
+    try {
+      setLoading(true);
 
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-      login(data.token);
-    } else {
-      alert(data.message || "LOGIN ERROR ❌");
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      // 🔥 VALIDACIÓN REAL
+      if (res.ok && data.token) {
+        localStorage.setItem("token", data.token);
+        login(data.token);
+      } else {
+        setError(data.message || "Credenciales incorrectas ❌");
+      }
+
+    } catch (err) {
+      setError("Error de conexión 🚨");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +72,7 @@ function Login() {
       }}
     >
       <Container maxWidth="sm">
+
         <Card
           style={{
             background: "#121212",
@@ -75,7 +96,15 @@ function Login() {
               GYM LOGIN
             </Typography>
 
+            {/* 🔥 ERROR */}
+            {error && (
+              <Alert severity="error" style={{ marginBottom: "10px" }}>
+                {error}
+              </Alert>
+            )}
+
             <form onSubmit={handleLogin}>
+
               <TextField
                 fullWidth
                 label="Email"
@@ -102,18 +131,20 @@ function Login() {
               <Button
                 fullWidth
                 type="submit"
+                disabled={loading}
                 style={{
                   marginTop: "20px",
                   background: "#00ff88",
                   color: "#000",
                   fontWeight: "bold",
-                  borderRadius: "10px"
+                  borderRadius: "10px",
+                  opacity: loading ? 0.7 : 1
                 }}
               >
-                ENTER GYM 💪
+                {loading ? "Entrando..." : "ENTER GYM 💪"}
               </Button>
 
-              {/* BOTÓN REGISTER 👇 */}
+              {/* 🔥 IR A REGISTER */}
               <Button
                 fullWidth
                 onClick={() => navigate("/register")}
@@ -125,13 +156,14 @@ function Login() {
                   borderRadius: "10px"
                 }}
               >
-                CREATE ACCOUNT 🚀
+                CREAR CUENTA 🚀
               </Button>
 
             </form>
 
           </CardContent>
         </Card>
+
       </Container>
     </Box>
   );
