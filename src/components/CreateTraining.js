@@ -6,42 +6,76 @@ function CreateTraining() {
   const [peso, setPeso] = useState("");
   const [repeticiones, setRepeticiones] = useState("");
 
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    const res = await fetch(`${API_URL}/api/training/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-      body: JSON.stringify({
-        fecha: new Date(),
-        series: [
-          {
-            ejercicio,
-            peso: Number(peso),
-            repeticiones: Number(repeticiones),
-          },
-        ],
-      }),
-    });
+    // 🔥 VALIDACIONES
+    if (!ejercicio || !peso || !repeticiones) {
+      setError("Completa todos los campos ⚠️");
+      return;
+    }
 
-    const data = await res.json();
-    console.log(data);
+    if (Number(peso) <= 0 || Number(repeticiones) <= 0) {
+      setError("Peso y repeticiones deben ser mayores a 0 ⚠️");
+      return;
+    }
 
-    alert(data.message || "Entrenamiento guardado");
+    try {
+      setLoading(true);
 
-    setEjercicio("");
-    setPeso("");
-    setRepeticiones("");
+      const res = await fetch(`${API_URL}/api/training/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 🔥 IMPORTANTE
+        },
+        body: JSON.stringify({
+          fecha: new Date(),
+          series: [
+            {
+              ejercicio,
+              peso: Number(peso),
+              repeticiones: Number(repeticiones),
+            },
+          ],
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Error al guardar ❌");
+        return;
+      }
+
+      alert("Entrenamiento guardado 💪");
+
+      // 🔄 limpiar campos
+      setEjercicio("");
+      setPeso("");
+      setRepeticiones("");
+
+    } catch (err) {
+      setError("Error de conexión 🚨");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>💪 Crear entrenamiento</h2>
+
+      {/* 🔥 ERROR */}
+      {error && (
+        <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>
+      )}
 
       <form onSubmit={handleSubmit} style={styles.form}>
         <input
@@ -67,8 +101,15 @@ function CreateTraining() {
           onChange={(e) => setRepeticiones(e.target.value)}
         />
 
-        <button type="submit" style={styles.button}>
-          Guardar entrenamiento
+        <button
+          type="submit"
+          style={{
+            ...styles.button,
+            opacity: loading ? 0.7 : 1
+          }}
+          disabled={loading}
+        >
+          {loading ? "Guardando..." : "Guardar entrenamiento"}
         </button>
       </form>
     </div>
