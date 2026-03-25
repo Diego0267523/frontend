@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 import {
   Typography,
@@ -11,7 +11,9 @@ import {
   Box,
   LinearProgress,
   IconButton,
-  Drawer
+  Drawer,
+  useTheme,
+  useMediaQuery
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
@@ -23,166 +25,167 @@ import ChatAssistant from "../components/ChatAssistant";
 function Home() {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [open, setOpen] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+
+  const menuItems = [
+    { label: "🏋️ Rutinas", path: "/" },
+    { label: "📈 Progreso", path: "/progreso" },
+    { label: "🔥 Calorías", path: "/calorias" },
+    { label: "🎯 Objetivos", path: "/objetivos" },
+    { label: "🤖 AI", action: () => setShowAI(true) }
+  ];
 
   const SidebarContent = () => (
     <Box sx={{ width: 250, bgcolor: "#121212", height: "100%", p: 2 }}>
 
       {/* PERFIL */}
-      <Box
-        onClick={() => navigate("/profile")}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          p: 2,
-          borderRadius: 3,
-          cursor: "pointer",
-          transition: "0.3s",
-          '&:hover': {
-            bgcolor: "rgba(0,255,136,0.1)",
-            transform: "scale(1.02)"
-          }
-        }}
-      >
-        <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#00ff88" }} />
-        <Box>
-          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-            {user?.nombre || "Usuario"}
-          </Typography>
-          <Typography sx={{ color: "#888", fontSize: 12 }}>
-            Nivel 3 🔥
-          </Typography>
+      <motion.div whileHover={{ scale: 1.03 }}>
+        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+          <Box sx={avatarStyle} />
+          <Box>
+            <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+              {user?.nombre || "Usuario"}
+            </Typography>
+            <Typography sx={{ color: "#888", fontSize: 12 }}>
+              Nivel 3 🔥
+            </Typography>
+          </Box>
         </Box>
-      </Box>
+      </motion.div>
 
       {/* MENU */}
-      {["🏋️ Rutinas", "📈 Progreso", "🔥 Calorías", "🎯 Objetivos"].map((item, i) => (
-        <motion.div key={i} whileHover={{ scale: 1.05 }}>
-          <Box
-            sx={{
-              mt: 2,
-              p: 1.5,
-              borderRadius: 2,
-              color: "#aaa",
-              cursor: "pointer",
-              '&:hover': {
-                color: "#00ff88",
-                bgcolor: "rgba(0,255,136,0.08)"
-              }
-            }}
-          >
-            {item}
-          </Box>
-        </motion.div>
-      ))}
+      {menuItems.map((item, i) => {
+        const isActive = location.pathname === item.path;
 
-      <Button
-        onClick={logout}
-        sx={{ mt: 4, border: "1px solid #00ff88", color: "#00ff88" }}
-        fullWidth
-      >
+        return (
+          <motion.div key={i} whileHover={{ scale: 1.05 }}>
+            <Box
+              onClick={() => {
+                if (item.path) navigate(item.path);
+                if (item.action) item.action();
+                setOpen(false);
+              }}
+              sx={{
+                ...menuItemStyle,
+                color: isActive ? "#00ff88" : "#aaa",
+                bgcolor: isActive ? "rgba(0,255,136,0.1)" : "transparent",
+                borderLeft: isActive ? "3px solid #00ff88" : "3px solid transparent"
+              }}
+            >
+              {item.label}
+            </Box>
+          </motion.div>
+        );
+      })}
+
+      <Button onClick={logout} sx={logoutStyle} fullWidth>
         EXIT
       </Button>
     </Box>
   );
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#0f0f0f" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#0f0f0f" }}>
 
-      {/* TOP BAR MOBILE */}
-      <Box sx={{ display: "flex", alignItems: "center", p: 2 }}>
-        <IconButton onClick={() => setOpen(true)}>
-          <MenuIcon sx={{ color: "#00ff88" }} />
-        </IconButton>
-        <Typography sx={{ color: "#00ff88", fontWeight: "bold", ml: 2 }}>
-          GYM
-        </Typography>
-      </Box>
+      {/* SIDEBAR DESKTOP */}
+      {!isMobile && <SidebarContent />}
+
+      {/* MOBILE TOP */}
+      {isMobile && (
+        <Box sx={topBar}>
+          <IconButton onClick={() => setOpen(true)}>
+            <MenuIcon sx={{ color: "#00ff88" }} />
+          </IconButton>
+        </Box>
+      )}
 
       {/* DRAWER */}
-      <Drawer
-        anchor="left"
-        open={open}
-        onClose={() => setOpen(false)}
-        PaperProps={{
-          sx: { bgcolor: "#121212" }
-        }}
-      >
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ x: -300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <SidebarContent />
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <Drawer open={open} onClose={() => setOpen(false)}>
+        <SidebarContent />
       </Drawer>
 
       {/* MAIN */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ flex: 1, p: isMobile ? 2 : 4, mt: isMobile ? 6 : 0 }}>
 
         {/* HERO */}
-        <Card sx={cardStyle}>
-          <CardContent>
-            <Typography sx={{ color: "#00ff88" }}>
-              💪 Rutina de hoy
-            </Typography>
-            <Typography sx={{ color: "#fff", fontSize: 22, fontWeight: "bold" }}>
-              Pecho + Tríceps
-            </Typography>
-            <Button sx={{ mt: 2, bgcolor: "#00ff88", color: "#000" }} fullWidth>
-              Empezar entrenamiento
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* CONTENT */}
-        <Card sx={cardStyle}>
-          <CardContent>
-            <Typography sx={titleStyle}>YOUR GYM</Typography>
-            <TrainingList />
-          </CardContent>
-        </Card>
-
-        <Card sx={cardStyle}>
-          <CardContent>
-            <CreateTraining />
-          </CardContent>
-        </Card>
-
-        <Card sx={cardStyle}>
-          <CardContent>
-            <Typography sx={titleStyle}>GYM AI</Typography>
-            <ChatAssistant />
-          </CardContent>
-        </Card>
-
-        {/* STATS */}
-        {["Calorías", "Proteína", "Agua"].map((item, i) => (
-          <Card key={i} sx={cardStyle}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card sx={cardStyleHover}>
             <CardContent>
-              <Typography sx={titleStyle}>{item}</Typography>
-              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+              <Typography sx={titleStyle}>💪 Rutina de hoy</Typography>
+              <Typography sx={heroText}>Pecho + Tríceps</Typography>
+              <Button sx={ctaStyle} fullWidth={isMobile}>
+                Empezar entrenamiento
+              </Button>
             </CardContent>
           </Card>
-        ))}
+        </motion.div>
+
+        {/* GRID */}
+        <Box sx={gridStyle(isMobile)}>
+
+          <Box>
+            <Card sx={cardStyleHover}>
+              <CardContent>
+                <Typography sx={titleStyle}>YOUR GYM</Typography>
+                <TrainingList />
+              </CardContent>
+            </Card>
+
+            <Card sx={cardStyleHover}>
+              <CardContent>
+                <CreateTraining />
+              </CardContent>
+            </Card>
+          </Box>
+
+          {!isMobile && (
+            <Box>
+              {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+                <Card key={i} sx={cardStyleHover}>
+                  <CardContent>
+                    <Typography sx={titleStyle}>{item}</Typography>
+                    <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
+        </Box>
+
+        {/* AI MODAL */}
+        {showAI && (
+          <Box sx={aiOverlay} onClick={() => setShowAI(false)}>
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <Box sx={aiBox} onClick={(e) => e.stopPropagation()}>
+                <Typography sx={titleStyle}>GYM AI</Typography>
+                <ChatAssistant />
+              </Box>
+            </motion.div>
+          </Box>
+        )}
 
       </Box>
     </Box>
   );
 }
 
-const cardStyle = {
+// 🎨 STYLES PRO
+const cardStyleHover = {
   borderRadius: 4,
   bgcolor: "#121212",
   boxShadow: "0 0 30px rgba(0,255,136,0.08)",
-  mb: 2
+  mb: 2,
+  transition: "0.3s",
+  '&:hover': {
+    boxShadow: "0 0 40px rgba(0,255,136,0.2)",
+    transform: "translateY(-3px)"
+  }
 };
 
 const titleStyle = {
@@ -190,10 +193,100 @@ const titleStyle = {
   mb: 1
 };
 
+const heroText = {
+  color: "#fff",
+  fontSize: 26,
+  fontWeight: "bold",
+  mt: 1
+};
+
+const ctaStyle = {
+  mt: 2,
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const avatarStyle = {
+  width: 40,
+  height: 40,
+  borderRadius: "50%",
+  bgcolor: "#00ff88"
+};
+
+const profileStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: 2,
+  p: 2,
+  borderRadius: 3,
+  cursor: "pointer",
+  transition: "0.3s",
+  '&:hover': {
+    bgcolor: "rgba(0,255,136,0.1)"
+  }
+};
+
+const menuItemStyle = {
+  mt: 2,
+  p: 1.5,
+  borderRadius: 2,
+  cursor: "pointer",
+  transition: "0.3s"
+};
+
+const logoutStyle = {
+  mt: 4,
+  border: "1px solid #00ff88",
+  color: "#00ff88"
+};
+
 const progressStyle = {
   height: 8,
   borderRadius: 5,
   mt: 1
+};
+
+const gridStyle = (isMobile) => ({
+  display: "grid",
+  gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
+  gap: 3,
+  mt: 3
+});
+
+const topBar = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  p: 1,
+  zIndex: 10,
+  bgcolor: "rgba(15,15,15,0.8)",
+  backdropFilter: "blur(10px)"
+};
+
+const aiOverlay = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  bgcolor: "rgba(0,0,0,0.7)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 20
+};
+
+const aiBox = {
+  width: "90%",
+  maxWidth: 500,
+  bgcolor: "#121212",
+  p: 3,
+  borderRadius: 4
 };
 
 export default Home;
