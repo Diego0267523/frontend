@@ -50,9 +50,8 @@ export function AuthProvider({ children }) {
       setUser(res.data.data);
 
     } catch (error) {
-      console.error("Error obteniendo perfil:", error);
-      logout(); // 🔥 si falla → cerrar sesión
-    }
+        console.error("ERROR PROFILE:", error.response?.data || error.message);
+      }
   };
 
   // ==========================
