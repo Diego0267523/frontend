@@ -55,6 +55,15 @@ function ChatAssistant() {
                 ? styles.userMessage
                 : styles.aiMessage
             }
+
+
+
+
+
+
+
+
+
           >
             {msg.text}
           </div>
@@ -116,5 +125,4 @@ const styles = {
     padding: "10px"
   }
 };
-
 export default ChatAssistant;
