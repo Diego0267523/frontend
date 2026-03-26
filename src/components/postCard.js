@@ -15,6 +15,8 @@ const PostCard = memo(({ post }) => {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState("");
+  const [loadingLike, setLoadingLike] = useState(false);
+  const [loadingComment, setLoadingComment] = useState(false);
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";
@@ -39,44 +41,88 @@ const PostCard = memo(({ post }) => {
   };
 
   const handleLike = async () => {
-    if (!token) return;
+    if (!token) {
+      console.error("No token found");
+      return;
+    }
+    
+    setLoadingLike(true);
     try {
-      await axios.post(`${API_URL}/api/posts/${post.id}/like`, {}, {
+      console.log(`Intentando dar like a post ${post.id}`);
+      const response = await axios.post(`${API_URL}/api/posts/${post.id}/like`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLiked(!liked);
-      setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+      
+      console.log("Response like:", response.data);
+      
+      if (response.data.success) {
+        // Backend devuelve: { success: true, data: { action, likes } }
+        const newLikesCount = response.data.data.likes;
+        const isLiked = response.data.data.action === 'liked';
+        
+        setLiked(isLiked);
+        setLikesCount(newLikesCount);
+        console.log(`Like actualizado: ${isLiked ? 'liked' : 'unliked'}, total: ${newLikesCount}`);
+      }
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Error liking post:", error.response?.data || error.message);
+    } finally {
+      setLoadingLike(false);
     }
   };
 
   const handleAddComment = async () => {
-    if (!token || !newComment.trim()) return;
+    if (!token || !newComment.trim()) {
+      console.warn("No token o comentario vacío");
+      return;
+    }
+    
+    setLoadingComment(true);
     try {
+      console.log(`Agregando comentario a post ${post.id}: "${newComment}"`);
       const response = await axios.post(`${API_URL}/api/posts/${post.id}/comments`, {
         comment: newComment
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setComments([...comments, response.data.comment]); // Asumiendo que devuelve el comentario
-      setNewComment("");
+      
+      console.log("Response comment:", response.data);
+      
+      if (response.data.success) {
+        // Backend devuelve: { success: true, comment: { id, user, comment, time } }
+        setComments([...comments, response.data.comment]);
+        setNewComment("");
+        console.log("Comentario agregado exitosamente");
+      }
     } catch (error) {
-      console.error("Error adding comment:", error);
+      console.error("Error adding comment:", error.response?.data || error.message);
+    } finally {
+      setLoadingComment(false);
     }
   };
 
-  const toggleComments = async () => {
-    if (!showComments && comments.length === 0) {
-      // Fetch comments if not loaded
-      try {
-        const response = await axios.get(`${API_URL}/api/posts/${post.id}/comments`);
-        setComments(response.data.comments || []);
-      } catch (error) {
-        console.error("Error fetching comments:", error);
-      }
+  const loadComments = async () => {
+    if (comments.length > 0) {
+      setShowComments(!showComments);
+      return;
     }
-    setShowComments(!showComments);
+
+    try {
+      console.log(`Cargando comentarios del post ${post.id}`);
+      const response = await axios.get(`${API_URL}/api/posts/${post.id}/comments`);
+      
+      console.log("Comments response:", response.data);
+      
+      if (response.data.success) {
+        // Backend devuelve: { success: true, comments: [...] }
+        setComments(response.data.comments || []);
+        setShowComments(true);
+        console.log(`${response.data.comments?.length || 0} comentarios cargados`);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error.response?.data || error.message);
+      setShowComments(true); // Mostrar sección vacía aunque falle
+    }
   };
 
   return (
@@ -88,6 +134,7 @@ const PostCard = memo(({ post }) => {
       <Card sx={{ bgcolor: "#111", mb: 2, borderRadius: 4 }}>
         <CardContent>
 
+          {/* Header - Usuario y Tiempo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#00ff88" }} />
             <Box>
@@ -100,6 +147,7 @@ const PostCard = memo(({ post }) => {
             </Box>
           </Box>
 
+          {/* Imagen */}
           <Box component="img" src={post.image_url || post.image} sx={{
             width: "100%",
             height: 300,
@@ -108,40 +156,80 @@ const PostCard = memo(({ post }) => {
             mt: 1
           }} />
 
+          {/* Botones Like y Comentarios */}
           <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-            <IconButton onClick={handleLike}>
+            <IconButton onClick={handleLike} disabled={loadingLike}>
               <FavoriteIcon sx={{ color: liked ? "#ff0000" : "#aaa" }} />
             </IconButton>
-            <IconButton onClick={toggleComments}>
+            <IconButton onClick={loadComments}>
               <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
             </IconButton>
           </Box>
 
-          <Typography sx={{ color: "#fff", mt: 1 }}>
-            {likesCount} likes
+          {/* Contador de Likes */}
+          <Typography sx={{ color: "#fff", mt: 1, fontWeight: "bold" }}>
+            {likesCount} {likesCount === 1 ? "like" : "likes"}
           </Typography>
 
+          {/* Caption */}
           <Typography sx={{ color: "#ccc", mt: 1 }}>
             <b>{post.nombre || post.user || "Usuario"}</b> {post.caption}
           </Typography>
 
+          {/* Sección de Comentarios */}
           <Collapse in={showComments}>
-            <Box sx={{ mt: 2 }}>
-              {comments.map((comment, i) => (
-                <Typography key={i} sx={{ color: "#ccc", fontSize: 14, mb: 1 }}>
-                  <b>{comment.user || "Usuario"}</b> {comment.comment}
+            <Box sx={{ mt: 2, borderTop: "1px solid #333", pt: 2 }}>
+              {/* Lista de comentarios */}
+              {comments && comments.length > 0 ? (
+                <Box sx={{ maxHeight: 200, overflowY: "auto", mb: 2 }}>
+                  {comments.map((comment, i) => (
+                    <Box key={i} sx={{ mb: 1.5 }}>
+                      <Typography sx={{ color: "#ccc", fontSize: 14 }}>
+                        <b>{comment.user || "Usuario"}</b> {comment.comment}
+                      </Typography>
+                      <Typography sx={{ color: "#777", fontSize: 12, mt: 0.5 }}>
+                        {getTimeAgo(comment.time)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography sx={{ color: "#777", fontSize: 14, mb: 2 }}>
+                  Sin comentarios aún
                 </Typography>
-              ))}
+              )}
+
+              {/* Input para nuevo comentario */}
               <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
                 <TextField
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   placeholder="Agregar comentario..."
                   size="small"
-                  sx={{ flex: 1, input: { color: "#fff" }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#00ff88' } } }}
+                  disabled={loadingComment}
+                  sx={{
+                    flex: 1,
+                    input: { color: "#fff", fontSize: 14 },
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': { borderColor: '#00ff88' },
+                      '&:hover fieldset': { borderColor: '#00ff88' },
+                      '&.Mui-focused fieldset': { borderColor: '#00ff88' }
+                    }
+                  }}
                 />
-                <Button onClick={handleAddComment} sx={{ bgcolor: "#00ff88", color: "#000" }}>
-                  Enviar
+                <Button
+                  onClick={handleAddComment}
+                  disabled={loadingComment || !newComment.trim()}
+                  sx={{
+                    bgcolor: "#00ff88",
+                    color: "#000",
+                    fontWeight: "bold",
+                    "&:hover": { bgcolor: "#00dd77" },
+                    "&:disabled": { bgcolor: "#666", color: "#999" }
+                  }}
+                >
+                  {loadingComment ? "..." : "Enviar"}
                 </Button>
               </Box>
             </Box>
@@ -153,4 +241,5 @@ const PostCard = memo(({ post }) => {
   );
 });
 
+PostCard.displayName = 'PostCard';
 export default PostCard;
