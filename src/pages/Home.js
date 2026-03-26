@@ -36,16 +36,20 @@ function Home() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const queryClient = useQueryClient(); // 🔥 PREFETCH
+  const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
   const [showAI, setShowAI] = useState(false);
 
+  // 🔥 NUEVO (crear post)
+  const [openCreatePost, setOpenCreatePost] = useState(false);
+  const [newPostImage, setNewPostImage] = useState(null);
+  const [newPostCaption, setNewPostCaption] = useState("");
+
   const [visiblePosts, setVisiblePosts] = useState(2);
   const [loading, setLoading] = useState(false);
 
-  // 🔥 FETCH PAGINADO REAL
   const fetchPosts = async ({ pageParam = 1 }) => {
     const { data } = await axios.get(
       `https://jsonplaceholder.typicode.com/photos?_limit=5&_page=${pageParam}`
@@ -63,7 +67,6 @@ function Home() {
     };
   };
 
-  // 🔥 INFINITE QUERY
   const {
     data,
     fetchNextPage,
@@ -77,7 +80,6 @@ function Home() {
     staleTime: 1000 * 60 * 5
   });
 
-  // 🔥 THROTTLE + SCROLL REAL
   let scrollTimeout = null;
 
   const handleScroll = useCallback((e) => {
@@ -90,7 +92,7 @@ function Home() {
         e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
 
       if (bottom && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage(); // 🔥 REAL
+        fetchNextPage();
       }
     }, 200);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -103,7 +105,6 @@ function Home() {
     { label: "🤖 AI", action: () => setShowAI(true) }
   ];
 
-  // 🔥 PREFETCH (ejemplo)
   const prefetchProgreso = () => {
     queryClient.prefetchQuery({
       queryKey: ["progreso"],
@@ -114,7 +115,6 @@ function Home() {
     });
   };
 
-  // 🔥 POST MEMOIZADO
   const PostCard = memo(({ post }) => (
     <motion.div
       whileHover={{ scale: 1.01 }}
@@ -134,12 +134,7 @@ function Home() {
             </Box>
           </Box>
 
-          <Box
-            component="img"
-            src={post.image}
-            loading="lazy"
-            sx={imageStyle}
-          />
+          <Box component="img" src={post.image} loading="lazy" sx={imageStyle} />
 
           <Box sx={actionsStyle}>
             <IconButton>
@@ -178,7 +173,7 @@ function Home() {
           return (
             <motion.div key={i} whileHover={{ scale: 1.03 }}>
               <Box
-                onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined} // 🔥 PREFETCH
+                onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined}
                 onClick={() => {
                   if (item.path) navigate(item.path);
                   if (item.action) item.action();
@@ -203,12 +198,7 @@ function Home() {
   );
 
  return (
-  <Box sx={{
-    display: "flex",
-    height: "100vh",
-    bgcolor: "#000",
-    overflow: "hidden"
-  }}>
+  <Box sx={{ display: "flex", height: "100vh", bgcolor: "#000", overflow: "hidden" }}>
 
     {!isMobile && (
       <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto" }}>
@@ -232,13 +222,24 @@ function Home() {
       <SidebarContent />
     </Drawer>
 
-    <Drawer
-      anchor="right"
-      open={openRight}
-      onClose={() => setOpenRight(false)}
-      PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
-    >
+    <Drawer anchor="right" open={openRight} onClose={() => setOpenRight(false)}
+      PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}>
       <Box sx={{ p: 2 }}>
+
+        {/* 🔥 NUEVO BOTÓN */}
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>➕ Crear publicación</Typography>
+            <Button
+              fullWidth
+              sx={{ mt: 2, bgcolor: "#00ff88", color: "#000", fontWeight: "bold" }}
+              onClick={() => setOpenCreatePost(true)}
+            >
+              Crear
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>📊 Calorías semana</Typography>
@@ -250,84 +251,23 @@ function Home() {
           </CardContent>
         </Card>
 
-        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-          <Card key={i} sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>{item}</Typography>
-              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-            </CardContent>
-          </Card>
-        ))}
       </Box>
     </Drawer>
 
-    <Box onScroll={handleScroll} sx={{
-      flex: 1,
-      display: "flex",
-      justifyContent: "center",
-      overflowY: "auto"
-    }}>
+    {/* FEED */}
+    <Box onScroll={handleScroll} sx={{ flex: 1, display: "flex", justifyContent: "center", overflowY: "auto" }}>
       <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
-
-        <Box sx={storiesContainer}>
-          {[1,2,3,4,5].map((_,i) => (
-            <motion.div key={i} whileHover={{ scale: 1.1 }}>
-              <Box sx={storyItem}>
-                <Box sx={storyCircle} />
-                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                  user{i+1}
-                </Typography>
-              </Box>
-            </motion.div>
-          ))}
-        </Box>
-
-        {/* 🔥 POSTS REALES */}
-        {isLoading ? (
-          <Skeleton variant="rectangular" height={300} />
-        ) : (
+        {isLoading ? <Skeleton variant="rectangular" height={300} /> :
           data.pages.map((page, i) =>
             page.data.map((post, j) => (
               <PostCard key={i + "-" + j} post={post} />
             ))
           )
-        )}
-
-        {isFetchingNextPage && (
-          <Card sx={postCard}>
-            <CardContent>
-              <Skeleton variant="rectangular" height={300} />
-            </CardContent>
-          </Card>
-        )}
-
+        }
       </Box>
     </Box>
 
-    {!isMobile && (
-      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-              {[40,60,80,50,70,90,65].map((v,i)=>(
-                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-
-        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-          <Card key={i} sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>{item}</Typography>
-              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
-    )}
-
+    {/* IA */}
     {showAI && (
       <Box sx={aiOverlay}>
         <Box sx={aiBox}>
@@ -338,9 +278,58 @@ function Home() {
       </Box>
     )}
 
+    {/* 🔥 MODAL CREAR POST */}
+    {openCreatePost && (
+      <Box sx={aiOverlay}>
+        <Box sx={{ ...aiBox, width: 400 }}>
+          <Typography sx={titleStyle}>Crear publicación</Typography>
+
+          <Button onClick={() => setOpenCreatePost(false)}>Cerrar</Button>
+
+          <Button variant="contained" component="label">
+            Subir imagen
+            <input
+              type="file"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) setNewPostImage(URL.createObjectURL(file));
+              }}
+            />
+          </Button>
+
+          {newPostImage && (
+            <Box component="img" src={newPostImage} sx={{ width: "100%", mt: 2 }} />
+          )}
+
+          <textarea
+            value={newPostCaption}
+            onChange={(e) => setNewPostCaption(e.target.value)}
+            placeholder="Comentario..."
+            style={{ width: "100%", marginTop: 10 }}
+          />
+
+          <Button
+            sx={{ bgcolor: "#00ff88", color: "#000", mt: 2 }}
+            onClick={() => {
+              console.log(newPostImage, newPostCaption);
+              setOpenCreatePost(false);
+              setNewPostImage(null);
+              setNewPostCaption("");
+            }}
+          >
+            Publicar
+          </Button>
+
+        </Box>
+      </Box>
+    )}
+
   </Box>
 );
 }
+
+
 /* 🎨 STYLES */
 
 const sidebarStyle = {
