@@ -1,10 +1,20 @@
 import React, { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { Box, Typography, Card, CardContent, Avatar } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Avatar,
+  IconButton
+} from "@mui/material";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 function Profile() {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   if (!user) {
     return (
@@ -23,6 +33,21 @@ function Profile() {
 
   return (
     <Box sx={{ p: 3, bgcolor: "#0f0f0f", minHeight: "100vh" }}>
+
+      {/* 🔙 BOTÓN VOLVER */}
+      <IconButton
+        onClick={() => navigate(-1)}
+        sx={{
+          color: "#00ff88",
+          mb: 2,
+          border: "1px solid #00ff88",
+          "&:hover": {
+            bgcolor: "rgba(0,255,136,0.1)"
+          }
+        }}
+      >
+        <ArrowBackIcon />
+      </IconButton>
 
       {/* HEADER */}
       <motion.div
