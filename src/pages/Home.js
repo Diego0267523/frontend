@@ -3,7 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import React, { useContext, useState, useCallback, memo, useRef } from "react";
-import PostCard from "../components/postCard";
+import PostCard from "../components/postCArd";
 
 
 import {
@@ -17,7 +17,9 @@ import {
   Drawer,
   useTheme,
   useMediaQuery,
-  Skeleton
+  Skeleton,
+  Snackbar,
+  Alert
 } from "@mui/material";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -30,10 +32,11 @@ import ChatAssistant from "../components/ChatAssistant";
 // 🔥 NUEVO
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import API_URL from "../config";
 
 function Home() {
   const [file, setFile] = useState(null);
-  const [caption, setCaption] = useState("");
+  const [postCaption, setPostCaption] = useState("");
 
   const { logout, user } = useContext(AuthContext);
 
@@ -51,25 +54,24 @@ function Home() {
   const [showAI, setShowAI] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
-
-  
-    return {
-      data: data.map((item, i) => ({
-        user: "User" + (i + pageParam * 5),
-        image: item.url,
-        caption: item.title,
-        likes: Math.floor(Math.random() * 200),
-        time: "Hace " + (i + 1) + "h"
-      })),
-      nextPage: pageParam + 1
-    };
-  };
+  // 🔥 NOTIFICACIONES
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
 const handleCreatePost = async () => {
+  // ✅ VALIDACIÓN
+  if (!file) {
+    setSnackbar({ open: true, message: "Selecciona una imagen", severity: "error" });
+    return;
+  }
+  if (!postCaption.trim()) {
+    setSnackbar({ open: true, message: "Escribe una descripción", severity: "error" });
+    return;
+  }
+
   try {
     const formData = new FormData();
     formData.append("image", file);
-    formData.append("caption", caption);
+    formData.append("caption", postCaption);
 
     // 🔹 1️⃣ Crear post en backend
     await axios.post(`${API_URL}/api/posts`, formData, {
@@ -83,9 +85,9 @@ const handleCreatePost = async () => {
       if (!oldData) return oldData;
 
       const newPost = {
-        user: user.nombre,
+        user: user?.nombre || "Usuario",
         image: URL.createObjectURL(file),
-        caption: caption,
+        caption: postCaption,
         likes: 0,
         time: "Ahora"
       };
@@ -108,22 +110,31 @@ const handleCreatePost = async () => {
     // 🔹 4️⃣ Cerrar modal y limpiar
     setShowCreatePost(false);
     setFile(null);
-    setCaption("");
+    setPostCaption("");
+
+    // ✅ NOTIFICACIÓN DE ÉXITO
+    setSnackbar({ open: true, message: "¡Post publicado exitosamente!", severity: "success" });
 
   } catch (error) {
     console.error(error);
+    // ❌ NOTIFICACIÓN DE ERROR
+    setSnackbar({ open: true, message: "Error al publicar el post. Inténtalo de nuevo.", severity: "error" });
   }
 };
 
 
   // 🔥 FETCH POSTS (AQUÍ VA)
 const fetchPosts = async ({ pageParam = 1 }) => {
-  const { data } = await axios.get(`${API_URL}/api/posts?page=${pageParam}`);
-
-  return {
-    data: data,
-    nextPage: pageParam + 1
-  };
+  try {
+    const { data } = await axios.get(`${API_URL}/api/posts?page=${pageParam}`);
+    return {
+      data: data || [],
+      nextPage: pageParam + 1
+    };
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error; // Re-throw para que React Query maneje el error
+  }
 };
   // 🔥 INFINITE QUERY
   const {
@@ -403,8 +414,8 @@ const handleScroll = useCallback((e) => {
                   {/* CAPTION */}
                   <input
                     placeholder="¿Qué estás pensando?"
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
+                    value={postCaption}
+                    onChange={(e) => setPostCaption(e.target.value)}
                     style={inputPro}
                   />
     
@@ -424,11 +435,26 @@ const handleScroll = useCallback((e) => {
             </Box>
           )}
 
+          {/* 🔥 SNACKBAR PARA NOTIFICACIONES */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={4000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+
   </Box>
 );
+
 }
-
-
 
 /* 🎨 STYLES */
 
@@ -483,7 +509,7 @@ const imageStyle = {
 
 const actionsStyle = { display: "flex", gap: 1, mt: 1 };
 const likes = { color: "#fff", mt: 1 };
-const caption = { color: "#ccc", mt: 1 };
+const captionStyle = { color: "#ccc", mt: 1 };
 
 const storiesContainer = {
   display: "flex",
@@ -636,5 +662,7 @@ const cancelBtn = {
 };
 
 const aiBox = { bgcolor: "#111", padding: 3 };
+
+}
 
 export default Home;
