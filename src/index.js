@@ -7,20 +7,22 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./theme";
 import "./index.css";
 
-// 🔥 NUEVO
+// 🔥 React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const queryClient = new QueryClient(); // 🔥 NUEVO
+const queryClient = new QueryClient();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <QueryClientProvider client={queryClient}> {/* 🔥 NUEVO */}
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider> {/* 🔥 NUEVO */}
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
