@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import API_URL from "../config";
+import API_URL from "../utils/config";
 import { useNavigate } from "react-router-dom";
 
 import {

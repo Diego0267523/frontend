@@ -5,7 +5,7 @@ import axios from "axios";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import API_URL from "../config";
+import API_URL from "../utils/config";
 import { AuthContext } from "../context/AuthContext";
 
 const PostCard = memo(({ post }) => {

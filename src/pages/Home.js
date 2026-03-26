@@ -33,7 +33,7 @@ import ChatAssistant from "../components/ChatAssistant";
 // 🔥 NUEVO
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import API_URL from "../config";
+import API_URL from "../utils/config";
 
 function Home() {
   const { user, logout } = useContext(AuthContext);

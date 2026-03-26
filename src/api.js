@@ -1,5 +1,5 @@
 import axios from 'axios';
-import API_URL from '../config';
+import API_URL from './utils/config';
 
 const getAuthHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`
