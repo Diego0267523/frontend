@@ -35,11 +35,13 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 
+
 // =======================
 // 🔹 COMPONENTE PRINCIPAL
 // =======================
 function Home() {
-
+  const [file, setFile] = useState(null);
+  const [caption, setCaption] = useState("");
   // 🔹 Contexto de usuario
   const { logout, user } = useContext(AuthContext);
 
@@ -84,6 +86,29 @@ function Home() {
       nextPage: pageParam + 1
     };
   };
+  const handleCreatePost = async () => {
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("caption", caption);
+    formData.append("user_id", user?.id);
+
+    await axios.post("https://TU_BACKEND/api/posts", formData);
+
+    // 🔥 refrescar feed
+    queryClient.invalidateQueries(["feed"]);
+
+    // cerrar modal
+    setShowCreatePost(false);
+
+    // limpiar
+    setFile(null);
+    setCaption("");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   // =======================
   // 🔹 INFINITE SCROLL (React Query)
