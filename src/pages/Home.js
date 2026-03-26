@@ -35,6 +35,8 @@ import axios from "axios";
 import API_URL from "../config";
 
 function Home() {
+  const { user, logout } = useContext(AuthContext);
+
   const [file, setFile] = useState(null);
   const [postCaption, setPostCaption] = useState("");
   const [isPosting, setIsPosting] = useState(false);
