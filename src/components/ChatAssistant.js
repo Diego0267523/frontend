@@ -3,7 +3,9 @@ import API_URL from "../utils/config";
 
 function ChatAssistant() {
   const [messages, setMessages] = useState(() => {
-    return JSON.parse(localStorage.getItem("chat")) || [];
+    const saved = JSON.parse(localStorage.getItem("chat")) || [];
+    // Mantener solo los últimos 10 mensajes
+    return saved.slice(-10);
   });
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
@@ -19,9 +21,11 @@ function ChatAssistant() {
     });
   }, [messages, typing]);
 
-  // 🔥 GUARDAR HISTORIAL EN LOCAL
+  // 🔥 GUARDAR HISTORIAL EN LOCAL (solo últimos 10 mensajes)
   useEffect(() => {
-    localStorage.setItem("chat", JSON.stringify(messages));
+    // Mantener solo los últimos 10 mensajes
+    const limited = messages.slice(-10);
+    localStorage.setItem("chat", JSON.stringify(limited));
   }, [messages]);
 
   const sendMessage = async () => {
