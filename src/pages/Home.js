@@ -1,7 +1,7 @@
 
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import React, { useContext, useState, useCallback, useRef } from "react";
 import PostCard from "../components/postCard";
 
@@ -26,6 +26,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import CloseIcon from "@mui/icons-material/Close";
 
 import ChatAssistant from "../components/ChatAssistant";
 
@@ -46,6 +47,14 @@ function Home() {
   const [showStoryPreview, setShowStoryPreview] = useState(false);
   const [isUploadingStory, setIsUploadingStory] = useState(false);
   const [stories, setStories] = useState([]);
+
+  // 🔥 STORY VIEWER
+  const [viewingStory, setViewingStory] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [storyProgress, setStoryProgress] = useState(0);
+  const [storyTimer, setStoryTimer] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userStories, setUserStories] = useState([]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -208,6 +217,64 @@ const handleCreatePost = async () => {
     } catch (error) {
       console.error("Error deleting story:", error);
       setSnackbar({ open: true, message: "Error al eliminar la historia", severity: "error" });
+    }
+  };
+
+  // 🔥 STORY VIEWER FUNCTIONS
+  const openUserStories = (userName) => {
+    const userStoriesFiltered = stories.filter(s => s.nombre === userName);
+    setCurrentUser(userName);
+    setUserStories(userStoriesFiltered);
+    setCurrentStoryIndex(0);
+    setViewingStory(true);
+    setStoryProgress(0);
+    startStoryTimer();
+  };
+
+  const closeStoryViewer = () => {
+    setViewingStory(false);
+    setCurrentUser(null);
+    setUserStories([]);
+    stopStoryTimer();
+  };
+
+  const startStoryTimer = () => {
+    const interval = setInterval(() => {
+      setStoryProgress((prev) => {
+        if (prev >= 100) {
+          nextStory();
+          return 0;
+        }
+        return prev + (100 / 50); // 5 seconds at 20fps
+      });
+    }, 100);
+    setStoryTimer(interval);
+  };
+
+  const stopStoryTimer = () => {
+    if (storyTimer) {
+      clearInterval(storyTimer);
+      setStoryTimer(null);
+    }
+  };
+
+  const nextStory = () => {
+    stopStoryTimer();
+    if (currentStoryIndex < userStories.length - 1) {
+      setCurrentStoryIndex((prev) => prev + 1);
+      setStoryProgress(0);
+      startStoryTimer();
+    } else {
+      closeStoryViewer();
+    }
+  };
+
+  const prevStory = () => {
+    stopStoryTimer();
+    if (currentStoryIndex > 0) {
+      setCurrentStoryIndex((prev) => prev - 1);
+      setStoryProgress(0);
+      startStoryTimer();
     }
   };
 
@@ -425,8 +492,10 @@ const handleScroll = useCallback((e) => {
           {isMobile && (
             <motion.div whileHover={{ scale: 1.1 }} onClick={() => setShowStoryPreview(true)}>
               <Box sx={storyItem}>
-                <Box sx={{ ...storyCircle, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                  <Typography sx={{ color: "#000", fontSize: 28, fontWeight: "bold" }}>+</Typography>
+                <Box sx={storyCircle}>
+                  <Box sx={storyInner}>
+                    <Typography sx={{ color: "#000", fontSize: 28, fontWeight: "bold" }}>+</Typography>
+                  </Box>
                 </Box>
                 <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
                   Tu historia
@@ -436,23 +505,28 @@ const handleScroll = useCallback((e) => {
           )}
 
           {/* Historias de otros usuarios */}
-          {stories && stories.map((story, i) => (
-            <motion.div key={i} whileHover={{ scale: 1.1 }}>
-              <Box sx={storyItem}>
-                <Box 
-                  sx={{ 
-                    ...storyCircle, 
-                    backgroundImage: `url(${story.image_url})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center"
-                  }} 
-                />
-                <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
-                  {story.nombre}
-                </Typography>
-              </Box>
-            </motion.div>
-          ))}
+          {stories && [...new Set(stories.map(s => s.nombre))].map((userName, i) => {
+            const userStory = stories.find(s => s.nombre === userName);
+            return (
+              <motion.div key={i} whileHover={{ scale: 1.1 }}>
+                <Box sx={storyItem} onClick={() => openUserStories(userName)}>
+                  <Box sx={storyCircle}>
+                    <Box 
+                      sx={{ 
+                        ...storyInner, 
+                        backgroundImage: `url(${userStory.image_url})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center"
+                      }} 
+                    />
+                  </Box>
+                  <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
+                    {userName}
+                  </Typography>
+                </Box>
+              </motion.div>
+            );
+          })}
         </Box>
 
         {/* 🔥 POSTS REALES */}
@@ -661,6 +735,87 @@ const handleScroll = useCallback((e) => {
             </Box>
           )}
 
+          {/* 🔥 STORY VIEWER MODAL */}
+          <AnimatePresence>
+            {viewingStory && userStories.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={storyViewerOverlay} onClick={closeStoryViewer}>
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Box sx={storyViewerContainer}>
+                      {/* Progress Bars */}
+                      <Box sx={progressContainer}>
+                        {userStories.map((_, i) => (
+                          <LinearProgress
+                            key={i}
+                            variant="determinate"
+                            value={i < currentStoryIndex ? 100 : i === currentStoryIndex ? storyProgress : 0}
+                            sx={progressBar}
+                          />
+                        ))}
+                      </Box>
+
+                      {/* Close Button */}
+                      <IconButton onClick={closeStoryViewer} sx={closeButton}>
+                        <CloseIcon sx={{ color: "#fff" }} />
+                      </IconButton>
+
+                      {/* User Info */}
+                      <Box sx={userInfo}>
+                        <Box 
+                          sx={{ 
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            backgroundImage: `url(${userStories[currentStoryIndex]?.image_url})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            border: "2px solid #fff"
+                          }} 
+                        />
+                        <Typography sx={userName}>
+                          {currentUser}
+                        </Typography>
+                      </Box>
+
+                      {/* Story Image with Navigation */}
+                      <Box sx={storyImageContainer}>
+                        <AnimatePresence mode="wait">
+                          <motion.img
+                            key={currentStoryIndex}
+                            src={userStories[currentStoryIndex]?.image_url}
+                            alt={currentUser}
+                            style={storyImage}
+                            initial={{ x: 300, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -300, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            onMouseEnter={stopStoryTimer}
+                            onMouseLeave={startStoryTimer}
+                          />
+                        </AnimatePresence>
+
+                        {/* Navigation Areas */}
+                        <Box sx={navLeft} onClick={prevStory} />
+                        <Box sx={navRight} onClick={nextStory} />
+                      </Box>
+                    </Box>
+                  </motion.div>
+                </Box>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* 🔥 SNACKBAR PARA NOTIFICACIONES */}
           <Snackbar
             open={snackbar.open}
@@ -748,10 +903,25 @@ const storiesContainer = {
 const storyItem = { textAlign: "center" };
 
 const storyCircle = {
-  width: 60,
-  height: 60,
+  width: 66,
+  height: 66,
   borderRadius: "50%",
-  background: "linear-gradient(45deg,#00ff88,#00ccff)"
+  background: "linear-gradient(45deg,#00ff88,#00ccff)",
+  padding: 3,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
+};
+
+const storyInner = {
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  background: "#fff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden"
 };
 
 const titleStyle = { color: "#00ff88" };
@@ -890,6 +1060,106 @@ const cancelBtn = {
 
 const aiBox = { bgcolor: "#111", padding: 3 };
 
+// 🔥 STORY VIEWER STYLES
+const storyViewerOverlay = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.9)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000
+};
 
+const storyViewerContainer = {
+  position: "relative",
+  width: "100vw",
+  height: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center"
+};
+
+const progressContainer = {
+  position: "absolute",
+  top: 10,
+  left: 10,
+  right: 10,
+  display: "flex",
+  gap: 2,
+  zIndex: 10
+};
+
+const progressBar = {
+  flex: 1,
+  height: 3,
+  bgcolor: "rgba(255,255,255,0.3)",
+  '& .MuiLinearProgress-bar': {
+    bgcolor: "#fff"
+  }
+};
+
+const closeButton = {
+  position: "absolute",
+  top: 20,
+  right: 20,
+  color: "#fff",
+  bgcolor: "rgba(0,0,0,0.5)",
+  zIndex: 10,
+  '&:hover': {
+    bgcolor: "rgba(0,0,0,0.7)"
+  }
+};
+
+const userInfo = {
+  position: "absolute",
+  top: 30,
+  left: 20,
+  display: "flex",
+  alignItems: "center",
+  gap: 1,
+  zIndex: 10
+};
+
+const userName = {
+  color: "#fff",
+  fontWeight: "bold",
+  fontSize: 16,
+  textShadow: "0 0 10px rgba(0,0,0,0.5)"
+};
+
+const storyImageContainer = {
+  position: "relative",
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
+};
+
+const storyImage = {
+  maxWidth: "100%",
+  maxHeight: "100%",
+  objectFit: "contain"
+};
+
+const navLeft = {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  width: "50%",
+  height: "100%",
+  cursor: "pointer"
+};
+
+const navRight = {
+  position: "absolute",
+  right: 0,
+  top: 0,
+  width: "50%",
+  height: "100%",
+  cursor: "pointer"
+};
 
 export default Home;
