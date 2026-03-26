@@ -101,169 +101,191 @@ function Home() {
     </Box>
   );
 
-  return (
-    <Box sx={{ display: "flex", bgcolor: "#000", width: "100%", overflowX: "hidden" }}>
+ return (
+  <Box sx={{
+    display: "flex",
+    height: "100vh",
+    bgcolor: "#000",
+    overflow: "hidden"
+  }}>
 
-      {/* SIDEBAR DESKTOP */}
-      {!isMobile && <SidebarContent />}
-
-      {/* TOPBAR MOBILE */}
-      {isMobile && (
-        <Box sx={topBar}>
-          <IconButton onClick={() => setOpen(true)}>
-            <MenuIcon sx={{ color: "#00ff88" }} />
-          </IconButton>
-
-          {/* ✅ ICONO DERECHO CORREGIDO */}
-          <IconButton onClick={() => setOpenRight(true)}>
-            <BarChartIcon sx={{ color: "#00ff88" }} />
-          </IconButton>
-        </Box>
-      )}
-
-      {/* DRAWER IZQUIERDO */}
-      <Drawer open={open} onClose={() => setOpen(false)}>
+    {/* SIDEBAR DESKTOP */}
+    {!isMobile && (
+      <Box sx={{
+        width: 250,
+        flexShrink: 0,
+        overflowY: "auto"
+      }}>
         <SidebarContent />
-      </Drawer>
+      </Box>
+    )}
 
-      {/* DRAWER DERECHO */}
-      <Drawer
-        anchor="right"
-        open={openRight}
-        onClose={() => setOpenRight(false)}
-        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
-      >
-        <Box sx={{ p: 2 }}>
-          <Card sx={postCard}>
+    {/* TOPBAR MOBILE */}
+    {isMobile && (
+      <Box sx={topBar}>
+        <IconButton onClick={() => setOpen(true)}>
+          <MenuIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
+
+        <IconButton onClick={() => setOpenRight(true)}>
+          <BarChartIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
+      </Box>
+    )}
+
+    {/* DRAWER IZQUIERDO */}
+    <Drawer open={open} onClose={() => setOpen(false)}>
+      <SidebarContent />
+    </Drawer>
+
+    {/* DRAWER DERECHO */}
+    <Drawer
+      anchor="right"
+      open={openRight}
+      onClose={() => setOpenRight(false)}
+      PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+    >
+      <Box sx={{ p: 2 }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{
+                  width: 10,
+                  height: v,
+                  bgcolor: "#00ff88",
+                  borderRadius: 2
+                }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+          <Card key={i} sx={postCard}>
             <CardContent>
-              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                {[40,60,80,50,70,90,65].map((v,i)=>(
-                  <Box key={i} sx={{
-                    width: 10,
-                    height: v,
-                    bgcolor: "#00ff88",
-                    borderRadius: 2
-                  }} />
-                ))}
-              </Box>
+              <Typography sx={titleStyle}>{item}</Typography>
+              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
             </CardContent>
           </Card>
+        ))}
+      </Box>
+    </Drawer>
 
-          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-            <Card key={i} sx={postCard}>
-              <CardContent>
-                <Typography sx={titleStyle}>{item}</Typography>
-                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      </Drawer>
+    {/* 🔥 CENTRO (SCROLL PRINCIPAL) */}
+    <Box sx={{
+      flex: 1,
+      display: "flex",
+      justifyContent: "center",
+      overflowY: "auto"
+    }}>
+      <Box sx={{
+        width: "100%",
+        maxWidth: 500,
+        py: 2
+      }}>
 
-      {/* 🔥 CENTRO */}
-      <Box sx={centerContent(isMobile)}>
-        <Box sx={{
-          width: "100%",
-          maxWidth: 500,
-          margin: 0
-        }}>
-
-          {/* STORIES */}
-          <Box sx={storiesContainer}>
-            {[1,2,3,4,5].map((_,i) => (
-              <motion.div key={i} whileHover={{ scale: 1.1 }}>
-                <Box sx={storyItem}>
-                  <Box sx={storyCircle} />
-                  <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                    user{i+1}
-                  </Typography>
-                </Box>
-              </motion.div>
-            ))}
-          </Box>
-
-          {/* POSTS */}
-          {posts.map((post, i) => (
-            <motion.div key={i} whileHover={{ scale: 1.01 }}>
-              <Card sx={postCard}>
-                <CardContent>
-
-                  <Box sx={headerStyle}>
-                    <Box sx={avatarStyle} />
-                    <Box>
-                      <Typography sx={username}>{post.user}</Typography>
-                      <Typography sx={time}>{post.time}</Typography>
-                    </Box>
-                  </Box>
-
-                  <Box component="img" src={post.image} sx={imageStyle} />
-
-                  <Box sx={actionsStyle}>
-                    <IconButton>
-                      <FavoriteIcon sx={{ color: "#aaa" }} />
-                    </IconButton>
-                    <IconButton>
-                      <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-                    </IconButton>
-                  </Box>
-
-                  <Typography sx={likes}>{post.likes} likes</Typography>
-                  <Typography sx={caption}>
-                    <b>{post.user}</b> {post.caption}
-                  </Typography>
-
-                </CardContent>
-              </Card>
+        {/* STORIES */}
+        <Box sx={storiesContainer}>
+          {[1,2,3,4,5].map((_,i) => (
+            <motion.div key={i} whileHover={{ scale: 1.1 }}>
+              <Box sx={storyItem}>
+                <Box sx={storyCircle} />
+                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                  user{i+1}
+                </Typography>
+              </Box>
             </motion.div>
           ))}
-
         </Box>
-      </Box>
 
-      {/* DERECHA DESKTOP */}
-      {!isMobile && (
-        <Box sx={rightPanel}>
-          <Card sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                {[40,60,80,50,70,90,65].map((v,i)=>(
-                  <Box key={i} sx={{
-                    width: 10,
-                    height: v,
-                    bgcolor: "#00ff88",
-                    borderRadius: 2
-                  }} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-            <Card key={i} sx={postCard}>
+        {/* POSTS */}
+        {posts.map((post, i) => (
+          <motion.div key={i} whileHover={{ scale: 1.01 }}>
+            <Card sx={postCard}>
               <CardContent>
-                <Typography sx={titleStyle}>{item}</Typography>
-                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+
+                <Box sx={headerStyle}>
+                  <Box sx={avatarStyle} />
+                  <Box>
+                    <Typography sx={username}>{post.user}</Typography>
+                    <Typography sx={time}>{post.time}</Typography>
+                  </Box>
+                </Box>
+
+                <Box component="img" src={post.image} sx={imageStyle} />
+
+                <Box sx={actionsStyle}>
+                  <IconButton>
+                    <FavoriteIcon sx={{ color: "#aaa" }} />
+                  </IconButton>
+                  <IconButton>
+                    <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+                  </IconButton>
+                </Box>
+
+                <Typography sx={likes}>{post.likes} likes</Typography>
+                <Typography sx={caption}>
+                  <b>{post.user}</b> {post.caption}
+                </Typography>
+
               </CardContent>
             </Card>
-          ))}
-        </Box>
-      )}
+          </motion.div>
+        ))}
 
-      {/* AI */}
-      {showAI && (
-        <Box sx={aiOverlay}>
-          <Box sx={aiBox}>
-            <Typography sx={titleStyle}>GYM AI</Typography>
-            <Button onClick={() => setShowAI(false)}>Cerrar</Button>
-            <ChatAssistant />
-          </Box>
-        </Box>
-      )}
-
+      </Box>
     </Box>
-  );
+
+    {/* DERECHA DESKTOP */}
+    {!isMobile && (
+      <Box sx={{
+        width: 300,
+        flexShrink: 0,
+        p: 2,
+        overflowY: "auto"
+      }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{
+                  width: 10,
+                  height: v,
+                  bgcolor: "#00ff88",
+                  borderRadius: 2
+                }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+          <Card key={i} sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>{item}</Typography>
+              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    )}
+
+    {/* AI */}
+    {showAI && (
+      <Box sx={aiOverlay}>
+        <Box sx={aiBox}>
+          <Typography sx={titleStyle}>GYM AI</Typography>
+          <Button onClick={() => setShowAI(false)}>Cerrar</Button>
+          <ChatAssistant />
+        </Box>
+      </Box>
+    )}
+
+  </Box>
+);
 }
 
 /* 🎨 STYLES */
