@@ -13,13 +13,14 @@ import {
   IconButton,
   Drawer,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Skeleton // ✅ NUEVO
 } from "@mui/material";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
-import BarChartIcon from "@mui/icons-material/BarChart"; // ✅ ICONO NUEVO
+import BarChartIcon from "@mui/icons-material/BarChart";
 
 import ChatAssistant from "../components/ChatAssistant";
 
@@ -34,6 +35,10 @@ function Home() {
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
   const [showAI, setShowAI] = useState(false);
+
+  // 🔥 NUEVO (lazy + loading)
+  const [visiblePosts, setVisiblePosts] = useState(2);
+  const [loading, setLoading] = useState(false);
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
@@ -59,6 +64,21 @@ function Home() {
       time: "Hace 5h"
     }
   ];
+
+  // 🔥 SCROLL INFINITO
+  const handleScroll = (e) => {
+    const bottom =
+      e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+
+    if (bottom && !loading) {
+      setLoading(true);
+
+      setTimeout(() => {
+        setVisiblePosts((prev) => prev + 2);
+        setLoading(false);
+      }, 1000);
+    }
+  };
 
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
@@ -109,18 +129,12 @@ function Home() {
     overflow: "hidden"
   }}>
 
-    {/* SIDEBAR DESKTOP */}
     {!isMobile && (
-      <Box sx={{
-        width: 250,
-        flexShrink: 0,
-        overflowY: "auto"
-      }}>
+      <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto" }}>
         <SidebarContent />
       </Box>
     )}
 
-    {/* TOPBAR MOBILE */}
     {isMobile && (
       <Box sx={topBar}>
         <IconButton onClick={() => setOpen(true)}>
@@ -133,12 +147,10 @@ function Home() {
       </Box>
     )}
 
-    {/* DRAWER IZQUIERDO */}
     <Drawer open={open} onClose={() => setOpen(false)}>
       <SidebarContent />
     </Drawer>
 
-    {/* DRAWER DERECHO */}
     <Drawer
       anchor="right"
       open={openRight}
@@ -151,12 +163,7 @@ function Home() {
             <Typography sx={titleStyle}>📊 Calorías semana</Typography>
             <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
               {[40,60,80,50,70,90,65].map((v,i)=>(
-                <Box key={i} sx={{
-                  width: 10,
-                  height: v,
-                  bgcolor: "#00ff88",
-                  borderRadius: 2
-                }} />
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
               ))}
             </Box>
           </CardContent>
@@ -173,20 +180,18 @@ function Home() {
       </Box>
     </Drawer>
 
-    {/* 🔥 CENTRO (SCROLL PRINCIPAL) */}
-    <Box sx={{
-      flex: 1,
-      display: "flex",
-      justifyContent: "center",
-      overflowY: "auto"
-    }}>
-      <Box sx={{
-        width: "100%",
-        maxWidth: 500,
-        py: 2
-      }}>
+    {/* 🔥 CENTRO CON SCROLL + LAZY */}
+    <Box
+      onScroll={handleScroll}
+      sx={{
+        flex: 1,
+        display: "flex",
+        justifyContent: "center",
+        overflowY: "auto"
+      }}
+    >
+      <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
 
-        {/* STORIES */}
         <Box sx={storiesContainer}>
           {[1,2,3,4,5].map((_,i) => (
             <motion.div key={i} whileHover={{ scale: 1.1 }}>
@@ -200,9 +205,16 @@ function Home() {
           ))}
         </Box>
 
-        {/* POSTS */}
-        {posts.map((post, i) => (
-          <motion.div key={i} whileHover={{ scale: 1.01 }}>
+        {/* POSTS CON ANIMACIÓN */}
+        {posts.slice(0, visiblePosts).map((post, i) => (
+          <motion.div
+            key={i}
+            whileHover={{ scale: 1.01 }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <Card sx={postCard}>
               <CardContent>
 
@@ -235,28 +247,29 @@ function Home() {
           </motion.div>
         ))}
 
+        {/* 🔥 SKELETON LOADING */}
+        {loading && (
+          <Card sx={postCard}>
+            <CardContent>
+              <Skeleton variant="circular" width={40} height={40} />
+              <Skeleton variant="text" width="40%" />
+              <Skeleton variant="rectangular" height={300} sx={{ mt: 1 }} />
+              <Skeleton variant="text" width="60%" />
+            </CardContent>
+          </Card>
+        )}
+
       </Box>
     </Box>
 
-    {/* DERECHA DESKTOP */}
     {!isMobile && (
-      <Box sx={{
-        width: 300,
-        flexShrink: 0,
-        p: 2,
-        overflowY: "auto"
-      }}>
+      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>📊 Calorías semana</Typography>
             <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
               {[40,60,80,50,70,90,65].map((v,i)=>(
-                <Box key={i} sx={{
-                  width: 10,
-                  height: v,
-                  bgcolor: "#00ff88",
-                  borderRadius: 2
-                }} />
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
               ))}
             </Box>
           </CardContent>
@@ -273,7 +286,6 @@ function Home() {
       </Box>
     )}
 
-    {/* AI */}
     {showAI && (
       <Box sx={aiOverlay}>
         <Box sx={aiBox}>
