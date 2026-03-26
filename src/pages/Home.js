@@ -138,6 +138,7 @@ const fetchPosts = async ({ pageParam = 1 }) => {
     const token = localStorage.getItem("token");
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const response = await axios.get(`${API_URL}/api/posts?page=${pageParam}`, { headers });
+    console.log("Response data:", response.data); // 🔥 DEBUG
     const { posts } = response.data; // Backend devuelve { success: true, posts: [...] }
     return {
       data: posts || [],
@@ -281,7 +282,7 @@ const handleScroll = useCallback((e) => {
   }}>
 
     {!isMobile && (
-      <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto" }}>
+      <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
         <SidebarContent />
       </Box>
     )}
@@ -335,7 +336,8 @@ const handleScroll = useCallback((e) => {
       flex: 1,
       display: "flex",
       justifyContent: "center",
-      overflowY: "auto"
+      overflowY: "auto",
+      '&::-webkit-scrollbar': { display: 'none' }
     }}>
       <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
 
@@ -396,7 +398,7 @@ const handleScroll = useCallback((e) => {
     </Box>
 
     {!isMobile && (
-      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
+      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>📊 Calorías semana</Typography>
@@ -577,7 +579,8 @@ const storiesContainer = {
   display: "flex",
   gap: 2,
   overflowX: "auto",
-  mb: 2
+  mb: 2,
+  '&::-webkit-scrollbar': { display: 'none' }
 };
 
 const storyItem = { textAlign: "center" };
