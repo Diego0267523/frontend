@@ -19,7 +19,7 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
-import BarChartIcon from "@mui/icons-material/BarChart"; // ✅ ICONO NUEVO
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 import ChatAssistant from "../components/ChatAssistant";
 
@@ -102,72 +102,38 @@ function Home() {
   );
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "#000" }}>
+    <Box sx={{ display: "flex", bgcolor: "#000", width: "100%", overflowX: "hidden" }}>
 
-      {/* SIDEBAR DESKTOP */}
       {!isMobile && <SidebarContent />}
 
-      {/* TOPBAR MOBILE */}
       {isMobile && (
         <Box sx={topBar}>
           <IconButton onClick={() => setOpen(true)}>
             <MenuIcon sx={{ color: "#00ff88" }} />
           </IconButton>
 
-          {/* ✅ ICONO DERECHO CORREGIDO */}
           <IconButton onClick={() => setOpenRight(true)}>
-            <BarChartIcon sx={{ color: "#00ff88" }} />
+            <DashboardIcon sx={{ color: "#00ff88" }} />
           </IconButton>
         </Box>
       )}
 
-      {/* DRAWER IZQUIERDO */}
       <Drawer open={open} onClose={() => setOpen(false)}>
         <SidebarContent />
       </Drawer>
 
-      {/* DRAWER DERECHO */}
       <Drawer
         anchor="right"
         open={openRight}
         onClose={() => setOpenRight(false)}
-        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 280 } }}
       >
-        <Box sx={{ p: 2 }}>
-          <Card sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                {[40,60,80,50,70,90,65].map((v,i)=>(
-                  <Box key={i} sx={{
-                    width: 10,
-                    height: v,
-                    bgcolor: "#00ff88",
-                    borderRadius: 2
-                  }} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-            <Card key={i} sx={postCard}>
-              <CardContent>
-                <Typography sx={titleStyle}>{item}</Typography>
-                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        <RightPanel />
       </Drawer>
 
       {/* 🔥 CENTRO */}
       <Box sx={centerContent(isMobile)}>
-        <Box sx={{
-          width: "100%",
-          maxWidth: 500,
-          margin: "0 auto"
-        }}>
+        <Box sx={{ width: "100%", maxWidth: 500, margin: "0 auto" }}>
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
@@ -221,37 +187,8 @@ function Home() {
         </Box>
       </Box>
 
-      {/* DERECHA DESKTOP */}
-      {!isMobile && (
-        <Box sx={rightPanel}>
-          <Card sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                {[40,60,80,50,70,90,65].map((v,i)=>(
-                  <Box key={i} sx={{
-                    width: 10,
-                    height: v,
-                    bgcolor: "#00ff88",
-                    borderRadius: 2
-                  }} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
+      {!isMobile && <RightPanel />}
 
-          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-            <Card key={i} sx={postCard}>
-              <CardContent>
-                <Typography sx={titleStyle}>{item}</Typography>
-                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      )}
-
-      {/* AI */}
       {showAI && (
         <Box sx={aiOverlay}>
           <Box sx={aiBox}>
@@ -265,6 +202,36 @@ function Home() {
     </Box>
   );
 }
+
+/* 🔥 PANEL DERECHO */
+const RightPanel = () => (
+  <Box sx={rightPanel}>
+    <Card sx={postCard}>
+      <CardContent>
+        <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+          {[40,60,80,50,70,90,65].map((v,i)=>(
+            <Box key={i} sx={{
+              width: 10,
+              height: v,
+              bgcolor: "#00ff88",
+              borderRadius: 2
+            }} />
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+
+    {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+      <Card key={i} sx={postCard}>
+        <CardContent>
+          <Typography sx={titleStyle}>{item}</Typography>
+          <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+        </CardContent>
+      </Card>
+    ))}
+  </Box>
+);
 
 /* 🎨 STYLES */
 
@@ -281,25 +248,25 @@ const sidebarStyle = {
 };
 
 const centerContent = (isMobile) => ({
+  flex: 1,
+  minWidth: 0,
   marginLeft: isMobile ? 0 : 250,
-  marginRight: isMobile ? 0 : 300,
+  marginRight: isMobile ? 0 : 280,
   display: "flex",
   justifyContent: "center",
-  alignItems: "flex-start",
-  minHeight: "100vh",
-  paddingTop: isMobile ? 55 : 20,
-  paddingLeft: isMobile ? 10 : 20,
-  paddingRight: isMobile ? 10 : 20
+  width: "100%",
+  paddingTop: isMobile ? 60 : 20,
+  boxSizing: "border-box"
 });
 
 const rightPanel = {
-  width: 300,
-  height: "100vh",
+  width: 280,
   position: "fixed",
   right: 0,
   top: 0,
-  p: 2,
-  bgcolor: "#0b0b0b"
+  height: "100vh",
+  padding: 16,
+  backgroundColor: "#0b0b0b"
 };
 
 const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
@@ -379,11 +346,16 @@ const progressStyle = { height: 8, mt: 1 };
 const topBar = {
   position: "fixed",
   top: 0,
-  width: "100%",
+  left: 0,
+  right: 0,
   display: "flex",
   justifyContent: "space-between",
-  bgcolor: "#000",
-  zIndex: 10
+  alignItems: "center",
+  background: "#000",
+  padding: "6px 10px",
+  zIndex: 10,
+  height: 56,
+  boxSizing: "border-box"
 };
 
 const aiOverlay = {
