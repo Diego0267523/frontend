@@ -1,6 +1,3 @@
-// =======================
-// 🔹 IMPORTACIONES
-// =======================
 import React, { useContext, useState, useCallback, memo } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -27,45 +24,32 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 
 import ChatAssistant from "../components/ChatAssistant";
 
+// 🔥 NUEVO
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
-
-// =======================
-// 🔹 COMPONENTE PRINCIPAL
-// =======================
 function Home() {
+  const [file, setFile] = useState(null);
+  const [caption, setCaption] = useState("");
 
-  // =======================
-  // 🔹 CONTEXTO / NAV
-  // =======================
   const { logout, user } = useContext(AuthContext);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const queryClient = useQueryClient();
-
-  // =======================
-  // 🔹 ESTADOS
-  // =======================
-  const [file, setFile] = useState(null);
-  const [caption, setCaption] = useState("");
+  const queryClient = useQueryClient(); // 🔥 PREFETCH
 
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
+  
   const [showAI, setShowAI] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
-  const [visiblePosts, setVisiblePosts] = useState(2); // (no usado)
-  const [loading, setLoading] = useState(false); // (no usado)
 
-
-  // =======================
-  // 🔹 FETCH (POSTS)
-  // =======================
+  // 🔥 FETCH PAGINADO REAL
   const fetchPosts = async ({ pageParam = 1 }) => {
     const { data } = await axios.get(
       `https://jsonplaceholder.typicode.com/photos?_limit=5&_page=${pageParam}`
@@ -83,30 +67,7 @@ function Home() {
     };
   };
 
-  const handleCreatePost = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("caption", caption);
-      formData.append("user_id", user?.id);
-
-      await axios.post("https://TU_BACKEND/api/posts", formData);
-
-      queryClient.invalidateQueries(["feed"]);
-
-      setShowCreatePost(false);
-      setFile(null);
-      setCaption("");
-
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-
-  // =======================
-  // 🔹 INFINITE QUERY
-  // =======================
+  // 🔥 INFINITE QUERY
   const {
     data,
     fetchNextPage,
@@ -120,10 +81,7 @@ function Home() {
     staleTime: 1000 * 60 * 5
   });
 
-
-  // =======================
-  // 🔹 SCROLL
-  // =======================
+  // 🔥 THROTTLE + SCROLL REAL
   let scrollTimeout = null;
 
   const handleScroll = useCallback((e) => {
@@ -136,15 +94,11 @@ function Home() {
         e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
 
       if (bottom && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
+        fetchNextPage(); // 🔥 REAL
       }
     }, 200);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-
-  // =======================
-  // 🔹 MENÚ
-  // =======================
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
     { label: "📈 Progreso", path: "/progreso" },
@@ -154,6 +108,7 @@ function Home() {
     { label: "➕ Crear", action: () => setShowCreatePost(true) }
   ];
 
+  // 🔥 PREFETCH (ejemplo)
   const prefetchProgreso = () => {
     queryClient.prefetchQuery({
       queryKey: ["progreso"],
@@ -164,11 +119,7 @@ function Home() {
     });
   };
 
-
-  // =======================
-  // 🔹 COMPONENTES
-  // =======================
-
+  // 🔥 POST MEMOIZADO
   const PostCard = memo(({ post }) => (
     <motion.div
       whileHover={{ scale: 1.01 }}
@@ -188,7 +139,12 @@ function Home() {
             </Box>
           </Box>
 
-          <Box component="img" src={post.image} sx={imageStyle} />
+          <Box
+            component="img"
+            src={post.image}
+            loading="lazy"
+            sx={imageStyle}
+          />
 
           <Box sx={actionsStyle}>
             <IconButton>
@@ -209,139 +165,270 @@ function Home() {
     </motion.div>
   ));
 
+   const handleCreatePost = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("caption", caption);
+      formData.append("user_id", user?.id);
+  
+      await axios.post("https://TU_BACKEND/api/posts", formData);
+  
+      // 🔥 refrescar feed
+      queryClient.invalidateQueries(["feed"]);
+  
+      // cerrar modal
+      setShowCreatePost(false);
+  
+      // limpiar
+      setFile(null);
+      setCaption("");
+  
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
-      <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-        <Box sx={avatarStyle} />
-        <Typography sx={{ color: "#fff" }}>
-          {user?.nombre || "Usuario"}
-        </Typography>
-      </Box>
+      <motion.div whileHover={{ scale: 1.05 }}>
+        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+          <Box sx={avatarStyle} />
+          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+            {user?.nombre || "Usuario"}
+          </Typography>
+        </Box>
+      </motion.div>
 
       <Box sx={{ flex: 1 }}>
         {menuItems.map((item, i) => {
           const isActive = location.pathname === item.path;
 
           return (
-            <Box
-              key={i}
-              onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined}
-              onClick={() => {
-                if (item.path) navigate(item.path);
-                if (item.action) item.action();
-              }}
-              sx={{
-                ...menuItemStyle,
-                bgcolor: isActive ? "#00ff8820" : "#151515"
-              }}
-            >
-              {item.label}
-            </Box>
+            <motion.div key={i} whileHover={{ scale: 1.03 }}>
+              <Box
+                onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined} // 🔥 PREFETCH
+                onClick={() => {
+                  if (item.path) navigate(item.path);
+                  if (item.action) item.action();
+                }}
+                sx={{
+                  ...menuItemStyle,
+                  bgcolor: isActive ? "#00ff8820" : "#151515",
+                  color: isActive ? "#00ff88" : "#ccc"
+                }}
+              >
+                {item.label}
+              </Box>
+            </motion.div>
           );
         })}
       </Box>
 
-      <Button onClick={logout} sx={logoutStyle}>
+      <Button onClick={logout} sx={logoutStyle} fullWidth>
         EXIT
       </Button>
     </Box>
   );
 
+ return (
+  <Box sx={{
+    display: "flex",
+    height: "100vh",
+    bgcolor: "#000",
+    overflow: "hidden"
+  }}>
 
-  // =======================
-  // 🔹 UI (RENDER)
-  // =======================
-  return (
-    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#000" }}>
-
-      {/* sidebar */}
-      {!isMobile && (
-        <Box sx={{ width: 250 }}>
-          <SidebarContent />
-        </Box>
-      )}
-
-      {/* topbar */}
-      {isMobile && (
-        <Box sx={topBar}>
-          <IconButton onClick={() => setOpen(true)}>
-            <MenuIcon />
-          </IconButton>
-          <IconButton onClick={() => setOpenRight(true)}>
-            <BarChartIcon />
-          </IconButton>
-        </Box>
-      )}
-
-      <Drawer open={open} onClose={() => setOpen(false)}>
+    {!isMobile && (
+      <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto" }}>
         <SidebarContent />
-      </Drawer>
+      </Box>
+    )}
 
-      {/* FEED */}
-      <Box onScroll={handleScroll} sx={{ flex: 1, overflowY: "auto" }}>
-        <Box sx={{ maxWidth: 500, margin: "auto" }}>
+    {isMobile && (
+      <Box sx={topBar}>
+        <IconButton onClick={() => setOpen(true)}>
+          <MenuIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
 
-          {/* posts */}
-          {isLoading ? (
-            <Skeleton height={300} />
-          ) : (
-            data.pages.map((page, i) =>
-              page.data.map((post, j) => (
-                <PostCard key={i + "-" + j} post={post} />
-              ))
-            )
-          )}
+        <IconButton onClick={() => setOpenRight(true)}>
+          <BarChartIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
+      </Box>
+    )}
 
+    <Drawer open={open} onClose={() => setOpen(false)}>
+      <SidebarContent />
+    </Drawer>
+
+    <Drawer
+      anchor="right"
+      open={openRight}
+      onClose={() => setOpenRight(false)}
+      PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+    >
+      <Box sx={{ p: 2 }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+          <Card key={i} sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>{item}</Typography>
+              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    </Drawer>
+
+    <Box onScroll={handleScroll} sx={{
+      flex: 1,
+      display: "flex",
+      justifyContent: "center",
+      overflowY: "auto"
+    }}>
+      <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
+
+        <Box sx={storiesContainer}>
+          {[1,2,3,4,5].map((_,i) => (
+            <motion.div key={i} whileHover={{ scale: 1.1 }}>
+              <Box sx={storyItem}>
+                <Box sx={storyCircle} />
+                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                  user{i+1}
+                </Typography>
+              </Box>
+            </motion.div>
+          ))}
+        </Box>
+
+        {/* 🔥 POSTS REALES */}
+        {isLoading ? (
+          <Skeleton variant="rectangular" height={300} />
+        ) : (
+          data.pages.map((page, i) =>
+            page.data.map((post, j) => (
+              <PostCard key={i + "-" + j} post={post} />
+            ))
+          )
+        )}
+
+        {isFetchingNextPage && (
+          <Card sx={postCard}>
+            <CardContent>
+              <Skeleton variant="rectangular" height={300} />
+            </CardContent>
+          </Card>
+        )}
+
+      </Box>
+    </Box>
+
+    {!isMobile && (
+      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+          <Card key={i} sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>{item}</Typography>
+              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    )}
+
+    {showAI && (
+      <Box sx={aiOverlay}>
+        <Box sx={aiBox}>
+          <Typography sx={titleStyle}>GYM AI</Typography>
+          <Button onClick={() => setShowAI(false)}>Cerrar</Button>
+          <ChatAssistant />
         </Box>
       </Box>
+    )}
 
-      {/* AI */}
-      {showAI && (
-        <Box sx={aiOverlay}>
-          <Box sx={aiBox}>
-            <Typography>GYM AI</Typography>
-            <Button onClick={() => setShowAI(false)}>Cerrar</Button>
-            <ChatAssistant />
-          </Box>
-        </Box>
-      )}
-
-      {/* CREATE POST */}
-      {showCreatePost && (
-        <Box sx={overlayPro}>
-          <Box sx={modalPro}>
-            <Typography sx={titlePro}>Crear Post 🚀</Typography>
-
-            {file && (
-              <Box component="img" src={URL.createObjectURL(file)} sx={previewImage} />
-            )}
-
-            <Button component="label" sx={uploadBtn}>
-              Subir imagen
-              <input type="file" hidden onChange={(e) => setFile(e.target.files[0])} />
-            </Button>
-
-            <input
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              style={inputPro}
-            />
-
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button onClick={handleCreatePost} sx={postBtn}>
-                Publicar
-              </Button>
-              <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
-                Cancelar
-              </Button>
+          {showCreatePost && (
+            <Box sx={overlayPro}>
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={modalPro}>
+    
+                  <Typography sx={titlePro}>
+                    Crear Post 🚀
+                  </Typography>
+    
+                  {/* PREVIEW */}
+                  {file && (
+                    <Box
+                      component="img"
+                      src={URL.createObjectURL(file)}
+                      sx={previewImage}
+                    />
+                  )}
+    
+                  {/* INPUT FILE */}
+                  <Button
+                    variant="contained"
+                    component="label"
+                    sx={uploadBtn}
+                  >
+                    Subir imagen
+                    <input
+                      type="file"
+                      hidden
+                      onChange={(e) => setFile(e.target.files[0])}
+                    />
+                  </Button>
+    
+                  {/* CAPTION */}
+                  <input
+                    placeholder="¿Qué estás pensando?"
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    style={inputPro}
+                  />
+    
+                  {/* BOTONES */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <Button onClick={handleCreatePost} sx={postBtn}>
+                      Publicar
+                    </Button>
+    
+                    <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
+                      Cancelar
+                    </Button>
+                  </Box>
+    
+                </Box>
+              </motion.div>
             </Box>
+          )}
 
-          </Box>
-        </Box>
-      )}
-
-    </Box>
-  );
+  </Box>
+);
 }
 
 
