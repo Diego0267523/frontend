@@ -663,6 +663,6 @@ const cancelBtn = {
 
 const aiBox = { bgcolor: "#111", padding: 3 };
 
-}
+
 
 export default Home;
