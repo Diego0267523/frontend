@@ -37,8 +37,7 @@ import API_URL from "../config";
 function Home() {
   const [file, setFile] = useState(null);
   const [postCaption, setPostCaption] = useState("");
-
-  const { logout, user } = useContext(AuthContext);
+  const [isPosting, setIsPosting] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,6 +66,10 @@ const handleCreatePost = async () => {
     setSnackbar({ open: true, message: "Escribe una descripción", severity: "error" });
     return;
   }
+
+  // 🔹 Evitar múltiples clics
+  if (isPosting) return;
+  setIsPosting(true);
 
   try {
     const formData = new FormData();
@@ -107,18 +110,22 @@ const handleCreatePost = async () => {
     // 🔹 3️⃣ Refrescar feed desde backend para tener datos reales
     queryClient.invalidateQueries({ queryKey: ["feed"] });
 
-    // 🔹 4️⃣ Cerrar modal y limpiar
-    setShowCreatePost(false);
-    setFile(null);
-    setPostCaption("");
-
     // ✅ NOTIFICACIÓN DE ÉXITO
     setSnackbar({ open: true, message: "¡Post publicado exitosamente!", severity: "success" });
+
+    // 🔹 4️⃣ Cerrar modal y limpiar después de 800ms
+    setTimeout(() => {
+      setShowCreatePost(false);
+      setFile(null);
+      setPostCaption("");
+      setIsPosting(false);
+    }, 800);
 
   } catch (error) {
     console.error(error);
     // ❌ NOTIFICACIÓN DE ERROR
     setSnackbar({ open: true, message: "Error al publicar el post. Inténtalo de nuevo.", severity: "error" });
+    setIsPosting(false);
   }
 };
 
@@ -377,13 +384,13 @@ const handleScroll = useCallback((e) => {
     )}
 
           {showCreatePost && (
-            <Box sx={overlayPro}>
+            <Box sx={overlayPro} onClick={() => setShowCreatePost(false)}>
               <motion.div
                 initial={{ scale: 0.7, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={modalPro}>
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
     
                   <Typography sx={titlePro}>
                     Crear Post 🚀
@@ -422,11 +429,19 @@ const handleScroll = useCallback((e) => {
     
                   {/* BOTONES */}
                   <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                    <Button onClick={handleCreatePost} sx={postBtn}>
-                      Publicar
+                    <Button 
+                      onClick={handleCreatePost} 
+                      sx={postBtn}
+                      disabled={isPosting}
+                    >
+                      {isPosting ? "Publicando..." : "Publicar"}
                     </Button>
     
-                    <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
+                    <Button 
+                      onClick={() => setShowCreatePost(false)} 
+                      sx={cancelBtn}
+                      disabled={isPosting}
+                    >
                       Cancelar
                     </Button>
                   </Box>
