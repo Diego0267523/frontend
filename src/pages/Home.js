@@ -42,7 +42,7 @@ function Home() {
   ];
 
   const SidebarContent = () => (
-    <Box sx={{ width: 250, bgcolor: "#0f0f0f", height: "100%", p: 2 }}>
+    <Box sx={{ width: 250, bgcolor: "#0b0b0b", height: "100%", p: 2 }}>
 
       {/* PERFIL */}
       <motion.div whileHover={{ scale: 1.03 }}>
@@ -70,8 +70,8 @@ function Home() {
               }}
               sx={{
                 ...menuItemStyle,
-                color: isActive ? "#00ff88" : "#aaa",
-                bgcolor: isActive ? "rgba(0,255,136,0.1)" : "transparent",
+                color: isActive ? "#00ff88" : "#777",
+                bgcolor: isActive ? "rgba(0,255,136,0.08)" : "transparent",
                 borderLeft: isActive ? "3px solid #00ff88" : "3px solid transparent"
               }}
             >
@@ -88,9 +88,9 @@ function Home() {
   );
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#0f0f0f" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#000" }}>
 
-      {/* SIDEBAR DESKTOP */}
+      {/* SIDEBAR */}
       {!isMobile && <SidebarContent />}
 
       {/* MOBILE TOP */}
@@ -106,17 +106,29 @@ function Home() {
       <Drawer
         open={open}
         onClose={() => setOpen(false)}
-        PaperProps={{ sx: { backgroundColor: "#0f0f0f" } }}
+        PaperProps={{ sx: { backgroundColor: "#0b0b0b" } }}
       >
         <SidebarContent />
       </Drawer>
 
       {/* MAIN */}
-      <Box sx={{ flex: 1, p: isMobile ? 2 : 4, mt: isMobile ? 6 : 0 }}>
+      <Box sx={{ flex: 1, p: isMobile ? 1 : 3, mt: isMobile ? 6 : 0 }}>
 
-        {/* HERO */}
+        {/* 🔥 STORIES */}
+        <Box sx={storiesContainer}>
+          {[1,2,3,4,5].map((_,i) => (
+            <Box key={i} sx={storyItem}>
+              <Box sx={storyCircle} />
+              <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                user{i+1}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* 🔥 POST PRINCIPAL */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card sx={cardStyleHover}>
+          <Card sx={postCard}>
             <CardContent>
               <Typography sx={titleStyle}>💪 Rutina de hoy</Typography>
               <Typography sx={heroText}>Pecho + Tríceps</Typography>
@@ -127,39 +139,35 @@ function Home() {
           </Card>
         </motion.div>
 
-        {/* GRID */}
-        <Box sx={gridStyle(isMobile)}>
+        {/* 🔥 FEED */}
+        <Box sx={{ mt: 2 }}>
 
-          <Box>
-            <Card sx={cardStyleHover}>
-              <CardContent>
-                <Typography sx={titleStyle}>YOUR GYM</Typography>
-                <TrainingList />
-              </CardContent>
-            </Card>
+          <Card sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>YOUR GYM</Typography>
+              <TrainingList />
+            </CardContent>
+          </Card>
 
-            <Card sx={cardStyleHover}>
-              <CardContent>
-                <CreateTraining />
-              </CardContent>
-            </Card>
-          </Box>
+          <Card sx={postCard}>
+            <CardContent>
+              <CreateTraining />
+            </CardContent>
+          </Card>
 
           {!isMobile && (
-            <Box>
-              {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-                <Card key={i} sx={cardStyleHover}>
-                  <CardContent>
-                    <Typography sx={titleStyle}>{item}</Typography>
-                    <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
+            ["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+              <Card key={i} sx={postCard}>
+                <CardContent>
+                  <Typography sx={titleStyle}>{item}</Typography>
+                  <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+                </CardContent>
+              </Card>
+            ))
           )}
         </Box>
 
-        {/* AI MODAL FIXED */}
+        {/* AI */}
         {showAI && (
           <Box sx={aiOverlay}>
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
@@ -182,16 +190,35 @@ function Home() {
 }
 
 // 🎨 STYLES
-const cardStyleHover = {
+
+const postCard = {
   borderRadius: 4,
-  bgcolor: "#121212",
-  boxShadow: "0 0 30px rgba(0,255,136,0.08)",
+  bgcolor: "#111",
   mb: 2,
+  border: "1px solid rgba(255,255,255,0.05)",
   transition: "0.3s",
   '&:hover': {
-    boxShadow: "0 0 40px rgba(0,255,136,0.2)",
-    transform: "translateY(-3px)"
+    transform: "scale(1.01)"
   }
+};
+
+const storiesContainer = {
+  display: "flex",
+  gap: 2,
+  overflowX: "auto",
+  pb: 1,
+  mb: 2
+};
+
+const storyItem = {
+  textAlign: "center"
+};
+
+const storyCircle = {
+  width: 60,
+  height: 60,
+  borderRadius: "50%",
+  background: "linear-gradient(45deg,#00ff88,#00ccff)"
 };
 
 const titleStyle = {
@@ -256,13 +283,6 @@ const progressStyle = {
   mt: 1
 };
 
-const gridStyle = (isMobile) => ({
-  display: "grid",
-  gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
-  gap: 3,
-  mt: 3
-});
-
 const topBar = {
   position: "fixed",
   top: 0,
@@ -270,7 +290,7 @@ const topBar = {
   right: 0,
   p: 1,
   zIndex: 10,
-  bgcolor: "rgba(15,15,15,0.9)",
+  bgcolor: "rgba(0,0,0,0.9)",
   backdropFilter: "blur(10px)"
 };
 
