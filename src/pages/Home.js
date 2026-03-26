@@ -135,11 +135,9 @@ const handleCreatePost = async () => {
   // 🔥 FETCH POSTS (AQUÍ VA)
 const fetchPosts = async ({ pageParam = 1 }) => {
   try {
-    const response = await axios.get(`${API_URL}/api/posts?page=${pageParam}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      }
-    });
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await axios.get(`${API_URL}/api/posts?page=${pageParam}`, { headers });
     const { posts } = response.data; // Backend devuelve { success: true, posts: [...] }
     return {
       data: posts || [],
