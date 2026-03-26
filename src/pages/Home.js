@@ -37,14 +37,22 @@ function Home() {
       user: "DiegoFit",
       image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800",
       caption: "Día de pecho 💪🔥",
-      likes: 120
+      likes: 120,
+      time: "Hace 2h"
+    },
+    {
+      user: "GymBro",
+      image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=800",
+      caption: "No pain no gain 🧠",
+      likes: 98,
+      time: "Hace 5h"
     }
   ];
 
   return (
     <Box sx={{ display: "flex", bgcolor: "#050505", minHeight: "100vh" }}>
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR (NO TOCADO) */}
       {!isMobile && (
         <Box sx={sidebarStyle}>
           <Typography sx={logo}>GYM APP</Typography>
@@ -77,25 +85,33 @@ function Home() {
         <Box sx={sidebarStyle} />
       </Drawer>
 
-      {/* FEED */}
+      {/* 🔥 CENTRO MEJORADO */}
       <Box sx={feed}>
 
-        {/* STORIES */}
+        {/* STORIES MEJORADAS */}
         <Box sx={stories}>
-          {[1,2,3,4].map(i => (
-            <Box key={i} sx={story} />
+          {[1,2,3,4,5].map(i => (
+            <motion.div key={i} whileHover={{ scale: 1.1 }}>
+              <Box sx={storyWrapper}>
+                <Box sx={story} />
+                <Typography sx={storyText}>user{i}</Typography>
+              </Box>
+            </motion.div>
           ))}
         </Box>
 
-        {/* POSTS */}
+        {/* POSTS MEJORADOS */}
         {posts.map((post, i) => (
-          <motion.div key={i} whileHover={{ scale: 1.02 }}>
+          <motion.div key={post.user + i} whileHover={{ scale: 1.01 }}>
             <Card sx={card}>
               <CardContent>
 
                 <Box sx={postHeader}>
                   <Avatar sx={{ bgcolor: "#00ff88" }} />
-                  <Typography sx={username}>{post.user}</Typography>
+                  <Box>
+                    <Typography sx={username}>{post.user}</Typography>
+                    <Typography sx={time}>{post.time}</Typography>
+                  </Box>
                 </Box>
 
                 <Box component="img" src={post.image} sx={image} />
@@ -125,7 +141,7 @@ function Home() {
   );
 }
 
-/* 🎨 ESTILOS PRO */
+/* 🎨 SOLO SE MEJORÓ EL CENTRO */
 
 const sidebarStyle = {
   width: 240,
@@ -167,30 +183,41 @@ const logoutBtn = {
 
 const feed = {
   flex: 1,
-  maxWidth: 600,
+  maxWidth: 520,
   margin: "0 auto",
-  p: 2
+  paddingTop: 20
 };
 
 const stories = {
   display: "flex",
   gap: 2,
-  mb: 2
+  overflowX: "auto",
+  mb: 3
+};
+
+const storyWrapper = {
+  textAlign: "center"
 };
 
 const story = {
-  width: 60,
-  height: 60,
+  width: 65,
+  height: 65,
   borderRadius: "50%",
   background: "linear-gradient(45deg,#00ff88,#00ccff)",
-  boxShadow: "0 0 10px #00ff88"
+  boxShadow: "0 0 12px #00ff88"
+};
+
+const storyText = {
+  color: "#aaa",
+  fontSize: 12,
+  mt: 0.5
 };
 
 const card = {
   bgcolor: "#111",
   borderRadius: 4,
   mb: 2,
-  boxShadow: "0 0 15px rgba(0,255,136,0.2)"
+  boxShadow: "0 4px 20px rgba(0,0,0,0.5)"
 };
 
 const postHeader = {
@@ -205,15 +232,23 @@ const username = {
   fontWeight: "bold"
 };
 
+const time = {
+  color: "#777",
+  fontSize: 12
+};
+
 const image = {
   width: "100%",
+  height: 300,
+  objectFit: "cover",
   borderRadius: 10,
   marginTop: 10
 };
 
 const actions = {
   display: "flex",
-  gap: 1
+  gap: 1,
+  mt: 1
 };
 
 const likes = {
@@ -222,13 +257,15 @@ const likes = {
 };
 
 const caption = {
-  color: "#ccc"
+  color: "#ccc",
+  mt: 0.5
 };
 
 const topBar = {
   position: "fixed",
   width: "100%",
-  bgcolor: "#000"
+  bgcolor: "#000",
+  zIndex: 10
 };
 
 export default Home;
