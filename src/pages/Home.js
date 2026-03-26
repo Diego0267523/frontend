@@ -2,7 +2,7 @@
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import React, { useContext, useState, useCallback, memo, useRef } from "react";
+import React, { useContext, useState, useCallback, useRef } from "react";
 import PostCard from "../components/postCard";
 
 
@@ -249,6 +249,16 @@ const handleScroll = useCallback((e) => {
      </Box>
    );
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "grid", placeItems: "center", minHeight: "100vh", bgcolor: "#060a0f", color: "#fff" }}>
+        <Typography variant="h6">Cargando contenido... un momento, por favor.</Typography>
+      </Box>
+    );
+  }
+
+  const hasPosts = data?.pages?.some((page) => Array.isArray(page.data) && page.data.length > 0);
+
  return (
   <Box sx={{
     display: "flex",
@@ -330,8 +340,12 @@ const handleScroll = useCallback((e) => {
         </Box>
 
         {/* 🔥 POSTS REALES */}
-        {isLoading ? (
-          <Skeleton variant="rectangular" height={300} />
+        {!hasPosts ? (
+          <Card sx={postCard}>
+            <CardContent>
+              <Typography sx={{ color: "#fff" }}>No hay posts disponibles aún.</Typography>
+            </CardContent>
+          </Card>
         ) : (
           data.pages.map((page, i) =>
             page.data.map((post, j) => (
