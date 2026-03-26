@@ -313,7 +313,6 @@ const fetchPosts = async ({ pageParam = 1 }) => {
     const token = localStorage.getItem("token");
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const response = await axios.get(`${API_URL}/api/posts?page=${pageParam}`, { headers });
-    console.log("Response data:", response.data); // 🔥 DEBUG
     const { posts } = response.data; // Backend devuelve { success: true, posts: [...] }
     return {
       data: posts || [],

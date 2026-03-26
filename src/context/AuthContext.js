@@ -50,8 +50,12 @@ export function AuthProvider({ children }) {
       setUser(res.data);
 
     } catch (error) {
-        console.error("ERROR PROFILE:", error.response?.data || error.message);
+      console.error("ERROR PROFILE:", error.response?.data || error.message);
+      // Si el token es inválido, hacer logout automático
+      if (error.response?.status === 401) {
+        logout();
       }
+    }
   };
 
   // ==========================
