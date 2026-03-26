@@ -3,7 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import React, { useContext, useState, useCallback, memo, useRef } from "react";
-import PostCard from "../components/postCArd";
+import PostCard from "../components/postCard";
 
 
 import {
