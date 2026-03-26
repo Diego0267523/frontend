@@ -33,12 +33,14 @@ function Home() {
 
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
+  const [showAI, setShowAI] = useState(false);
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
     { label: "📈 Progreso", path: "/progreso" },
     { label: "🔥 Calorías", path: "/calorias" },
-    { label: "🎯 Objetivos", path: "/objetivos" }
+    { label: "🎯 Objetivos", path: "/objetivos" },
+    { label: "🤖 AI", action: () => setShowAI(true) }
   ];
 
   const posts = [
@@ -48,17 +50,26 @@ function Home() {
       caption: "Día de pecho 💪🔥",
       likes: 120,
       time: "Hace 2h"
+    },
+    {
+      user: "GymBro",
+      image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61",
+      caption: "No pain no gain 🧠",
+      likes: 98,
+      time: "Hace 5h"
     }
   ];
 
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
-      <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-        <Box sx={avatarStyle} />
-        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-          {user?.nombre || "Usuario"}
-        </Typography>
-      </Box>
+      <motion.div whileHover={{ scale: 1.05 }}>
+        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+          <Box sx={avatarStyle} />
+          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+            {user?.nombre || "Usuario"}
+          </Typography>
+        </Box>
+      </motion.div>
 
       <Box sx={{ flex: 1 }}>
         {menuItems.map((item, i) => {
@@ -67,7 +78,10 @@ function Home() {
           return (
             <motion.div key={i} whileHover={{ scale: 1.03 }}>
               <Box
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  if (item.path) navigate(item.path);
+                  if (item.action) item.action();
+                }}
                 sx={{
                   ...menuItemStyle,
                   bgcolor: isActive ? "#00ff8820" : "#151515",
@@ -93,7 +107,7 @@ function Home() {
       {/* SIDEBAR */}
       {!isMobile && <SidebarContent />}
 
-      {/* MOBILE TOPBAR */}
+      {/* TOPBAR MOBILE */}
       {isMobile && (
         <Box sx={topBar}>
           <IconButton onClick={() => setOpen(true)}>
@@ -106,11 +120,12 @@ function Home() {
         </Box>
       )}
 
+      {/* DRAWER IZQUIERDO */}
       <Drawer open={open} onClose={() => setOpen(false)}>
         <SidebarContent />
       </Drawer>
 
-      {/* RIGHT DRAWER MOBILE */}
+      {/* DRAWER DERECHO */}
       <Drawer
         anchor="right"
         open={openRight}
@@ -126,53 +141,57 @@ function Home() {
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
-            {[1,2,3,4].map((_,i) => (
-              <Box key={i} sx={storyItem}>
-                <Box sx={storyCircle} />
-                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                  user{i+1}
-                </Typography>
-              </Box>
+            {[1,2,3,4,5].map((_,i) => (
+              <motion.div key={i} whileHover={{ scale: 1.1 }}>
+                <Box sx={storyItem}>
+                  <Box sx={storyCircle} />
+                  <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                    user{i+1}
+                  </Typography>
+                </Box>
+              </motion.div>
             ))}
           </Box>
 
           {/* POSTS */}
           {posts.map((post, i) => (
-            <Card key={i} sx={postCard}>
-              <CardContent>
+            <motion.div key={i} whileHover={{ scale: 1.01 }}>
+              <Card sx={postCard}>
+                <CardContent>
 
-                <Box sx={headerStyle}>
-                  <Box sx={avatarStyle} />
-                  <Box>
-                    <Typography sx={username}>{post.user}</Typography>
-                    <Typography sx={time}>{post.time}</Typography>
+                  <Box sx={headerStyle}>
+                    <Box sx={avatarStyle} />
+                    <Box>
+                      <Typography sx={username}>{post.user}</Typography>
+                      <Typography sx={time}>{post.time}</Typography>
+                    </Box>
                   </Box>
-                </Box>
 
-                <Box component="img" src={post.image} sx={imageStyle} />
+                  <Box component="img" src={post.image} sx={imageStyle} />
 
-                <Box sx={actionsStyle}>
-                  <IconButton>
-                    <FavoriteIcon sx={{ color: "#aaa" }} />
-                  </IconButton>
-                  <IconButton>
-                    <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-                  </IconButton>
-                </Box>
+                  <Box sx={actionsStyle}>
+                    <IconButton>
+                      <FavoriteIcon sx={{ color: "#aaa" }} />
+                    </IconButton>
+                    <IconButton>
+                      <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+                    </IconButton>
+                  </Box>
 
-                <Typography sx={likes}>{post.likes} likes</Typography>
-                <Typography sx={caption}>
-                  <b>{post.user}</b> {post.caption}
-                </Typography>
+                  <Typography sx={likes}>{post.likes} likes</Typography>
+                  <Typography sx={caption}>
+                    <b>{post.user}</b> {post.caption}
+                  </Typography>
 
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
 
         </Box>
       </Box>
 
-      {/* DERECHA DESKTOP */}
+      {/* PANEL DERECHO DESKTOP */}
       {!isMobile && <RightPanel />}
 
     </Box>
@@ -248,15 +267,16 @@ const rightPanel = {
 };
 
 const postCard = {
-  background: "#111",
-  borderRadius: 12,
-  marginBottom: 20
+  bgcolor: "#111",
+  mb: 2,
+  borderRadius: 4
 };
 
 const headerStyle = {
   display: "flex",
+  alignItems: "center",
   gap: 10,
-  alignItems: "center"
+  mb: 1
 };
 
 const username = { color: "#fff", fontWeight: "bold" };
@@ -266,18 +286,19 @@ const imageStyle = {
   width: "100%",
   height: 300,
   objectFit: "cover",
-  marginTop: 10,
-  borderRadius: 10
+  borderRadius: 10,
+  marginTop: 10
 };
 
-const actionsStyle = { display: "flex", gap: 5 };
-const likes = { color: "#fff" };
-const caption = { color: "#ccc" };
+const actionsStyle = { display: "flex", gap: 1, mt: 1 };
+const likes = { color: "#fff", mt: 1 };
+const caption = { color: "#ccc", mt: 1 };
 
 const storiesContainer = {
   display: "flex",
-  gap: 15,
-  marginBottom: 20
+  gap: 2,
+  overflowX: "auto",
+  mb: 2
 };
 
 const storyItem = { textAlign: "center" };
@@ -289,45 +310,56 @@ const storyCircle = {
   background: "linear-gradient(45deg,#00ff88,#00ccff)"
 };
 
+const titleStyle = { color: "#00ff88" };
+
 const avatarStyle = {
   width: 40,
   height: 40,
   borderRadius: "50%",
-  background: "#00ff88"
+  bgcolor: "#00ff88"
 };
 
 const profileStyle = {
   display: "flex",
-  gap: 10,
-  marginBottom: 20,
+  gap: 2,
+  mb: 2,
   cursor: "pointer"
 };
 
 const menuItemStyle = {
-  padding: 10,
-  borderRadius: 10,
-  marginTop: 10,
-  cursor: "pointer"
+  mt: 2,
+  p: 1.5,
+  borderRadius: 3,
+  cursor: "pointer",
+  transition: "0.3s",
+  '&:hover': {
+    bgcolor: "#00ff8830",
+    color: "#00ff88"
+  }
 };
 
 const logoutStyle = {
-  marginTop: "auto",
-  background: "#00ff88",
-  color: "#000"
+  mt: "auto",
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
 };
 
-const progressStyle = { height: 6 };
-
-const titleStyle = { color: "#00ff88" };
+const progressStyle = { height: 8, mt: 1 };
 
 const topBar = {
   position: "fixed",
   top: 0,
-  width: "100%",
+  left: 0,
+  right: 0,
   display: "flex",
   justifyContent: "space-between",
+  alignItems: "center",
   background: "#000",
-  padding: 5,
+  padding: "5px 10px",
   zIndex: 10
 };
 
