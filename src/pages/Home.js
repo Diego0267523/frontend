@@ -133,13 +133,13 @@ function Home() {
 
       {/* 🔥 CENTRO */}
       <Box sx={centerContent(isMobile)}>
-              <Box
-                sx={{
-                width: "100%",
-                maxWidth: isMobile ? "100%" : 560,
-                mx: "auto"
-              }}
-      >
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 520, // 🔥 FIX PC
+            margin: "0 auto"
+          }}
+        >
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
@@ -257,15 +257,15 @@ const centerContent = (isMobile) => ({
   flex: 1,
   minWidth: 0,
   marginLeft: isMobile ? 0 : 250,
-  marginRight: isMobile ? 0 : 300,
+  marginRight: isMobile ? 0 : 280,
   display: "flex",
   justifyContent: "center",
-  alignItems: "flex-start",
   minHeight: "100vh",
-  paddingTop: isMobile ? 60 : 20,
-  paddingLeft: isMobile ? 12 : 20,
-  paddingRight: isMobile ? 12 : 20,
-  paddingBottom: 20
+  paddingTop: isMobile ? 65 : 20, // 🔥 FIX móvil
+  paddingLeft: isMobile ? 10 : 20,
+  paddingRight: isMobile ? 10 : 20,
+  paddingBottom: 20,
+  boxSizing: "border-box"
 });
 
 const rightPanel = {
@@ -298,9 +298,10 @@ const caption = { color: "#ccc", mt: 1 };
 
 const storiesContainer = {
   display: "flex",
-  gap: 2,
+  gap: 12,
   overflowX: "auto",
-  mb: 2
+  marginBottom: 16,
+  paddingBottom: 4
 };
 
 const storyItem = { textAlign: "center" };
