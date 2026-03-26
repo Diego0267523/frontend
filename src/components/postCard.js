@@ -1,4 +1,4 @@
-import { memo, useState, useContext } from "react";
+import { memo, useState, useContext, useEffect } from "react";
 import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -18,6 +18,13 @@ const PostCard = memo(({ post }) => {
   const [newComment, setNewComment] = useState("");
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
+
+  // 🔥 Actualizar estado cuando el post cambia (ej: infinite scroll)
+  useEffect(() => {
+    setLiked(post.liked || false);
+    setLikesCount(post.likes || 0);
+    setCommentsCount(post.commentsCount || 0);
+  }, [post.id, post.liked, post.likes, post.commentsCount]);
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";
