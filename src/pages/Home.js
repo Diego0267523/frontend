@@ -19,6 +19,8 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+
 import ChatAssistant from "../components/ChatAssistant";
 
 function Home() {
@@ -31,14 +33,12 @@ function Home() {
 
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
-  const [showAI, setShowAI] = useState(false);
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
     { label: "📈 Progreso", path: "/progreso" },
     { label: "🔥 Calorías", path: "/calorias" },
-    { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) }
+    { label: "🎯 Objetivos", path: "/objetivos" }
   ];
 
   const posts = [
@@ -48,26 +48,17 @@ function Home() {
       caption: "Día de pecho 💪🔥",
       likes: 120,
       time: "Hace 2h"
-    },
-    {
-      user: "GymBro",
-      image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61",
-      caption: "No pain no gain 🧠",
-      likes: 98,
-      time: "Hace 5h"
     }
   ];
 
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
-      <motion.div whileHover={{ scale: 1.05 }}>
-        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-          <Box sx={avatarStyle} />
-          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-            {user?.nombre || "Usuario"}
-          </Typography>
-        </Box>
-      </motion.div>
+      <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+        <Box sx={avatarStyle} />
+        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+          {user?.nombre || "Usuario"}
+        </Typography>
+      </Box>
 
       <Box sx={{ flex: 1 }}>
         {menuItems.map((item, i) => {
@@ -76,10 +67,7 @@ function Home() {
           return (
             <motion.div key={i} whileHover={{ scale: 1.03 }}>
               <Box
-                onClick={() => {
-                  if (item.path) navigate(item.path);
-                  if (item.action) item.action();
-                }}
+                onClick={() => navigate(item.path)}
                 sx={{
                   ...menuItemStyle,
                   bgcolor: isActive ? "#00ff8820" : "#151515",
@@ -102,10 +90,10 @@ function Home() {
   return (
     <Box sx={{ display: "flex", bgcolor: "#000" }}>
 
-      {/* SIDEBAR DESKTOP */}
+      {/* SIDEBAR */}
       {!isMobile && <SidebarContent />}
 
-      {/* TOPBAR MOBILE */}
+      {/* MOBILE TOPBAR */}
       {isMobile && (
         <Box sx={topBar}>
           <IconButton onClick={() => setOpen(true)}>
@@ -113,151 +101,113 @@ function Home() {
           </IconButton>
 
           <IconButton onClick={() => setOpenRight(true)}>
-            📊
+            <DashboardIcon sx={{ color: "#00ff88" }} />
           </IconButton>
         </Box>
       )}
 
-      {/* DRAWER IZQUIERDO */}
       <Drawer open={open} onClose={() => setOpen(false)}>
         <SidebarContent />
       </Drawer>
 
-      {/* DRAWER DERECHO */}
+      {/* RIGHT DRAWER MOBILE */}
       <Drawer
         anchor="right"
         open={openRight}
         onClose={() => setOpenRight(false)}
-        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 280 } }}
       >
-        <Box sx={{ p: 2 }}>
-          <Card sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                {[40,60,80,50,70,90,65].map((v,i)=>(
-                  <Box key={i} sx={{
-                    width: 10,
-                    height: v,
-                    bgcolor: "#00ff88",
-                    borderRadius: 2
-                  }} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-            <Card key={i} sx={postCard}>
-              <CardContent>
-                <Typography sx={titleStyle}>{item}</Typography>
-                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        <RightPanel />
       </Drawer>
 
-      {/* 🔥 CENTRO */}
+      {/* CENTRO */}
       <Box sx={centerContent(isMobile)}>
-        <Box sx={{ width: "100%", maxWidth: 500 }}>
+        <Box sx={feedContainer}>
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
-            {[1,2,3,4,5].map((_,i) => (
-              <motion.div key={i} whileHover={{ scale: 1.1 }}>
-                <Box sx={storyItem}>
-                  <Box sx={storyCircle} />
-                  <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                    user{i+1}
-                  </Typography>
-                </Box>
-              </motion.div>
+            {[1,2,3,4].map((_,i) => (
+              <Box key={i} sx={storyItem}>
+                <Box sx={storyCircle} />
+                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                  user{i+1}
+                </Typography>
+              </Box>
             ))}
           </Box>
 
           {/* POSTS */}
           {posts.map((post, i) => (
-            <motion.div key={i} whileHover={{ scale: 1.01 }}>
-              <Card sx={postCard}>
-                <CardContent>
+            <Card key={i} sx={postCard}>
+              <CardContent>
 
-                  <Box sx={headerStyle}>
-                    <Box sx={avatarStyle} />
-                    <Box>
-                      <Typography sx={username}>{post.user}</Typography>
-                      <Typography sx={time}>{post.time}</Typography>
-                    </Box>
+                <Box sx={headerStyle}>
+                  <Box sx={avatarStyle} />
+                  <Box>
+                    <Typography sx={username}>{post.user}</Typography>
+                    <Typography sx={time}>{post.time}</Typography>
                   </Box>
+                </Box>
 
-                  <Box component="img" src={post.image} sx={imageStyle} />
+                <Box component="img" src={post.image} sx={imageStyle} />
 
-                  <Box sx={actionsStyle}>
-                    <IconButton>
-                      <FavoriteIcon sx={{ color: "#aaa" }} />
-                    </IconButton>
-                    <IconButton>
-                      <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-                    </IconButton>
-                  </Box>
+                <Box sx={actionsStyle}>
+                  <IconButton>
+                    <FavoriteIcon sx={{ color: "#aaa" }} />
+                  </IconButton>
+                  <IconButton>
+                    <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+                  </IconButton>
+                </Box>
 
-                  <Typography sx={likes}>{post.likes} likes</Typography>
-                  <Typography sx={caption}>
-                    <b>{post.user}</b> {post.caption}
-                  </Typography>
+                <Typography sx={likes}>{post.likes} likes</Typography>
+                <Typography sx={caption}>
+                  <b>{post.user}</b> {post.caption}
+                </Typography>
 
-                </CardContent>
-              </Card>
-            </motion.div>
+              </CardContent>
+            </Card>
           ))}
 
         </Box>
       </Box>
 
       {/* DERECHA DESKTOP */}
-      {!isMobile && (
-        <Box sx={rightPanel}>
-          <Card sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-                {[40,60,80,50,70,90,65].map((v,i)=>(
-                  <Box key={i} sx={{
-                    width: 10,
-                    height: v,
-                    bgcolor: "#00ff88",
-                    borderRadius: 2
-                  }} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-            <Card key={i} sx={postCard}>
-              <CardContent>
-                <Typography sx={titleStyle}>{item}</Typography>
-                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      )}
-
-      {/* AI */}
-      {showAI && (
-        <Box sx={aiOverlay}>
-          <Box sx={aiBox}>
-            <Typography sx={titleStyle}>GYM AI</Typography>
-            <Button onClick={() => setShowAI(false)}>Cerrar</Button>
-            <ChatAssistant />
-          </Box>
-        </Box>
-      )}
+      {!isMobile && <RightPanel />}
 
     </Box>
   );
 }
+
+/* 🔥 PANEL DERECHO */
+const RightPanel = () => (
+  <Box sx={rightPanel}>
+    <Card sx={postCard}>
+      <CardContent>
+        <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+          {[40,60,80,50,70,90,65].map((v,i)=>(
+            <Box key={i} sx={{
+              width: 10,
+              height: v,
+              bgcolor: "#00ff88",
+              borderRadius: 2
+            }} />
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+
+    {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+      <Card key={i} sx={postCard}>
+        <CardContent>
+          <Typography sx={titleStyle}>{item}</Typography>
+          <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+        </CardContent>
+      </Card>
+    ))}
+  </Box>
+);
 
 /* 🎨 STYLES */
 
@@ -275,26 +225,40 @@ const sidebarStyle = {
 
 const centerContent = (isMobile) => ({
   marginLeft: isMobile ? 0 : 250,
-  marginRight: isMobile ? 0 : 300,
+  marginRight: isMobile ? 0 : 280,
   display: "flex",
   justifyContent: "center",
-  minHeight: "100vh",
-  paddingTop: isMobile ? 70 : 20
+  width: "100%",
+  paddingTop: isMobile ? 60 : 20
 });
 
+const feedContainer = {
+  width: "100%",
+  maxWidth: 500
+};
+
 const rightPanel = {
-  width: 300,
-  height: "100vh",
+  width: 280,
   position: "fixed",
   right: 0,
   top: 0,
-  p: 2,
-  bgcolor: "#0b0b0b"
+  height: "100vh",
+  padding: 16,
+  backgroundColor: "#0b0b0b"
 };
 
-const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
+const postCard = {
+  background: "#111",
+  borderRadius: 12,
+  marginBottom: 20
+};
 
-const headerStyle = { display: "flex", alignItems: "center", gap: 10, mb: 1 };
+const headerStyle = {
+  display: "flex",
+  gap: 10,
+  alignItems: "center"
+};
+
 const username = { color: "#fff", fontWeight: "bold" };
 const time = { color: "#777", fontSize: 12 };
 
@@ -302,19 +266,18 @@ const imageStyle = {
   width: "100%",
   height: 300,
   objectFit: "cover",
-  borderRadius: 10,
-  marginTop: 10
+  marginTop: 10,
+  borderRadius: 10
 };
 
-const actionsStyle = { display: "flex", gap: 1, mt: 1 };
-const likes = { color: "#fff", mt: 1 };
-const caption = { color: "#ccc", mt: 1 };
+const actionsStyle = { display: "flex", gap: 5 };
+const likes = { color: "#fff" };
+const caption = { color: "#ccc" };
 
 const storiesContainer = {
   display: "flex",
-  gap: 2,
-  overflowX: "auto",
-  mb: 2
+  gap: 15,
+  marginBottom: 20
 };
 
 const storyItem = { textAlign: "center" };
@@ -326,45 +289,36 @@ const storyCircle = {
   background: "linear-gradient(45deg,#00ff88,#00ccff)"
 };
 
-const titleStyle = { color: "#00ff88" };
-
 const avatarStyle = {
   width: 40,
   height: 40,
   borderRadius: "50%",
-  bgcolor: "#00ff88"
+  background: "#00ff88"
 };
 
 const profileStyle = {
   display: "flex",
-  gap: 2,
-  mb: 2,
+  gap: 10,
+  marginBottom: 20,
   cursor: "pointer"
 };
 
 const menuItemStyle = {
-  mt: 2,
-  p: 1.5,
-  borderRadius: 3,
-  cursor: "pointer",
-  transition: "0.3s",
-  '&:hover': {
-    bgcolor: "#00ff8830",
-    color: "#00ff88"
-  }
+  padding: 10,
+  borderRadius: 10,
+  marginTop: 10,
+  cursor: "pointer"
 };
 
 const logoutStyle = {
-  mt: "auto",
-  bgcolor: "#00ff88",
-  color: "#000",
-  fontWeight: "bold",
-  '&:hover': {
-    bgcolor: "#00cc6a"
-  }
+  marginTop: "auto",
+  background: "#00ff88",
+  color: "#000"
 };
 
-const progressStyle = { height: 8, mt: 1 };
+const progressStyle = { height: 6 };
+
+const titleStyle = { color: "#00ff88" };
 
 const topBar = {
   position: "fixed",
@@ -372,19 +326,9 @@ const topBar = {
   width: "100%",
   display: "flex",
   justifyContent: "space-between",
-  bgcolor: "#000",
+  background: "#000",
+  padding: 5,
   zIndex: 10
 };
-
-const aiOverlay = {
-  position: "fixed",
-  inset: 0,
-  background: "#000",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center"
-};
-
-const aiBox = { bgcolor: "#111", padding: 3 };
 
 export default Home;
