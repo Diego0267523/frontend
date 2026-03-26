@@ -2,6 +2,9 @@ import React, { useContext, useState, useCallback, memo } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import React, { useContext, useState, useCallback, memo, useRef } from "react";
+import postCard from "../components/postCArd";
+
 
 import {
   Typography,
@@ -77,7 +80,7 @@ function Home() {
       await axios.post("https://TU_BACKEND/api/posts", formData);
   
       // 🔥 refrescar feed
-      queryClient.invalidateQueries(["feed"]);
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
   
       // cerrar modal
       setShowCreatePost(false);
@@ -108,23 +111,22 @@ function Home() {
     // =======================
   // 🔹 SCROLL DETECCIÓN
   // =======================
-  let scrollTimeout = null;
+ const scrollTimeout = useRef(null);
 
-  const handleScroll = useCallback((e) => {
-    if (scrollTimeout) return;
+const handleScroll = useCallback((e) => {
+  if (scrollTimeout.current) return;
 
-    scrollTimeout = setTimeout(() => {
-      scrollTimeout = null;
+  scrollTimeout.current = setTimeout(() => {
+    scrollTimeout.current = null;
 
-      const bottom =
-        e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+    const bottom =
+      e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
 
-      // 🔥 Carga más posts
-      if (bottom && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    }, 200);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+    if (bottom && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, 200);
+}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
@@ -147,51 +149,6 @@ function Home() {
       }
     });
   }
-
-  // =======================
-  // 🔹 COMPONENTE POST
-  // =======================
-  const PostCard = memo(({ post }) => (
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-    >
-      <Card sx={postCard}>
-        <CardContent>
-
-          {/* 🔹 Header del post */}
-          <Box sx={headerStyle}>
-            <Box sx={avatarStyle} />
-            <Box>
-              <Typography sx={username}>{post.user}</Typography>
-              <Typography sx={time}>{post.time}</Typography>
-            </Box>
-          </Box>
-
-          {/* 🔹 Imagen */}
-          <Box component="img" src={post.image} sx={imageStyle} />
-
-          {/* 🔹 Acciones */}
-          <Box sx={actionsStyle}>
-            <IconButton>
-              <FavoriteIcon sx={{ color: "#aaa" }} />
-            </IconButton>
-            <IconButton>
-              <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-            </IconButton>
-          </Box>
-
-          {/* 🔹 Texto */}
-          <Typography sx={likes}>{post.likes} likes</Typography>
-          <Typography sx={caption}>
-            <b>{post.user}</b> {post.caption}
-          </Typography>
-
-        </CardContent>
-      </Card>
-    </motion.div>
-  ));
 
 
  
