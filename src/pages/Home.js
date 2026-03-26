@@ -324,32 +324,68 @@ function Home() {
           </Box>
         </Box>
       )}
+
+      {/* 🔹 MODAL CREAR POST */}
+
       {showCreatePost && (
-  <Box sx={aiOverlay}>
-    <Box sx={aiBox}>
+        <Box sx={overlayPro}>
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Box sx={modalPro}>
 
-      <Typography sx={titleStyle}>Crear Post</Typography>
+              <Typography sx={titlePro}>
+                Crear Post 🚀
+              </Typography>
 
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+              {/* PREVIEW */}
+              {file && (
+                <Box
+                  component="img"
+                  src={URL.createObjectURL(file)}
+                  sx={previewImage}
+                />
+              )}
 
-      <input
-        type="text"
-        placeholder="Escribe algo..."
-        value={caption}
-        onChange={(e) => setCaption(e.target.value)}
-      />
+              {/* INPUT FILE */}
+              <Button
+                variant="contained"
+                component="label"
+                sx={uploadBtn}
+              >
+                Subir imagen
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+              </Button>
 
-      <Button onClick={handleCreatePost}>
-        Publicar
-      </Button>
+              {/* CAPTION */}
+              <input
+                placeholder="¿Qué estás pensando?"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                style={inputPro}
+              />
 
-      <Button onClick={() => setShowCreatePost(false)}>
-        Cancelar
-      </Button>
+              {/* BOTONES */}
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Button onClick={handleCreatePost} sx={postBtn}>
+                  Publicar
+                </Button>
 
-    </Box>
-  </Box>
-)}
+                <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
+                  Cancelar
+                </Button>
+              </Box>
+
+            </Box>
+          </motion.div>
+        </Box>
+      )}
 
     </Box>
   );
@@ -362,9 +398,6 @@ function Home() {
 const sidebarStyle = {
   width: 250,
   height: "100vh",
-  position: "fixed",
-  left: 0,
-  top: 0,
   bgcolor: "#0b0b0b",
   p: 2,
   display: "flex",
