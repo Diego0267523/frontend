@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 
+
 import { AuthContext } from "./context/AuthContext";
 
 function App() {

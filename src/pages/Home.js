@@ -52,12 +52,7 @@ function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
 
 
-  // 🔥 FETCH PAGINADO REAL
-  const fetchPosts = async ({ pageParam = 1 }) => {
-    const { data } = await axios.get(
-      `https://jsonplaceholder.typicode.com/photos?_limit=5&_page=${pageParam}`
-    );
-
+  
     return {
       data: data.map((item, i) => ({
         user: "User" + (i + pageParam * 5),
@@ -70,30 +65,66 @@ function Home() {
     };
   };
 
-   const handleCreatePost = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("caption", caption);
-      formData.append("user_id", user?.id);
-  
-      await axios.post("https://TU_BACKEND/api/posts", formData);
-  
-      // 🔥 refrescar feed
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-  
-      // cerrar modal
-      setShowCreatePost(false);
-  
-      // limpiar
-      setFile(null);
-      setCaption("");
-  
-    } catch (error) {
-      console.error(error);
-    }
-  };
+const handleCreatePost = async () => {
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("caption", caption);
 
+    // 🔹 1️⃣ Crear post en backend
+    await axios.post(`${API_URL}/api/posts`, formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+
+    // 🔹 2️⃣ Actualizar feed instantáneo (optimistic update)
+    queryClient.setQueryData(["feed"], (oldData) => {
+      if (!oldData) return oldData;
+
+      const newPost = {
+        user: user.nombre,
+        image: URL.createObjectURL(file),
+        caption: caption,
+        likes: 0,
+        time: "Ahora"
+      };
+
+      return {
+        ...oldData,
+        pages: [
+          {
+            ...oldData.pages[0],
+            data: [newPost, ...oldData.pages[0].data]
+          },
+          ...oldData.pages.slice(1)
+        ]
+      };
+    });
+
+    // 🔹 3️⃣ Refrescar feed desde backend para tener datos reales
+    queryClient.invalidateQueries({ queryKey: ["feed"] });
+
+    // 🔹 4️⃣ Cerrar modal y limpiar
+    setShowCreatePost(false);
+    setFile(null);
+    setCaption("");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+  // 🔥 FETCH POSTS (AQUÍ VA)
+const fetchPosts = async ({ pageParam = 1 }) => {
+  const { data } = await axios.get(`${API_URL}/api/posts?page=${pageParam}`);
+
+  return {
+    data: data,
+    nextPage: pageParam + 1
+  };
+};
   // 🔥 INFINITE QUERY
   const {
     data,
