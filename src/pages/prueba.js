@@ -35,11 +35,13 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 
+
 // =======================
 // 🔹 COMPONENTE PRINCIPAL
 // =======================
 function Home() {
-
+  const [file, setFile] = useState(null);
+  const [caption, setCaption] = useState("");
   // 🔹 Contexto de usuario
   const { logout, user } = useContext(AuthContext);
 
@@ -60,6 +62,7 @@ function Home() {
   const [open, setOpen] = useState(false); // sidebar izquierdo
   const [openRight, setOpenRight] = useState(false); // panel derecho
   const [showAI, setShowAI] = useState(false); // modal AI
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   const [visiblePosts, setVisiblePosts] = useState(2); // (no usado)
   const [loading, setLoading] = useState(false); // (no usado)
@@ -83,6 +86,29 @@ function Home() {
       nextPage: pageParam + 1
     };
   };
+  const handleCreatePost = async () => {
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("caption", caption);
+    formData.append("user_id", user?.id);
+
+    await axios.post("https://TU_BACKEND/api/posts", formData);
+
+    // 🔥 refrescar feed
+    queryClient.invalidateQueries(["feed"]);
+
+    // cerrar modal
+    setShowCreatePost(false);
+
+    // limpiar
+    setFile(null);
+    setCaption("");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   // =======================
   // 🔹 INFINITE SCROLL (React Query)
@@ -129,13 +155,14 @@ function Home() {
     { label: "📈 Progreso", path: "/progreso" },
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) }
+    { label: "🤖 AI", action: () => setShowAI(true) },
+    { label: "➕ Crear", action: () => setShowCreatePost(true) }
   ];
 
   // =======================
   // 🔹 PREFETCH (optimización)
   // =======================
-  const prefetchProgreso = () => {
+  function prefetchProgreso() {
     queryClient.prefetchQuery({
       queryKey: ["progreso"],
       queryFn: async () => {
@@ -143,7 +170,7 @@ function Home() {
         return data;
       }
     });
-  };
+  }
 
   // =======================
   // 🔹 COMPONENTE POST
@@ -263,15 +290,27 @@ function Home() {
       </Drawer>
 
       {/* 🔹 FEED CENTRAL */}
-      <Box onScroll={handleScroll} sx={{ flex: 1, overflowY: "auto" }}>
+      <Box 
+          onScroll={handleScroll} 
+          sx={{ 
+            flex: 1, 
+            overflowY: "auto",
+            marginLeft: isMobile ? 0 : 250 // 🔥 CLAVE
+          }}
+        >
         <Box sx={{ maxWidth: 500, margin: "auto" }}>
 
           {/* 🔹 Stories */}
-          <Box sx={storiesContainer}>
-            {[1,2,3].map((_,i)=>(
-              <Box key={i}>user{i}</Box>
-            ))}
-          </Box>
+            <Box sx={storiesContainer}>
+              {[1,2,3,4,5].map((_,i)=>(
+                <Box key={i} sx={storyItem}>
+                  <Box sx={storyCircle} />
+                  <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                    user{i}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
 
           {/* 🔹 POSTS */}
           {isLoading ? (
@@ -298,6 +337,68 @@ function Home() {
         </Box>
       )}
 
+      {/* 🔹 MODAL CREAR POST */}
+
+      {showCreatePost && (
+        <Box sx={overlayPro}>
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Box sx={modalPro}>
+
+              <Typography sx={titlePro}>
+                Crear Post 🚀
+              </Typography>
+
+              {/* PREVIEW */}
+              {file && (
+                <Box
+                  component="img"
+                  src={URL.createObjectURL(file)}
+                  sx={previewImage}
+                />
+              )}
+
+              {/* INPUT FILE */}
+              <Button
+                variant="contained"
+                component="label"
+                sx={uploadBtn}
+              >
+                Subir imagen
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+              </Button>
+
+              {/* CAPTION */}
+              <input
+                placeholder="¿Qué estás pensando?"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                style={inputPro}
+              />
+
+              {/* BOTONES */}
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Button onClick={handleCreatePost} sx={postBtn}>
+                  Publicar
+                </Button>
+
+                <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
+                  Cancelar
+                </Button>
+              </Box>
+
+            </Box>
+          </motion.div>
+        </Box>
+      )}
+
     </Box>
   );
 }
@@ -309,13 +410,14 @@ function Home() {
 const sidebarStyle = {
   width: 250,
   height: "100vh",
-  position: "fixed",
+  position: "fixed", // 🔥 CLAVE
   left: 0,
   top: 0,
   bgcolor: "#0b0b0b",
   p: 2,
   display: "flex",
-  flexDirection: "column"
+  flexDirection: "column",
+  zIndex: 100
 };
 
 const centerContent = (isMobile) => ({
@@ -432,6 +534,81 @@ const aiOverlay = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center"
+};
+
+// 🔥 MODAL CREAR POST (ESTILO PRO)
+
+const overlayPro = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.85)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 999
+};
+
+const modalPro = {
+  width: 350,
+  bgcolor: "#111",
+  borderRadius: 4,
+  p: 3,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  boxShadow: "0 0 30px #00ff8840"
+};
+
+const titlePro = {
+  color: "#00ff88",
+  fontWeight: "bold",
+  mb: 2,
+  fontSize: 20
+};
+
+const previewImage = {
+  width: "100%",
+  height: 200,
+  objectFit: "cover",
+  borderRadius: 10,
+  marginBottom: 10
+};
+
+const uploadBtn = {
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  mt: 1,
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const inputPro = {
+  width: "100%",
+  marginTop: "10px",
+  padding: "10px",
+  borderRadius: "8px",
+  border: "none",
+  outline: "none",
+  background: "#222",
+  color: "#fff"
+};
+
+const postBtn = {
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  flex: 1,
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const cancelBtn = {
+  bgcolor: "#222",
+  color: "#fff",
+  flex: 1
 };
 
 const aiBox = { bgcolor: "#111", padding: 3 };
