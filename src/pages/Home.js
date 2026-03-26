@@ -163,7 +163,11 @@ function Home() {
 
       {/* 🔥 CENTRO */}
       <Box sx={centerContent(isMobile)}>
-        <Box sx={{ width: "100%", maxWidth: 500 }}>
+        <Box sx={{
+          width: "100%",
+          maxWidth: 500,
+          margin: "0 auto"
+        }}>
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
@@ -281,8 +285,11 @@ const centerContent = (isMobile) => ({
   marginRight: isMobile ? 0 : 300,
   display: "flex",
   justifyContent: "center",
+  alignItems: "flex-start",
   minHeight: "100vh",
-  paddingTop: isMobile ? 70 : 20
+  paddingTop: isMobile ? 55 : 20,
+  paddingLeft: isMobile ? 10 : 20,
+  paddingRight: isMobile ? 10 : 20
 });
 
 const rightPanel = {
