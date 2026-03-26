@@ -102,7 +102,7 @@ function Home() {
   );
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "#000", width: "100%", overflowX: "hidden" }}>
+    <Box sx={{ display: "flex", bgcolor: "#000", overflowX: "hidden" }}>
 
       {!isMobile && <SidebarContent />}
 
@@ -133,7 +133,13 @@ function Home() {
 
       {/* 🔥 CENTRO */}
       <Box sx={centerContent(isMobile)}>
-        <Box sx={{ width: "100%", maxWidth: 500, margin: "0 auto" }}>
+              <Box
+                sx={{
+                width: "100%",
+                maxWidth: isMobile ? "100%" : 560,
+                mx: "auto"
+              }}
+      >
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
@@ -251,12 +257,15 @@ const centerContent = (isMobile) => ({
   flex: 1,
   minWidth: 0,
   marginLeft: isMobile ? 0 : 250,
-  marginRight: isMobile ? 0 : 280,
+  marginRight: isMobile ? 0 : 300,
   display: "flex",
   justifyContent: "center",
-  width: "100%",
+  alignItems: "flex-start",
+  minHeight: "100vh",
   paddingTop: isMobile ? 60 : 20,
-  boxSizing: "border-box"
+  paddingLeft: isMobile ? 12 : 20,
+  paddingRight: isMobile ? 12 : 20,
+  paddingBottom: 20
 });
 
 const rightPanel = {
