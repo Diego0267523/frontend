@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useCallback, memo } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -14,7 +14,7 @@ import {
   Drawer,
   useTheme,
   useMediaQuery,
-  Skeleton // ✅ NUEVO
+  Skeleton
 } from "@mui/material";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -36,9 +36,31 @@ function Home() {
   const [openRight, setOpenRight] = useState(false);
   const [showAI, setShowAI] = useState(false);
 
-  // 🔥 NUEVO (lazy + loading)
   const [visiblePosts, setVisiblePosts] = useState(2);
   const [loading, setLoading] = useState(false);
+
+  // 🔥 THROTTLE + MEMO
+  let scrollTimeout = null;
+
+  const handleScroll = useCallback((e) => {
+    if (scrollTimeout) return;
+
+    scrollTimeout = setTimeout(() => {
+      scrollTimeout = null;
+
+      const bottom =
+        e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+
+      if (bottom && !loading) {
+        setLoading(true);
+
+        setTimeout(() => {
+          setVisiblePosts((prev) => prev + 2);
+          setLoading(false);
+        }, 1000);
+      }
+    }, 200);
+  }, [loading]);
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
@@ -65,20 +87,51 @@ function Home() {
     }
   ];
 
-  // 🔥 SCROLL INFINITO
-  const handleScroll = (e) => {
-    const bottom =
-      e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+  // 🔥 POST MEMOIZADO
+  const PostCard = memo(({ post }) => (
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card sx={postCard}>
+        <CardContent>
 
-    if (bottom && !loading) {
-      setLoading(true);
+          <Box sx={headerStyle}>
+            <Box sx={avatarStyle} />
+            <Box>
+              <Typography sx={username}>{post.user}</Typography>
+              <Typography sx={time}>{post.time}</Typography>
+            </Box>
+          </Box>
 
-      setTimeout(() => {
-        setVisiblePosts((prev) => prev + 2);
-        setLoading(false);
-      }, 1000);
-    }
-  };
+          <Box
+            component="img"
+            src={post.image}
+            loading="lazy"
+            sx={imageStyle}
+          />
+
+          <Box sx={actionsStyle}>
+            <IconButton>
+              <FavoriteIcon sx={{ color: "#aaa" }} />
+            </IconButton>
+            <IconButton>
+              <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+            </IconButton>
+          </Box>
+
+          <Typography sx={likes}>{post.likes} likes</Typography>
+          <Typography sx={caption}>
+            <b>{post.user}</b> {post.caption}
+          </Typography>
+
+        </CardContent>
+      </Card>
+    </motion.div>
+  ));
 
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
@@ -180,16 +233,12 @@ function Home() {
       </Box>
     </Drawer>
 
-    {/* 🔥 CENTRO CON SCROLL + LAZY */}
-    <Box
-      onScroll={handleScroll}
-      sx={{
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        overflowY: "auto"
-      }}
-    >
+    <Box onScroll={handleScroll} sx={{
+      flex: 1,
+      display: "flex",
+      justifyContent: "center",
+      overflowY: "auto"
+    }}>
       <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
 
         <Box sx={storiesContainer}>
@@ -205,49 +254,10 @@ function Home() {
           ))}
         </Box>
 
-        {/* POSTS CON ANIMACIÓN */}
         {posts.slice(0, visiblePosts).map((post, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.01 }}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card sx={postCard}>
-              <CardContent>
-
-                <Box sx={headerStyle}>
-                  <Box sx={avatarStyle} />
-                  <Box>
-                    <Typography sx={username}>{post.user}</Typography>
-                    <Typography sx={time}>{post.time}</Typography>
-                  </Box>
-                </Box>
-
-                <Box component="img" src={post.image} sx={imageStyle} />
-
-                <Box sx={actionsStyle}>
-                  <IconButton>
-                    <FavoriteIcon sx={{ color: "#aaa" }} />
-                  </IconButton>
-                  <IconButton>
-                    <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-                  </IconButton>
-                </Box>
-
-                <Typography sx={likes}>{post.likes} likes</Typography>
-                <Typography sx={caption}>
-                  <b>{post.user}</b> {post.caption}
-                </Typography>
-
-              </CardContent>
-            </Card>
-          </motion.div>
+          <PostCard key={i} post={post} />
         ))}
 
-        {/* 🔥 SKELETON LOADING */}
         {loading && (
           <Card sx={postCard}>
             <CardContent>
