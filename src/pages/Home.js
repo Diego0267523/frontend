@@ -29,6 +29,8 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 function Home() {
+  const [file, setFile] = useState(null);
+const [caption, setCaption] = useState("");
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,6 +161,30 @@ function Home() {
       </Card>
     </motion.div>
   ));
+
+   const handleCreatePost = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("caption", caption);
+      formData.append("user_id", user?.id);
+  
+      await axios.post("https://TU_BACKEND/api/posts", formData);
+  
+      // 🔥 refrescar feed
+      queryClient.invalidateQueries(["feed"]);
+  
+      // cerrar modal
+      setShowCreatePost(false);
+  
+      // limpiar
+      setFile(null);
+      setCaption("");
+  
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
