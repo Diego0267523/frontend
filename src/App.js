@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
+import Feed from "./pages/Feed";
+import Stories from "./pages/Stories";
 
 
 import { AuthContext } from "./context/AuthContext";
@@ -27,7 +29,9 @@ function App() {
         ) : (
           <>
             <Route path="/" element={<Home />} />
-            <Route path="/profile" element={<Profile />} /> {/* 🔥 AÑADIDO */}
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/stories" element={<Stories />} />
           </>
         )}
 

@@ -536,7 +536,7 @@ const handleScroll = useCallback((e) => {
           {/* Historias de otros usuarios */}
           {stories && [...new Set(stories.map(s => s.nombre))].map((userName, i) => {
             const userStory = stories.find(s => s.nombre === userName);
-            const profileImage = userStory?.profile_image || userStory?.avatar || userStory?.image_url;
+            const profileImage = userStory?.avatarUrl || userStory?.image_url;
             const ringColor = getStoryRingColor(userName);
             return (
               <motion.div key={i} whileHover={{ scale: 1.1 }}>

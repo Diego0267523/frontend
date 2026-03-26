@@ -11,6 +11,7 @@ import {
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ProfileAvatar from "../components/ProfileAvatar";
 
 function Profile() {
   const { user } = useContext(AuthContext);
@@ -64,9 +65,7 @@ function Profile() {
             textAlign: { xs: "center", sm: "left" }
           }}
         >
-          <Avatar sx={{ width: 70, height: 70, bgcolor: "#00ff88" }}>
-            {user.nombre?.[0]}
-          </Avatar>
+          <ProfileAvatar size={70} />
 
           <Box>
             <Typography sx={nameStyle}>
