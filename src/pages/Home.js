@@ -85,8 +85,8 @@ const handleCreatePost = async () => {
       if (!oldData) return oldData;
 
       const newPost = {
-        user: user?.nombre || "Usuario",
-        image: URL.createObjectURL(file),
+        nombre: user?.nombre || "Usuario",
+        image_url: URL.createObjectURL(file),
         caption: postCaption,
         likes: 0,
         time: "Ahora"
@@ -126,9 +126,10 @@ const handleCreatePost = async () => {
   // 🔥 FETCH POSTS (AQUÍ VA)
 const fetchPosts = async ({ pageParam = 1 }) => {
   try {
-    const { data } = await axios.get(`${API_URL}/api/posts?page=${pageParam}`);
+    const response = await axios.get(`${API_URL}/api/posts?page=${pageParam}`);
+    const { posts } = response.data; // Backend devuelve { success: true, posts: [...] }
     return {
-      data: data || [],
+      data: posts || [],
       nextPage: pageParam + 1
     };
   } catch (error) {

@@ -19,15 +19,15 @@ const PostCard = memo(({ post }) => {
             <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#00ff88" }} />
             <Box>
               <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                {post.user}
+                {post.nombre || post.user || "Usuario"}
               </Typography>
               <Typography sx={{ color: "#777", fontSize: 12 }}>
-                {post.time}
+                {post.time || "Hace poco"}
               </Typography>
             </Box>
           </Box>
 
-          <Box component="img" src={post.image} sx={{
+          <Box component="img" src={post.image_url || post.image} sx={{
             width: "100%",
             height: 300,
             objectFit: "cover",
@@ -45,11 +45,11 @@ const PostCard = memo(({ post }) => {
           </Box>
 
           <Typography sx={{ color: "#fff" }}>
-            {post.likes} likes
+            {post.likes || 0} likes
           </Typography>
 
           <Typography sx={{ color: "#ccc" }}>
-            <b>{post.user}</b> {post.caption}
+            <b>{post.nombre || post.user || "Usuario"}</b> {post.caption}
           </Typography>
 
         </CardContent>
