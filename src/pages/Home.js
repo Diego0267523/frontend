@@ -19,8 +19,6 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-
 import ChatAssistant from "../components/ChatAssistant";
 
 function Home() {
@@ -104,7 +102,7 @@ function Home() {
   return (
     <Box sx={{ display: "flex", bgcolor: "#000" }}>
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR DESKTOP */}
       {!isMobile && <SidebarContent />}
 
       {/* TOPBAR MOBILE */}
@@ -115,7 +113,7 @@ function Home() {
           </IconButton>
 
           <IconButton onClick={() => setOpenRight(true)}>
-            <DashboardIcon sx={{ color: "#00ff88" }} />
+            📊
           </IconButton>
         </Box>
       )}
@@ -130,14 +128,39 @@ function Home() {
         anchor="right"
         open={openRight}
         onClose={() => setOpenRight(false)}
-        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 280 } }}
+        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
       >
-        <RightPanel />
+        <Box sx={{ p: 2 }}>
+          <Card sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+                {[40,60,80,50,70,90,65].map((v,i)=>(
+                  <Box key={i} sx={{
+                    width: 10,
+                    height: v,
+                    bgcolor: "#00ff88",
+                    borderRadius: 2
+                  }} />
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+
+          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+            <Card key={i} sx={postCard}>
+              <CardContent>
+                <Typography sx={titleStyle}>{item}</Typography>
+                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
       </Drawer>
 
-      {/* CENTRO */}
+      {/* 🔥 CENTRO */}
       <Box sx={centerContent(isMobile)}>
-        <Box sx={feedContainer}>
+        <Box sx={{ width: "100%", maxWidth: 500 }}>
 
           {/* STORIES */}
           <Box sx={storiesContainer}>
@@ -191,42 +214,50 @@ function Home() {
         </Box>
       </Box>
 
-      {/* PANEL DERECHO DESKTOP */}
-      {!isMobile && <RightPanel />}
+      {/* DERECHA DESKTOP */}
+      {!isMobile && (
+        <Box sx={rightPanel}>
+          <Card sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+                {[40,60,80,50,70,90,65].map((v,i)=>(
+                  <Box key={i} sx={{
+                    width: 10,
+                    height: v,
+                    bgcolor: "#00ff88",
+                    borderRadius: 2
+                  }} />
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+
+          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+            <Card key={i} sx={postCard}>
+              <CardContent>
+                <Typography sx={titleStyle}>{item}</Typography>
+                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
+
+      {/* AI */}
+      {showAI && (
+        <Box sx={aiOverlay}>
+          <Box sx={aiBox}>
+            <Typography sx={titleStyle}>GYM AI</Typography>
+            <Button onClick={() => setShowAI(false)}>Cerrar</Button>
+            <ChatAssistant />
+          </Box>
+        </Box>
+      )}
 
     </Box>
   );
 }
-
-/* 🔥 PANEL DERECHO */
-const RightPanel = () => (
-  <Box sx={rightPanel}>
-    <Card sx={postCard}>
-      <CardContent>
-        <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-          {[40,60,80,50,70,90,65].map((v,i)=>(
-            <Box key={i} sx={{
-              width: 10,
-              height: v,
-              bgcolor: "#00ff88",
-              borderRadius: 2
-            }} />
-          ))}
-        </Box>
-      </CardContent>
-    </Card>
-
-    {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-      <Card key={i} sx={postCard}>
-        <CardContent>
-          <Typography sx={titleStyle}>{item}</Typography>
-          <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-        </CardContent>
-      </Card>
-    ))}
-  </Box>
-);
 
 /* 🎨 STYLES */
 
@@ -244,41 +275,26 @@ const sidebarStyle = {
 
 const centerContent = (isMobile) => ({
   marginLeft: isMobile ? 0 : 250,
-  marginRight: isMobile ? 0 : 280,
+  marginRight: isMobile ? 0 : 300,
   display: "flex",
   justifyContent: "center",
-  width: "100%",
-  paddingTop: isMobile ? 60 : 20
+  minHeight: "100vh",
+  paddingTop: isMobile ? 70 : 20
 });
 
-const feedContainer = {
-  width: "100%",
-  maxWidth: 500
-};
-
 const rightPanel = {
-  width: 280,
+  width: 300,
+  height: "100vh",
   position: "fixed",
   right: 0,
   top: 0,
-  height: "100vh",
-  padding: 16,
-  backgroundColor: "#0b0b0b"
+  p: 2,
+  bgcolor: "#0b0b0b"
 };
 
-const postCard = {
-  bgcolor: "#111",
-  mb: 2,
-  borderRadius: 4
-};
+const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
 
-const headerStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  mb: 1
-};
-
+const headerStyle = { display: "flex", alignItems: "center", gap: 10, mb: 1 };
 const username = { color: "#fff", fontWeight: "bold" };
 const time = { color: "#777", fontSize: 12 };
 
@@ -353,14 +369,22 @@ const progressStyle = { height: 8, mt: 1 };
 const topBar = {
   position: "fixed",
   top: 0,
-  left: 0,
-  right: 0,
+  width: "100%",
   display: "flex",
   justifyContent: "space-between",
-  alignItems: "center",
-  background: "#000",
-  padding: "5px 10px",
+  bgcolor: "#000",
   zIndex: 10
 };
+
+const aiOverlay = {
+  position: "fixed",
+  inset: 0,
+  background: "#000",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center"
+};
+
+const aiBox = { bgcolor: "#111", padding: 3 };
 
 export default Home;
