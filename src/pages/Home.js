@@ -67,104 +67,6 @@ function Home() {
     };
   };
 
-  // 🔥 INFINITE QUERY
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading
-  } = useInfiniteQuery({
-    queryKey: ["feed"],
-    queryFn: fetchPosts,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    staleTime: 1000 * 60 * 5
-  });
-
-  // 🔥 THROTTLE + SCROLL REAL
-  let scrollTimeout = null;
-
-  const handleScroll = useCallback((e) => {
-    if (scrollTimeout) return;
-
-    scrollTimeout = setTimeout(() => {
-      scrollTimeout = null;
-
-      const bottom =
-        e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
-
-      if (bottom && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage(); // 🔥 REAL
-      }
-    }, 200);
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const menuItems = [
-    { label: "🏋️ Rutinas", path: "/" },
-    { label: "📈 Progreso", path: "/progreso" },
-    { label: "🔥 Calorías", path: "/calorias" },
-    { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) },
-    { label: "➕ Crear", action: () => setShowCreatePost(true) }
-  ];
-
-  // 🔥 PREFETCH (ejemplo)
-  const prefetchProgreso = () => {
-    queryClient.prefetchQuery({
-      queryKey: ["progreso"],
-      queryFn: async () => {
-        const { data } = await axios.get("https://jsonplaceholder.typicode.com/posts?_limit=5");
-        return data;
-      }
-    });
-  };
-
-  // 🔥 POST MEMOIZADO
-  const PostCard = memo(({ post }) => (
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card sx={postCard}>
-        <CardContent>
-
-          <Box sx={headerStyle}>
-            <Box sx={avatarStyle} />
-            <Box>
-              <Typography sx={username}>{post.user}</Typography>
-              <Typography sx={time}>{post.time}</Typography>
-            </Box>
-          </Box>
-
-          <Box
-            component="img"
-            src={post.image}
-            loading="lazy"
-            sx={imageStyle}
-          />
-
-          <Box sx={actionsStyle}>
-            <IconButton>
-              <FavoriteIcon sx={{ color: "#aaa" }} />
-            </IconButton>
-            <IconButton>
-              <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-            </IconButton>
-          </Box>
-
-          <Typography sx={likes}>{post.likes} likes</Typography>
-          <Typography sx={caption}>
-            <b>{post.user}</b> {post.caption}
-          </Typography>
-
-        </CardContent>
-      </Card>
-    </motion.div>
-  ));
-
    const handleCreatePost = async () => {
     try {
       const formData = new FormData();
@@ -189,47 +91,154 @@ function Home() {
     }
   };
 
-  const SidebarContent = () => (
-    <Box sx={sidebarStyle}>
-      <motion.div whileHover={{ scale: 1.05 }}>
-        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-          <Box sx={avatarStyle} />
-          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-            {user?.nombre || "Usuario"}
+  // 🔥 INFINITE QUERY
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useInfiniteQuery({
+    queryKey: ["feed"],
+    queryFn: fetchPosts,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    staleTime: 1000 * 60 * 5
+  });
+
+    // =======================
+  // 🔹 SCROLL DETECCIÓN
+  // =======================
+  let scrollTimeout = null;
+
+  const handleScroll = useCallback((e) => {
+    if (scrollTimeout) return;
+
+    scrollTimeout = setTimeout(() => {
+      scrollTimeout = null;
+
+      const bottom =
+        e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+
+      // 🔥 Carga más posts
+      if (bottom && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }, 200);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const menuItems = [
+    { label: "🏋️ Rutinas", path: "/" },
+    { label: "📈 Progreso", path: "/progreso" },
+    { label: "🔥 Calorías", path: "/calorias" },
+    { label: "🎯 Objetivos", path: "/objetivos" },
+    { label: "🤖 AI", action: () => setShowAI(true) },
+    { label: "➕ Crear", action: () => setShowCreatePost(true) }
+  ];
+
+   // =======================
+  // 🔹 PREFETCH (optimización)
+  // =======================
+  function prefetchProgreso() {
+    queryClient.prefetchQuery({
+      queryKey: ["progreso"],
+      queryFn: async () => {
+        const { data } = await axios.get("https://jsonplaceholder.typicode.com/posts?_limit=5");
+        return data;
+      }
+    });
+  }
+
+  // =======================
+  // 🔹 COMPONENTE POST
+  // =======================
+  const PostCard = memo(({ post }) => (
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+    >
+      <Card sx={postCard}>
+        <CardContent>
+
+          {/* 🔹 Header del post */}
+          <Box sx={headerStyle}>
+            <Box sx={avatarStyle} />
+            <Box>
+              <Typography sx={username}>{post.user}</Typography>
+              <Typography sx={time}>{post.time}</Typography>
+            </Box>
+          </Box>
+
+          {/* 🔹 Imagen */}
+          <Box component="img" src={post.image} sx={imageStyle} />
+
+          {/* 🔹 Acciones */}
+          <Box sx={actionsStyle}>
+            <IconButton>
+              <FavoriteIcon sx={{ color: "#aaa" }} />
+            </IconButton>
+            <IconButton>
+              <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+            </IconButton>
+          </Box>
+
+          {/* 🔹 Texto */}
+          <Typography sx={likes}>{post.likes} likes</Typography>
+          <Typography sx={caption}>
+            <b>{post.user}</b> {post.caption}
           </Typography>
-        </Box>
-      </motion.div>
 
-      <Box sx={{ flex: 1 }}>
-        {menuItems.map((item, i) => {
-          const isActive = location.pathname === item.path;
+        </CardContent>
+      </Card>
+    </motion.div>
+  ));
 
-          return (
-            <motion.div key={i} whileHover={{ scale: 1.03 }}>
-              <Box
-                onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined} // 🔥 PREFETCH
-                onClick={() => {
-                  if (item.path) navigate(item.path);
-                  if (item.action) item.action();
-                }}
-                sx={{
-                  ...menuItemStyle,
-                  bgcolor: isActive ? "#00ff8820" : "#151515",
-                  color: isActive ? "#00ff88" : "#ccc"
-                }}
-              >
-                {item.label}
-              </Box>
-            </motion.div>
-          );
-        })}
-      </Box>
 
-      <Button onClick={logout} sx={logoutStyle} fullWidth>
-        EXIT
-      </Button>
-    </Box>
-  );
+ 
+   // =======================
+   // 🔹 SIDEBAR
+   // =======================
+   const SidebarContent = () => (
+     <Box sx={sidebarStyle}>
+ 
+       {/* 🔹 Perfil */}
+       <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+         <Box sx={avatarStyle} />
+         <Typography sx={{ color: "#fff" }}>
+           {user?.nombre || "Usuario"}
+         </Typography>
+       </Box>
+ 
+       {/* 🔹 Menú */}
+       <Box sx={{ flex: 1 }}>
+         {menuItems.map((item, i) => {
+           const isActive = location.pathname === item.path;
+ 
+           return (
+             <Box
+               key={i}
+               onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined}
+               onClick={() => {
+                 if (item.path) navigate(item.path);
+                 if (item.action) item.action();
+               }}
+               sx={{
+                 ...menuItemStyle,
+                 bgcolor: isActive ? "#00ff8820" : "#151515"
+               }}
+             >
+               {item.label}
+             </Box>
+           );
+         })}
+       </Box>
+ 
+       {/* 🔹 Logout */}
+       <Button onClick={logout} sx={logoutStyle}>
+         EXIT
+       </Button>
+     </Box>
+   );
 
  return (
   <Box sx={{
