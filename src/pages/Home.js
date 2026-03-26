@@ -30,6 +30,7 @@ function Home() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [open, setOpen] = useState(false);
+  const [openRight, setOpenRight] = useState(false);
   const [showAI, setShowAI] = useState(false);
 
   const menuItems = [
@@ -40,7 +41,6 @@ function Home() {
     { label: "🤖 AI", action: () => setShowAI(true) }
   ];
 
-  // 🔥 POSTS DATA
   const posts = [
     {
       user: "DiegoFit",
@@ -60,7 +60,6 @@ function Home() {
 
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
-
       <motion.div whileHover={{ scale: 1.05 }}>
         <Box onClick={() => navigate("/profile")} sx={profileStyle}>
           <Box sx={avatarStyle} />
@@ -103,94 +102,38 @@ function Home() {
   return (
     <Box sx={{ display: "flex", bgcolor: "#000" }}>
 
+      {/* SIDEBAR DESKTOP */}
       {!isMobile && <SidebarContent />}
 
+      {/* TOPBAR MOBILE */}
       {isMobile && (
         <Box sx={topBar}>
           <IconButton onClick={() => setOpen(true)}>
             <MenuIcon sx={{ color: "#00ff88" }} />
           </IconButton>
+
+          <IconButton onClick={() => setOpenRight(true)}>
+            📊
+          </IconButton>
         </Box>
       )}
 
+      {/* DRAWER IZQUIERDO */}
       <Drawer open={open} onClose={() => setOpen(false)}>
         <SidebarContent />
       </Drawer>
 
-      {/* 🔥 CENTRO */}
-      <Box sx={centerContent(isMobile)}>
-
-        {/* STORIES */}
-        <Box sx={storiesContainer}>
-          {[1,2,3,4,5].map((_,i) => (
-            <motion.div key={i} whileHover={{ scale: 1.1 }}>
-              <Box sx={storyItem}>
-                <Box sx={storyCircle} />
-                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                  user{i+1}
-                </Typography>
-              </Box>
-            </motion.div>
-          ))}
-        </Box>
-
-        {/* 🔥 POSTS */}
-        {posts.map((post, i) => (
-          <motion.div key={i} whileHover={{ scale: 1.01 }}>
-            <Card sx={postCard}>
-              <CardContent>
-
-                {/* HEADER */}
-                <Box sx={headerStyle}>
-                  <Box sx={avatarStyle} />
-                  <Box>
-                    <Typography sx={username}>{post.user}</Typography>
-                    <Typography sx={time}>{post.time}</Typography>
-                  </Box>
-                </Box>
-
-                {/* IMAGE */}
-                <Box
-                  component="img"
-                  src={post.image}
-                  sx={imageStyle}
-                />
-
-                {/* ACTIONS */}
-                <Box sx={actionsStyle}>
-                  <IconButton>
-                    <FavoriteIcon sx={{ color: "#aaa" }} />
-                  </IconButton>
-
-                  <IconButton>
-                    <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-                  </IconButton>
-                </Box>
-
-                {/* INFO */}
-                <Typography sx={likes}>
-                  {post.likes} likes
-                </Typography>
-
-                <Typography sx={caption}>
-                  <b>{post.user}</b> {post.caption}
-                </Typography>
-
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-
-      </Box>
-
-      {/* DERECHA */}
-      {!isMobile && (
-        <Box sx={rightPanel}>
-
+      {/* DRAWER DERECHO */}
+      <Drawer
+        anchor="right"
+        open={openRight}
+        onClose={() => setOpenRight(false)}
+        PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+      >
+        <Box sx={{ p: 2 }}>
           <Card sx={postCard}>
             <CardContent>
               <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-
               <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
                 {[40,60,80,50,70,90,65].map((v,i)=>(
                   <Box key={i} sx={{
@@ -201,7 +144,6 @@ function Home() {
                   }} />
                 ))}
               </Box>
-
             </CardContent>
           </Card>
 
@@ -213,7 +155,92 @@ function Home() {
               </CardContent>
             </Card>
           ))}
+        </Box>
+      </Drawer>
 
+      {/* 🔥 CENTRO */}
+      <Box sx={centerContent(isMobile)}>
+        <Box sx={{ width: "100%", maxWidth: 500 }}>
+
+          {/* STORIES */}
+          <Box sx={storiesContainer}>
+            {[1,2,3,4,5].map((_,i) => (
+              <motion.div key={i} whileHover={{ scale: 1.1 }}>
+                <Box sx={storyItem}>
+                  <Box sx={storyCircle} />
+                  <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                    user{i+1}
+                  </Typography>
+                </Box>
+              </motion.div>
+            ))}
+          </Box>
+
+          {/* POSTS */}
+          {posts.map((post, i) => (
+            <motion.div key={i} whileHover={{ scale: 1.01 }}>
+              <Card sx={postCard}>
+                <CardContent>
+
+                  <Box sx={headerStyle}>
+                    <Box sx={avatarStyle} />
+                    <Box>
+                      <Typography sx={username}>{post.user}</Typography>
+                      <Typography sx={time}>{post.time}</Typography>
+                    </Box>
+                  </Box>
+
+                  <Box component="img" src={post.image} sx={imageStyle} />
+
+                  <Box sx={actionsStyle}>
+                    <IconButton>
+                      <FavoriteIcon sx={{ color: "#aaa" }} />
+                    </IconButton>
+                    <IconButton>
+                      <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+                    </IconButton>
+                  </Box>
+
+                  <Typography sx={likes}>{post.likes} likes</Typography>
+                  <Typography sx={caption}>
+                    <b>{post.user}</b> {post.caption}
+                  </Typography>
+
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+
+        </Box>
+      </Box>
+
+      {/* DERECHA DESKTOP */}
+      {!isMobile && (
+        <Box sx={rightPanel}>
+          <Card sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+              <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+                {[40,60,80,50,70,90,65].map((v,i)=>(
+                  <Box key={i} sx={{
+                    width: 10,
+                    height: v,
+                    bgcolor: "#00ff88",
+                    borderRadius: 2
+                  }} />
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+
+          {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+            <Card key={i} sx={postCard}>
+              <CardContent>
+                <Typography sx={titleStyle}>{item}</Typography>
+                <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+              </CardContent>
+            </Card>
+          ))}
         </Box>
       )}
 
@@ -249,9 +276,10 @@ const sidebarStyle = {
 const centerContent = (isMobile) => ({
   marginLeft: isMobile ? 0 : 250,
   marginRight: isMobile ? 0 : 300,
-  width: "100%",
+  display: "flex",
+  justifyContent: "center",
   minHeight: "100vh",
-  p: 2
+  paddingTop: isMobile ? 70 : 20
 });
 
 const rightPanel = {
@@ -264,19 +292,9 @@ const rightPanel = {
   bgcolor: "#0b0b0b"
 };
 
-const postCard = {
-  bgcolor: "#111",
-  mb: 2,
-  borderRadius: 4
-};
+const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
 
-const headerStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  mb: 1
-};
-
+const headerStyle = { display: "flex", alignItems: "center", gap: 10, mb: 1 };
 const username = { color: "#fff", fontWeight: "bold" };
 const time = { color: "#777", fontSize: 12 };
 
@@ -288,12 +306,7 @@ const imageStyle = {
   marginTop: 10
 };
 
-const actionsStyle = {
-  display: "flex",
-  gap: 1,
-  mt: 1
-};
-
+const actionsStyle = { display: "flex", gap: 1, mt: 1 };
 const likes = { color: "#fff", mt: 1 };
 const caption = { color: "#ccc", mt: 1 };
 
@@ -357,7 +370,10 @@ const topBar = {
   position: "fixed",
   top: 0,
   width: "100%",
-  bgcolor: "#000"
+  display: "flex",
+  justifyContent: "space-between",
+  bgcolor: "#000",
+  zIndex: 10
 };
 
 const aiOverlay = {
@@ -369,9 +385,6 @@ const aiOverlay = {
   alignItems: "center"
 };
 
-const aiBox = {
-  bgcolor: "#111",
-  padding: 3
-};
+const aiBox = { bgcolor: "#111", padding: 3 };
 
 export default Home;
