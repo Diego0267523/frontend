@@ -60,6 +60,7 @@ function Home() {
   const [open, setOpen] = useState(false); // sidebar izquierdo
   const [openRight, setOpenRight] = useState(false); // panel derecho
   const [showAI, setShowAI] = useState(false); // modal AI
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   const [visiblePosts, setVisiblePosts] = useState(2); // (no usado)
   const [loading, setLoading] = useState(false); // (no usado)
@@ -129,13 +130,14 @@ function Home() {
     { label: "📈 Progreso", path: "/progreso" },
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) }
+    { label: "🤖 AI", action: () => setShowAI(true) },
+    { label: "➕ Crear", action: () => setShowCreatePost(true) }
   ];
 
   // =======================
   // 🔹 PREFETCH (optimización)
   // =======================
-  const prefetchProgreso = () => {
+  function prefetchProgreso() {
     queryClient.prefetchQuery({
       queryKey: ["progreso"],
       queryFn: async () => {
@@ -143,7 +145,7 @@ function Home() {
         return data;
       }
     });
-  };
+  }
 
   // =======================
   // 🔹 COMPONENTE POST
@@ -297,6 +299,32 @@ function Home() {
           </Box>
         </Box>
       )}
+      {showCreatePost && (
+  <Box sx={aiOverlay}>
+    <Box sx={aiBox}>
+
+      <Typography sx={titleStyle}>Crear Post</Typography>
+
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+
+      <input
+        type="text"
+        placeholder="Escribe algo..."
+        value={caption}
+        onChange={(e) => setCaption(e.target.value)}
+      />
+
+      <Button onClick={handleCreatePost}>
+        Publicar
+      </Button>
+
+      <Button onClick={() => setShowCreatePost(false)}>
+        Cancelar
+      </Button>
+
+    </Box>
+  </Box>
+)}
 
     </Box>
   );
