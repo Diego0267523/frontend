@@ -129,7 +129,8 @@ function Home() {
     { label: "📈 Progreso", path: "/progreso" },
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) }
+    { label: "🤖 AI", action: () => setShowAI(true) },
+    { label: "➕ Crear", path: "/crear" }
   ];
 
 
