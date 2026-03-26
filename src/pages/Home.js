@@ -2,10 +2,11 @@
 // 🔹 IMPORTACIONES
 // =======================
 import React, { useContext, useState, useCallback, memo } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AuthContext } from "../context/AuthContext"; // contexto de usuario
+import { useNavigate, useLocation } from "react-router-dom"; // navegación
+import { motion } from "framer-motion"; // animaciones
 
+// 🔹 Material UI
 import {
   Typography,
   Button,
@@ -20,37 +21,54 @@ import {
   Skeleton
 } from "@mui/material";
 
+// 🔹 Iconos
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
+import BarChartIcon from "@mui/icons-material/BarChart";
 
+// 🔹 Componente externo
 import ChatAssistant from "../components/ChatAssistant";
 
+// 🔹 React Query + Axios
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
+
+
 // =======================
-// 🔹 COMPONENTE
+// 🔹 COMPONENTE PRINCIPAL
 // =======================
 function Home() {
   const [file, setFile] = useState(null);
   const [caption, setCaption] = useState("");
-
+  // 🔹 Contexto de usuario
   const { logout, user } = useContext(AuthContext);
+
+  // 🔹 Navegación
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 🔹 Responsive
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  // 🔹 React Query cache
   const queryClient = useQueryClient();
 
-  const [open, setOpen] = useState(false);
-  const [showAI, setShowAI] = useState(false);
+  // =======================
+  // 🔹 ESTADOS
+  // =======================
+  const [open, setOpen] = useState(false); // sidebar izquierdo
+  const [openRight, setOpenRight] = useState(false); // panel derecho
+  const [showAI, setShowAI] = useState(false); // modal AI
   const [showCreatePost, setShowCreatePost] = useState(false);
 
+  const [visiblePosts, setVisiblePosts] = useState(2); // (no usado)
+  const [loading, setLoading] = useState(false); // (no usado)
+
   // =======================
-  // 🔹 FETCH POSTS
+  // 🔹 FETCH DE POSTS
   // =======================
   const fetchPosts = async ({ pageParam = 1 }) => {
     const { data } = await axios.get(
@@ -68,26 +86,33 @@ function Home() {
       nextPage: pageParam + 1
     };
   };
-
   const handleCreatePost = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("caption", caption);
-      formData.append("user_id", user?.id);
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("caption", caption);
+    formData.append("user_id", user?.id);
 
-      await axios.post("https://TU_BACKEND/api/posts", formData);
+    await axios.post("https://TU_BACKEND/api/posts", formData);
 
-      queryClient.invalidateQueries(["feed"]);
-      setShowCreatePost(false);
-      setFile(null);
-      setCaption("");
+    // 🔥 refrescar feed
+    queryClient.invalidateQueries(["feed"]);
 
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    // cerrar modal
+    setShowCreatePost(false);
 
+    // limpiar
+    setFile(null);
+    setCaption("");
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  // =======================
+  // 🔹 INFINITE SCROLL (React Query)
+  // =======================
   const {
     data,
     fetchNextPage,
@@ -97,20 +122,33 @@ function Home() {
   } = useInfiniteQuery({
     queryKey: ["feed"],
     queryFn: fetchPosts,
-    getNextPageParam: (lastPage) => lastPage.nextPage
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    staleTime: 1000 * 60 * 5
   });
 
-  const handleScroll = useCallback((e) => {
-    const bottom =
-      e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+  // =======================
+  // 🔹 SCROLL DETECCIÓN
+  // =======================
+  let scrollTimeout = null;
 
-    if (bottom && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+  const handleScroll = useCallback((e) => {
+    if (scrollTimeout) return;
+
+    scrollTimeout = setTimeout(() => {
+      scrollTimeout = null;
+
+      const bottom =
+        e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+
+      // 🔥 Carga más posts
+      if (bottom && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }, 200);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // =======================
-  // 🔹 MENÚ
+  // 🔹 MENÚ LATERAL
   // =======================
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
@@ -118,17 +156,35 @@ function Home() {
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
     { label: "🤖 AI", action: () => setShowAI(true) },
-    { label: "➕ Crear", action: () => setShowCreatePost(true) }
+   // { label: "➕ Crear", action: () => setShowCreatePost(true) }
   ];
 
   // =======================
-  // 🔹 POST
+  // 🔹 PREFETCH (optimización)
+  // =======================
+  function prefetchProgreso() {
+    queryClient.prefetchQuery({
+      queryKey: ["progreso"],
+      queryFn: async () => {
+        const { data } = await axios.get("https://jsonplaceholder.typicode.com/posts?_limit=5");
+        return data;
+      }
+    });
+  }
+
+  // =======================
+  // 🔹 COMPONENTE POST
   // =======================
   const PostCard = memo(({ post }) => (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+    >
       <Card sx={postCard}>
         <CardContent>
 
+          {/* 🔹 Header del post */}
           <Box sx={headerStyle}>
             <Box sx={avatarStyle} />
             <Box>
@@ -137,15 +193,10 @@ function Home() {
             </Box>
           </Box>
 
-          <Box
-            component="img"
-            src={post.image}
-            sx={imageStyle}
-            onError={(e) => {
-              e.target.src = "https://via.placeholder.com/500x300";
-            }}
-          />
+          {/* 🔹 Imagen */}
+          <Box component="img" src={post.image} sx={imageStyle} />
 
+          {/* 🔹 Acciones */}
           <Box sx={actionsStyle}>
             <IconButton>
               <FavoriteIcon sx={{ color: "#aaa" }} />
@@ -155,9 +206,9 @@ function Home() {
             </IconButton>
           </Box>
 
+          {/* 🔹 Texto */}
           <Typography sx={likes}>{post.likes} likes</Typography>
-
-          <Typography sx={captionStyle}>
+          <Typography sx={caption}>
             <b>{post.user}</b> {post.caption}
           </Typography>
 
@@ -171,6 +222,8 @@ function Home() {
   // =======================
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
+
+      {/* 🔹 Perfil */}
       <Box onClick={() => navigate("/profile")} sx={profileStyle}>
         <Box sx={avatarStyle} />
         <Typography sx={{ color: "#fff" }}>
@@ -178,21 +231,31 @@ function Home() {
         </Typography>
       </Box>
 
+      {/* 🔹 Menú */}
       <Box sx={{ flex: 1 }}>
-        {menuItems.map((item, i) => (
-          <Box
-            key={i}
-            onClick={() => {
-              if (item.path) navigate(item.path);
-              if (item.action) item.action();
-            }}
-            sx={menuItemStyle}
-          >
-            {item.label}
-          </Box>
-        ))}
+        {menuItems.map((item, i) => {
+          const isActive = location.pathname === item.path;
+
+          return (
+            <Box
+              key={i}
+              onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined}
+              onClick={() => {
+                if (item.path) navigate(item.path);
+                if (item.action) item.action();
+              }}
+              sx={{
+                ...menuItemStyle,
+                bgcolor: isActive ? "#00ff8820" : "#151515"
+              }}
+            >
+              {item.label}
+            </Box>
+          );
+        })}
       </Box>
 
+      {/* 🔹 Logout */}
       <Button onClick={logout} sx={logoutStyle}>
         EXIT
       </Button>
@@ -200,36 +263,44 @@ function Home() {
   );
 
   // =======================
-  // 🔹 UI
+  // 🔹 RENDER PRINCIPAL (UI)
   // =======================
   return (
     <Box sx={{ display: "flex", height: "100vh", bgcolor: "#000" }}>
 
+      {/* 🔹 Sidebar desktop */}
       {!isMobile && (
-        <Box sx={{ width: 250, flexShrink: 0 }}>
+        <Box sx={{ width: 250 }}>
           <SidebarContent />
         </Box>
       )}
 
+      {/* 🔹 Topbar móvil */}
+      {isMobile && (
+        <Box sx={topBar}>
+          <IconButton onClick={() => setOpen(true)}>
+            <MenuIcon />
+          </IconButton>
+        </Box>
+      )}
+
+      {/* 🔹 Drawer móvil */}
       <Drawer open={open} onClose={() => setOpen(false)}>
         <SidebarContent />
       </Drawer>
 
+      {/* 🔹 FEED CENTRAL */}
       <Box onScroll={handleScroll} sx={{ flex: 1, overflowY: "auto" }}>
         <Box sx={{ maxWidth: 500, margin: "auto" }}>
 
-          {/* 🔥 STORIES BONITAS */}
+          {/* 🔹 Stories */}
           <Box sx={storiesContainer}>
-            {[1,2,3,4,5].map((_,i)=>(
-              <Box key={i} sx={storyItem}>
-                <Box sx={storyCircle} />
-                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                  user{i+1}
-                </Typography>
-              </Box>
+            {[1,2,3].map((_,i)=>(
+              <Box key={i}>user{i}</Box>
             ))}
           </Box>
 
+          {/* 🔹 POSTS */}
           {isLoading ? (
             <Skeleton height={300} />
           ) : (
@@ -243,6 +314,7 @@ function Home() {
         </Box>
       </Box>
 
+      {/* 🔹 MODAL AI */}
       {showAI && (
         <Box sx={aiOverlay}>
           <Box sx={aiBox}>
@@ -253,9 +325,73 @@ function Home() {
         </Box>
       )}
 
+      {/* 🔹 MODAL CREAR POST */}
+
+      {showCreatePost && (
+        <Box sx={overlayPro}>
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Box sx={modalPro}>
+
+              <Typography sx={titlePro}>
+                Crear Post 🚀
+              </Typography>
+
+              {/* PREVIEW */}
+              {file && (
+                <Box
+                  component="img"
+                  src={URL.createObjectURL(file)}
+                  sx={previewImage}
+                />
+              )}
+
+              {/* INPUT FILE */}
+              <Button
+                variant="contained"
+                component="label"
+                sx={uploadBtn}
+              >
+                Subir imagen
+                <input
+                  type="file"
+                  hidden
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+              </Button>
+
+              {/* CAPTION */}
+              <input
+                placeholder="¿Qué estás pensando?"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                style={inputPro}
+              />
+
+              {/* BOTONES */}
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Button onClick={handleCreatePost} sx={postBtn}>
+                  Publicar
+                </Button>
+
+                <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
+                  Cancelar
+                </Button>
+              </Box>
+
+            </Box>
+          </motion.div>
+        </Box>
+      )}
+
     </Box>
   );
 }
+
+
 
 /* 🎨 STYLES */
 
@@ -266,6 +402,29 @@ const sidebarStyle = {
   p: 2,
   display: "flex",
   flexDirection: "column"
+};
+
+const centerContent = (isMobile) => ({
+  flex: 1,
+  minWidth: 0,
+  marginLeft: isMobile ? 0 : 250,
+  marginRight: isMobile ? 0 : 280,
+  width: isMobile ? "100%" : "calc(100vw - 530px)",
+  display: "flex",
+  justifyContent: "center",
+  boxSizing: "border-box",
+  paddingTop: isMobile ? 60 : 20,
+  overflowX: "hidden"
+});
+
+const rightPanel = {
+  width: 300,
+  height: "100vh",
+  position: "fixed",
+  right: 0,
+  top: 0,
+  p: 2,
+  bgcolor: "#0b0b0b"
 };
 
 const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
@@ -284,7 +443,7 @@ const imageStyle = {
 
 const actionsStyle = { display: "flex", gap: 1, mt: 1 };
 const likes = { color: "#fff", mt: 1 };
-const captionStyle = { color: "#ccc", mt: 1 };
+const caption = { color: "#ccc", mt: 1 };
 
 const storiesContainer = {
   display: "flex",
@@ -301,6 +460,8 @@ const storyCircle = {
   borderRadius: "50%",
   background: "linear-gradient(45deg,#00ff88,#00ccff)"
 };
+
+const titleStyle = { color: "#00ff88" };
 
 const avatarStyle = {
   width: 40,
@@ -321,13 +482,33 @@ const menuItemStyle = {
   p: 1.5,
   borderRadius: 3,
   cursor: "pointer",
-  bgcolor: "#151515"
+  transition: "0.3s",
+  '&:hover': {
+    bgcolor: "#00ff8830",
+    color: "#00ff88"
+  }
 };
 
 const logoutStyle = {
   mt: "auto",
   bgcolor: "#00ff88",
-  color: "#000"
+  color: "#000",
+  fontWeight: "bold",
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const progressStyle = { height: 8, mt: 1 };
+
+const topBar = {
+  position: "fixed",
+  top: 0,
+  width: "100%",
+  display: "flex",
+  justifyContent: "space-between",
+  bgcolor: "#000",
+  zIndex: 10
 };
 
 const aiOverlay = {
