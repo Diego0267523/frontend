@@ -41,6 +41,12 @@ function Home() {
   const [postCaption, setPostCaption] = useState("");
   const [isPosting, setIsPosting] = useState(false);
 
+  // 🔥 HISTORIAS
+  const [storyFile, setStoryFile] = useState(null);
+  const [showStoryPreview, setShowStoryPreview] = useState(false);
+  const [isUploadingStory, setIsUploadingStory] = useState(false);
+  const [stories, setStories] = useState([]);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -131,6 +137,79 @@ const handleCreatePost = async () => {
   }
 };
 
+
+  // 🔥 HISTORIAS - Cargar historias al montar
+  React.useEffect(() => {
+    const loadStories = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/stories`);
+        if (response.data.success) {
+          setStories(response.data.stories || []);
+        }
+      } catch (error) {
+        console.error("Error loading stories:", error);
+      }
+    };
+    loadStories();
+  }, []);
+
+  // 🔥 HISTORIAS - Subir historia
+  const handleUploadStory = async () => {
+    if (!storyFile) {
+      setSnackbar({ open: true, message: "Selecciona una imagen para tu historia", severity: "error" });
+      return;
+    }
+
+    setIsUploadingStory(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", storyFile);
+
+      const response = await axios.post(`${API_URL}/api/stories`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      if (response.data.success) {
+        // Recargar historias
+        const storiesResponse = await axios.get(`${API_URL}/api/stories`);
+        if (storiesResponse.data.success) {
+          setStories(storiesResponse.data.stories || []);
+        }
+
+        setSnackbar({ open: true, message: "¡Historia publicada!", severity: "success" });
+        setTimeout(() => {
+          setShowStoryPreview(false);
+          setStoryFile(null);
+        }, 800);
+      }
+    } catch (error) {
+      console.error("Error uploading story:", error);
+      setSnackbar({ open: true, message: "Error al publicar la historia", severity: "error" });
+    } finally {
+      setIsUploadingStory(false);
+    }
+  };
+
+  // 🔥 HISTORIAS - Eliminar historia propia
+  const handleDeleteStory = async (storyId) => {
+    try {
+      const response = await axios.delete(`${API_URL}/api/stories/${storyId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      if (response.data.success) {
+        setStories(stories.filter(s => s.id !== storyId));
+        setSnackbar({ open: true, message: "Historia eliminada", severity: "success" });
+      }
+    } catch (error) {
+      console.error("Error deleting story:", error);
+      setSnackbar({ open: true, message: "Error al eliminar la historia", severity: "error" });
+    }
+  };
 
   // 🔥 FETCH POSTS (AQUÍ VA)
 const fetchPosts = async ({ pageParam = 1 }) => {
@@ -342,12 +421,34 @@ const handleScroll = useCallback((e) => {
       <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
 
         <Box sx={storiesContainer}>
-          {[1,2,3,4,5].map((_,i) => (
+          {/* Tu historia (solo en móviles) */}
+          {isMobile && (
+            <motion.div whileHover={{ scale: 1.1 }} onClick={() => setShowStoryPreview(true)}>
+              <Box sx={storyItem}>
+                <Box sx={{ ...storyCircle, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <Typography sx={{ color: "#000", fontSize: 28, fontWeight: "bold" }}>+</Typography>
+                </Box>
+                <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
+                  Tu historia
+                </Typography>
+              </Box>
+            </motion.div>
+          )}
+
+          {/* Historias de otros usuarios */}
+          {stories && stories.map((story, i) => (
             <motion.div key={i} whileHover={{ scale: 1.1 }}>
               <Box sx={storyItem}>
-                <Box sx={storyCircle} />
-                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                  user{i+1}
+                <Box 
+                  sx={{ 
+                    ...storyCircle, 
+                    backgroundImage: `url(${story.image_url})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center"
+                  }} 
+                />
+                <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
+                  {story.nombre}
                 </Typography>
               </Box>
             </motion.div>
@@ -489,6 +590,67 @@ const handleScroll = useCallback((e) => {
                       onClick={() => setShowCreatePost(false)} 
                       sx={cancelBtn}
                       disabled={isPosting}
+                    >
+                      Cancelar
+                    </Button>
+                  </Box>
+    
+                </Box>
+              </motion.div>
+            </Box>
+          )}
+
+          {/* 🔥 MODAL PARA SUBIR HISTORIA */}
+          {showStoryPreview && (
+            <Box sx={overlayPro} onClick={() => setShowStoryPreview(false)}>
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
+    
+                  <Typography sx={titlePro}>
+                    Nueva Historia 📸
+                  </Typography>
+    
+                  {/* PREVIEW */}
+                  {storyFile && (
+                    <Box
+                      component="img"
+                      src={URL.createObjectURL(storyFile)}
+                      sx={previewImage}
+                    />
+                  )}
+    
+                  {/* INPUT FILE */}
+                  <Button
+                    variant="contained"
+                    component="label"
+                    sx={uploadBtn}
+                  >
+                    Subir imagen
+                    <input
+                      type="file"
+                      hidden
+                      onChange={(e) => setStoryFile(e.target.files[0])}
+                    />
+                  </Button>
+    
+                  {/* BOTONES */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <Button 
+                      onClick={handleUploadStory} 
+                      sx={postBtn}
+                      disabled={isUploadingStory}
+                    >
+                      {isUploadingStory ? "Subiendo..." : "Compartir Historia"}
+                    </Button>
+    
+                    <Button 
+                      onClick={() => setShowStoryPreview(false)} 
+                      sx={cancelBtn}
+                      disabled={isUploadingStory}
                     >
                       Cancelar
                     </Button>
