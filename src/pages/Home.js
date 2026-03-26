@@ -1,12 +1,8 @@
-// =======================
-// 🔹 IMPORTACIONES
-// =======================
 import React, { useContext, useState, useCallback, memo } from "react";
-import { AuthContext } from "../context/AuthContext"; // contexto de usuario
-import { useNavigate, useLocation } from "react-router-dom"; // navegación
-import { motion } from "framer-motion"; // animaciones
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
-// 🔹 Material UI
 import {
   Typography,
   Button,
@@ -21,52 +17,35 @@ import {
   Skeleton
 } from "@mui/material";
 
-// 🔹 Iconos
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
 import BarChartIcon from "@mui/icons-material/BarChart";
 
-// 🔹 Componente externo
 import ChatAssistant from "../components/ChatAssistant";
 
-// 🔹 React Query + Axios
+// 🔥 NUEVO
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
-
-// =======================
-// 🔹 COMPONENTE PRINCIPAL
-// =======================
 function Home() {
-
-  // 🔹 Contexto de usuario
   const { logout, user } = useContext(AuthContext);
-
-  // 🔹 Navegación
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔹 Responsive
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // 🔹 React Query cache
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // 🔥 PREFETCH
 
-  // =======================
-  // 🔹 ESTADOS
-  // =======================
-  const [open, setOpen] = useState(false); // sidebar izquierdo
-  const [openRight, setOpenRight] = useState(false); // panel derecho
-  const [showAI, setShowAI] = useState(false); // modal AI
+  const [open, setOpen] = useState(false);
+  const [openRight, setOpenRight] = useState(false);
+  const [showAI, setShowAI] = useState(false);
 
-  const [visiblePosts, setVisiblePosts] = useState(2); // (no usado)
-  const [loading, setLoading] = useState(false); // (no usado)
+  const [visiblePosts, setVisiblePosts] = useState(2);
+  const [loading, setLoading] = useState(false);
 
-  // =======================
-  // 🔹 FETCH DE POSTS
-  // =======================
+  // 🔥 FETCH PAGINADO REAL
   const fetchPosts = async ({ pageParam = 1 }) => {
     const { data } = await axios.get(
       `https://jsonplaceholder.typicode.com/photos?_limit=5&_page=${pageParam}`
@@ -84,9 +63,7 @@ function Home() {
     };
   };
 
-  // =======================
-  // 🔹 INFINITE SCROLL (React Query)
-  // =======================
+  // 🔥 INFINITE QUERY
   const {
     data,
     fetchNextPage,
@@ -100,9 +77,7 @@ function Home() {
     staleTime: 1000 * 60 * 5
   });
 
-  // =======================
-  // 🔹 SCROLL DETECCIÓN
-  // =======================
+  // 🔥 THROTTLE + SCROLL REAL
   let scrollTimeout = null;
 
   const handleScroll = useCallback((e) => {
@@ -114,16 +89,12 @@ function Home() {
       const bottom =
         e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
 
-      // 🔥 Carga más posts
       if (bottom && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
+        fetchNextPage(); // 🔥 REAL
       }
     }, 200);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // =======================
-  // 🔹 MENÚ LATERAL
-  // =======================
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
     { label: "📈 Progreso", path: "/progreso" },
@@ -132,9 +103,7 @@ function Home() {
     { label: "🤖 AI", action: () => setShowAI(true) }
   ];
 
-  // =======================
-  // 🔹 PREFETCH (optimización)
-  // =======================
+  // 🔥 PREFETCH (ejemplo)
   const prefetchProgreso = () => {
     queryClient.prefetchQuery({
       queryKey: ["progreso"],
@@ -145,19 +114,18 @@ function Home() {
     });
   };
 
-  // =======================
-  // 🔹 COMPONENTE POST
-  // =======================
+  // 🔥 POST MEMOIZADO
   const PostCard = memo(({ post }) => (
     <motion.div
       whileHover={{ scale: 1.01 }}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
     >
       <Card sx={postCard}>
         <CardContent>
 
-          {/* 🔹 Header del post */}
           <Box sx={headerStyle}>
             <Box sx={avatarStyle} />
             <Box>
@@ -166,10 +134,13 @@ function Home() {
             </Box>
           </Box>
 
-          {/* 🔹 Imagen */}
-          <Box component="img" src={post.image} sx={imageStyle} />
+          <Box
+            component="img"
+            src={post.image}
+            loading="lazy"
+            sx={imageStyle}
+          />
 
-          {/* 🔹 Acciones */}
           <Box sx={actionsStyle}>
             <IconButton>
               <FavoriteIcon sx={{ color: "#aaa" }} />
@@ -179,7 +150,6 @@ function Home() {
             </IconButton>
           </Box>
 
-          {/* 🔹 Texto */}
           <Typography sx={likes}>{post.likes} likes</Typography>
           <Typography sx={caption}>
             <b>{post.user}</b> {post.caption}
@@ -190,116 +160,186 @@ function Home() {
     </motion.div>
   ));
 
-  // =======================
-  // 🔹 SIDEBAR
-  // =======================
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
+      <motion.div whileHover={{ scale: 1.05 }}>
+        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+          <Box sx={avatarStyle} />
+          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+            {user?.nombre || "Usuario"}
+          </Typography>
+        </Box>
+      </motion.div>
 
-      {/* 🔹 Perfil */}
-      <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-        <Box sx={avatarStyle} />
-        <Typography sx={{ color: "#fff" }}>
-          {user?.nombre || "Usuario"}
-        </Typography>
-      </Box>
-
-      {/* 🔹 Menú */}
       <Box sx={{ flex: 1 }}>
         {menuItems.map((item, i) => {
           const isActive = location.pathname === item.path;
 
           return (
-            <Box
-              key={i}
-              onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined}
-              onClick={() => {
-                if (item.path) navigate(item.path);
-                if (item.action) item.action();
-              }}
-              sx={{
-                ...menuItemStyle,
-                bgcolor: isActive ? "#00ff8820" : "#151515"
-              }}
-            >
-              {item.label}
-            </Box>
+            <motion.div key={i} whileHover={{ scale: 1.03 }}>
+              <Box
+                onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined} // 🔥 PREFETCH
+                onClick={() => {
+                  if (item.path) navigate(item.path);
+                  if (item.action) item.action();
+                }}
+                sx={{
+                  ...menuItemStyle,
+                  bgcolor: isActive ? "#00ff8820" : "#151515",
+                  color: isActive ? "#00ff88" : "#ccc"
+                }}
+              >
+                {item.label}
+              </Box>
+            </motion.div>
           );
         })}
       </Box>
 
-      {/* 🔹 Logout */}
-      <Button onClick={logout} sx={logoutStyle}>
+      <Button onClick={logout} sx={logoutStyle} fullWidth>
         EXIT
       </Button>
     </Box>
   );
 
-  // =======================
-  // 🔹 RENDER PRINCIPAL (UI)
-  // =======================
-  return (
-    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#000" }}>
+ return (
+  <Box sx={{
+    display: "flex",
+    height: "100vh",
+    bgcolor: "#000",
+    overflow: "hidden"
+  }}>
 
-      {/* 🔹 Sidebar desktop */}
-      {!isMobile && (
-        <Box sx={{ width: 250 }}>
-          <SidebarContent />
-        </Box>
-      )}
-
-      {/* 🔹 Topbar móvil */}
-      {isMobile && (
-        <Box sx={topBar}>
-          <IconButton onClick={() => setOpen(true)}>
-            <MenuIcon />
-          </IconButton>
-        </Box>
-      )}
-
-      {/* 🔹 Drawer móvil */}
-      <Drawer open={open} onClose={() => setOpen(false)}>
+    {!isMobile && (
+      <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto" }}>
         <SidebarContent />
-      </Drawer>
+      </Box>
+    )}
 
-      {/* 🔹 FEED CENTRAL */}
-      <Box onScroll={handleScroll} sx={{ flex: 1, overflowY: "auto" }}>
-        <Box sx={{ maxWidth: 500, margin: "auto" }}>
+    {isMobile && (
+      <Box sx={topBar}>
+        <IconButton onClick={() => setOpen(true)}>
+          <MenuIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
 
-          {/* 🔹 Stories */}
-          <Box sx={storiesContainer}>
-            {[1,2,3].map((_,i)=>(
-              <Box key={i}>user{i}</Box>
-            ))}
-          </Box>
+        <IconButton onClick={() => setOpenRight(true)}>
+          <BarChartIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
+      </Box>
+    )}
 
-          {/* 🔹 POSTS */}
-          {isLoading ? (
-            <Skeleton height={300} />
-          ) : (
-            data.pages.map((page, i) =>
-              page.data.map((post, j) => (
-                <PostCard key={i + "-" + j} post={post} />
-              ))
-            )
-          )}
+    <Drawer open={open} onClose={() => setOpen(false)}>
+      <SidebarContent />
+    </Drawer>
 
+    <Drawer
+      anchor="right"
+      open={openRight}
+      onClose={() => setOpenRight(false)}
+      PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+    >
+      <Box sx={{ p: 2 }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+          <Card key={i} sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>{item}</Typography>
+              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    </Drawer>
+
+    <Box onScroll={handleScroll} sx={{
+      flex: 1,
+      display: "flex",
+      justifyContent: "center",
+      overflowY: "auto"
+    }}>
+      <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
+
+        <Box sx={storiesContainer}>
+          {[1,2,3,4,5].map((_,i) => (
+            <motion.div key={i} whileHover={{ scale: 1.1 }}>
+              <Box sx={storyItem}>
+                <Box sx={storyCircle} />
+                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                  user{i+1}
+                </Typography>
+              </Box>
+            </motion.div>
+          ))}
+        </Box>
+
+        {/* 🔥 POSTS REALES */}
+        {isLoading ? (
+          <Skeleton variant="rectangular" height={300} />
+        ) : (
+          data.pages.map((page, i) =>
+            page.data.map((post, j) => (
+              <PostCard key={i + "-" + j} post={post} />
+            ))
+          )
+        )}
+
+        {isFetchingNextPage && (
+          <Card sx={postCard}>
+            <CardContent>
+              <Skeleton variant="rectangular" height={300} />
+            </CardContent>
+          </Card>
+        )}
+
+      </Box>
+    </Box>
+
+    {!isMobile && (
+      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
+          <Card key={i} sx={postCard}>
+            <CardContent>
+              <Typography sx={titleStyle}>{item}</Typography>
+              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    )}
+
+    {showAI && (
+      <Box sx={aiOverlay}>
+        <Box sx={aiBox}>
+          <Typography sx={titleStyle}>GYM AI</Typography>
+          <Button onClick={() => setShowAI(false)}>Cerrar</Button>
+          <ChatAssistant />
         </Box>
       </Box>
+    )}
 
-      {/* 🔹 MODAL AI */}
-      {showAI && (
-        <Box sx={aiOverlay}>
-          <Box sx={aiBox}>
-            <Typography>GYM AI</Typography>
-            <Button onClick={() => setShowAI(false)}>Cerrar</Button>
-            <ChatAssistant />
-          </Box>
-        </Box>
-      )}
-
-    </Box>
-  );
+  </Box>
+);
 }
 
 
