@@ -42,6 +42,7 @@ import axios from "axios";
 function Home() {
   const [file, setFile] = useState(null);
   const [caption, setCaption] = useState("");
+  
   // 🔹 Contexto de usuario
   const { logout, user } = useContext(AuthContext);
 
