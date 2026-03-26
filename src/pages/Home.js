@@ -166,7 +166,7 @@ function Home() {
         <Box sx={{
           width: "100%",
           maxWidth: 500,
-          margin: "0 auto"
+          margin: 0
         }}>
 
           {/* STORIES */}
