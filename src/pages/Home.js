@@ -520,6 +520,81 @@ const aiOverlay = {
   alignItems: "center"
 };
 
+// 🔥 MODAL CREAR POST (ESTILO PRO)
+
+const overlayPro = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.85)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 999
+};
+
+const modalPro = {
+  width: 350,
+  bgcolor: "#111",
+  borderRadius: 4,
+  p: 3,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  boxShadow: "0 0 30px #00ff8840"
+};
+
+const titlePro = {
+  color: "#00ff88",
+  fontWeight: "bold",
+  mb: 2,
+  fontSize: 20
+};
+
+const previewImage = {
+  width: "100%",
+  height: 200,
+  objectFit: "cover",
+  borderRadius: 10,
+  marginBottom: 10
+};
+
+const uploadBtn = {
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  mt: 1,
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const inputPro = {
+  width: "100%",
+  marginTop: "10px",
+  padding: "10px",
+  borderRadius: "8px",
+  border: "none",
+  outline: "none",
+  background: "#222",
+  color: "#fff"
+};
+
+const postBtn = {
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  flex: 1,
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const cancelBtn = {
+  bgcolor: "#222",
+  color: "#fff",
+  flex: 1
+};
+
 const aiBox = { bgcolor: "#111", padding: 3 };
 
 export default Home;
