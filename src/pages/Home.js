@@ -19,6 +19,8 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
+import BarChartIcon from "@mui/icons-material/BarChart"; // ✅ ICONO NUEVO
+
 import ChatAssistant from "../components/ChatAssistant";
 
 function Home() {
@@ -112,8 +114,9 @@ function Home() {
             <MenuIcon sx={{ color: "#00ff88" }} />
           </IconButton>
 
+          {/* ✅ ICONO DERECHO CORREGIDO */}
           <IconButton onClick={() => setOpenRight(true)}>
-            📊
+            <BarChartIcon sx={{ color: "#00ff88" }} />
           </IconButton>
         </Box>
       )}
