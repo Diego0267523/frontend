@@ -16,6 +16,8 @@ import {
   useMediaQuery
 } from "@mui/material";
 
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChatAssistant from "../components/ChatAssistant";
 
@@ -38,35 +40,59 @@ function Home() {
     { label: "🤖 AI", action: () => setShowAI(true) }
   ];
 
+  // 🔥 POSTS DATA
+  const posts = [
+    {
+      user: "DiegoFit",
+      image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e",
+      caption: "Día de pecho 💪🔥",
+      likes: 120,
+      time: "Hace 2h"
+    },
+    {
+      user: "GymBro",
+      image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61",
+      caption: "No pain no gain 🧠",
+      likes: 98,
+      time: "Hace 5h"
+    }
+  ];
+
   const SidebarContent = () => (
     <Box sx={sidebarStyle}>
 
-      <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-        <Box sx={avatarStyle} />
-        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-          {user?.nombre || "Usuario"}
-        </Typography>
+      <motion.div whileHover={{ scale: 1.05 }}>
+        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
+          <Box sx={avatarStyle} />
+          <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+            {user?.nombre || "Usuario"}
+          </Typography>
+        </Box>
+      </motion.div>
+
+      <Box sx={{ flex: 1 }}>
+        {menuItems.map((item, i) => {
+          const isActive = location.pathname === item.path;
+
+          return (
+            <motion.div key={i} whileHover={{ scale: 1.03 }}>
+              <Box
+                onClick={() => {
+                  if (item.path) navigate(item.path);
+                  if (item.action) item.action();
+                }}
+                sx={{
+                  ...menuItemStyle,
+                  bgcolor: isActive ? "#00ff8820" : "#151515",
+                  color: isActive ? "#00ff88" : "#ccc"
+                }}
+              >
+                {item.label}
+              </Box>
+            </motion.div>
+          );
+        })}
       </Box>
-
-      {menuItems.map((item, i) => {
-        const isActive = location.pathname === item.path;
-
-        return (
-          <Box
-            key={i}
-            onClick={() => {
-              if (item.path) navigate(item.path);
-              if (item.action) item.action();
-            }}
-            sx={{
-              ...menuItemStyle,
-              color: isActive ? "#00ff88" : "#777"
-            }}
-          >
-            {item.label}
-          </Box>
-        );
-      })}
 
       <Button onClick={logout} sx={logoutStyle} fullWidth>
         EXIT
@@ -77,10 +103,8 @@ function Home() {
   return (
     <Box sx={{ display: "flex", bgcolor: "#000" }}>
 
-      {/* SIDEBAR FIJO */}
       {!isMobile && <SidebarContent />}
 
-      {/* MOBILE */}
       {isMobile && (
         <Box sx={topBar}>
           <IconButton onClick={() => setOpen(true)}>
@@ -93,44 +117,80 @@ function Home() {
         <SidebarContent />
       </Drawer>
 
-      {/* CONTENIDO CENTRAL */}
+      {/* 🔥 CENTRO */}
       <Box sx={centerContent(isMobile)}>
 
         {/* STORIES */}
         <Box sx={storiesContainer}>
           {[1,2,3,4,5].map((_,i) => (
-            <Box key={i} sx={storyItem}>
-              <Box sx={storyCircle} />
-              <Typography sx={{ color: "#aaa", fontSize: 12 }}>
-                user{i+1}
-              </Typography>
-            </Box>
+            <motion.div key={i} whileHover={{ scale: 1.1 }}>
+              <Box sx={storyItem}>
+                <Box sx={storyCircle} />
+                <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                  user{i+1}
+                </Typography>
+              </Box>
+            </motion.div>
           ))}
         </Box>
 
-        {/* POSTS (VACÍO POR AHORA) */}
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={{ color: "#888" }}>
-              Aquí irán las publicaciones fitness 🔥
-            </Typography>
-          </CardContent>
-        </Card>
+        {/* 🔥 POSTS */}
+        {posts.map((post, i) => (
+          <motion.div key={i} whileHover={{ scale: 1.01 }}>
+            <Card sx={postCard}>
+              <CardContent>
+
+                {/* HEADER */}
+                <Box sx={headerStyle}>
+                  <Box sx={avatarStyle} />
+                  <Box>
+                    <Typography sx={username}>{post.user}</Typography>
+                    <Typography sx={time}>{post.time}</Typography>
+                  </Box>
+                </Box>
+
+                {/* IMAGE */}
+                <Box
+                  component="img"
+                  src={post.image}
+                  sx={imageStyle}
+                />
+
+                {/* ACTIONS */}
+                <Box sx={actionsStyle}>
+                  <IconButton>
+                    <FavoriteIcon sx={{ color: "#aaa" }} />
+                  </IconButton>
+
+                  <IconButton>
+                    <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
+                  </IconButton>
+                </Box>
+
+                {/* INFO */}
+                <Typography sx={likes}>
+                  {post.likes} likes
+                </Typography>
+
+                <Typography sx={caption}>
+                  <b>{post.user}</b> {post.caption}
+                </Typography>
+
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
 
       </Box>
 
-      {/* PANEL DERECHO */}
+      {/* DERECHA */}
       {!isMobile && (
         <Box sx={rightPanel}>
 
-          {/* GRAFICA */}
           <Card sx={postCard}>
             <CardContent>
-              <Typography sx={titleStyle}>
-                📊 Calorías semana
-              </Typography>
+              <Typography sx={titleStyle}>📊 Calorías semana</Typography>
 
-              {/* fake bars */}
               <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
                 {[40,60,80,50,70,90,65].map((v,i)=>(
                   <Box key={i} sx={{
@@ -145,7 +205,6 @@ function Home() {
             </CardContent>
           </Card>
 
-          {/* METRICAS */}
           {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
             <Card key={i} sx={postCard}>
               <CardContent>
@@ -182,7 +241,9 @@ const sidebarStyle = {
   left: 0,
   top: 0,
   bgcolor: "#0b0b0b",
-  p: 2
+  p: 2,
+  display: "flex",
+  flexDirection: "column"
 };
 
 const centerContent = (isMobile) => ({
@@ -208,6 +269,33 @@ const postCard = {
   mb: 2,
   borderRadius: 4
 };
+
+const headerStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  mb: 1
+};
+
+const username = { color: "#fff", fontWeight: "bold" };
+const time = { color: "#777", fontSize: 12 };
+
+const imageStyle = {
+  width: "100%",
+  height: 300,
+  objectFit: "cover",
+  borderRadius: 10,
+  marginTop: 10
+};
+
+const actionsStyle = {
+  display: "flex",
+  gap: 1,
+  mt: 1
+};
+
+const likes = { color: "#fff", mt: 1 };
+const caption = { color: "#ccc", mt: 1 };
 
 const storiesContainer = {
   display: "flex",
@@ -243,19 +331,27 @@ const profileStyle = {
 
 const menuItemStyle = {
   mt: 2,
-  cursor: "pointer"
+  p: 1.5,
+  borderRadius: 3,
+  cursor: "pointer",
+  transition: "0.3s",
+  '&:hover': {
+    bgcolor: "#00ff8830",
+    color: "#00ff88"
+  }
 };
 
 const logoutStyle = {
-  mt: 4,
-  border: "1px solid #00ff88",
-  color: "#00ff88"
+  mt: "auto",
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
 };
 
-const progressStyle = {
-  height: 8,
-  mt: 1
-};
+const progressStyle = { height: 8, mt: 1 };
 
 const topBar = {
   position: "fixed",
