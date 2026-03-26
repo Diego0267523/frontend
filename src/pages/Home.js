@@ -130,7 +130,7 @@ function Home() {
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
     { label: "🤖 AI", action: () => setShowAI(true) },
-    { label: "➕ Crear", path: "/crear" }
+    { label: "Crear", path: "/crear" }
   ];
 
 
