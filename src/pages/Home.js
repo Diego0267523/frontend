@@ -41,9 +41,8 @@ function Home() {
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
   const [showAI, setShowAI] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
-  const [visiblePosts, setVisiblePosts] = useState(2);
-  const [loading, setLoading] = useState(false);
 
   // 🔥 FETCH PAGINADO REAL
   const fetchPosts = async ({ pageParam = 1 }) => {
@@ -100,7 +99,8 @@ function Home() {
     { label: "📈 Progreso", path: "/progreso" },
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) }
+    { label: "🤖 AI", action: () => setShowAI(true) },
+    { label: "➕ Crear", action: () => setShowCreatePost(true) }
   ];
 
   // 🔥 PREFETCH (ejemplo)
@@ -338,6 +338,66 @@ function Home() {
       </Box>
     )}
 
+          {showCreatePost && (
+            <Box sx={overlayPro}>
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={modalPro}>
+    
+                  <Typography sx={titlePro}>
+                    Crear Post 🚀
+                  </Typography>
+    
+                  {/* PREVIEW */}
+                  {file && (
+                    <Box
+                      component="img"
+                      src={URL.createObjectURL(file)}
+                      sx={previewImage}
+                    />
+                  )}
+    
+                  {/* INPUT FILE */}
+                  <Button
+                    variant="contained"
+                    component="label"
+                    sx={uploadBtn}
+                  >
+                    Subir imagen
+                    <input
+                      type="file"
+                      hidden
+                      onChange={(e) => setFile(e.target.files[0])}
+                    />
+                  </Button>
+    
+                  {/* CAPTION */}
+                  <input
+                    placeholder="¿Qué estás pensando?"
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    style={inputPro}
+                  />
+    
+                  {/* BOTONES */}
+                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                    <Button onClick={handleCreatePost} sx={postBtn}>
+                      Publicar
+                    </Button>
+    
+                    <Button onClick={() => setShowCreatePost(false)} sx={cancelBtn}>
+                      Cancelar
+                    </Button>
+                  </Box>
+    
+                </Box>
+              </motion.div>
+            </Box>
+          )}
+
   </Box>
 );
 }
@@ -472,6 +532,81 @@ const aiOverlay = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center"
+};
+
+// 🔥 MODAL CREAR POST (ESTILO PRO)
+
+const overlayPro = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.85)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 999
+};
+
+const modalPro = {
+  width: 350,
+  bgcolor: "#111",
+  borderRadius: 4,
+  p: 3,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  boxShadow: "0 0 30px #00ff8840"
+};
+
+const titlePro = {
+  color: "#00ff88",
+  fontWeight: "bold",
+  mb: 2,
+  fontSize: 20
+};
+
+const previewImage = {
+  width: "100%",
+  height: 200,
+  objectFit: "cover",
+  borderRadius: 10,
+  marginBottom: 10
+};
+
+const uploadBtn = {
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  mt: 1,
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const inputPro = {
+  width: "100%",
+  marginTop: "10px",
+  padding: "10px",
+  borderRadius: "8px",
+  border: "none",
+  outline: "none",
+  background: "#222",
+  color: "#fff"
+};
+
+const postBtn = {
+  bgcolor: "#00ff88",
+  color: "#000",
+  fontWeight: "bold",
+  flex: 1,
+  '&:hover': {
+    bgcolor: "#00cc6a"
+  }
+};
+
+const cancelBtn = {
+  bgcolor: "#222",
+  color: "#fff",
+  flex: 1
 };
 
 const aiBox = { bgcolor: "#111", padding: 3 };
