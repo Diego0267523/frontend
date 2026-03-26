@@ -24,6 +24,10 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 
 import ChatAssistant from "../components/ChatAssistant";
 
+// 🔥 NUEVO
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
 function Home() {
   const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -32,6 +36,8 @@ function Home() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const queryClient = useQueryClient(); // 🔥 PREFETCH
+
   const [open, setOpen] = useState(false);
   const [openRight, setOpenRight] = useState(false);
   const [showAI, setShowAI] = useState(false);
@@ -39,7 +45,39 @@ function Home() {
   const [visiblePosts, setVisiblePosts] = useState(2);
   const [loading, setLoading] = useState(false);
 
-  // 🔥 THROTTLE + MEMO
+  // 🔥 FETCH PAGINADO REAL
+  const fetchPosts = async ({ pageParam = 1 }) => {
+    const { data } = await axios.get(
+      `https://jsonplaceholder.typicode.com/photos?_limit=5&_page=${pageParam}`
+    );
+
+    return {
+      data: data.map((item, i) => ({
+        user: "User" + (i + pageParam * 5),
+        image: item.url,
+        caption: item.title,
+        likes: Math.floor(Math.random() * 200),
+        time: "Hace " + (i + 1) + "h"
+      })),
+      nextPage: pageParam + 1
+    };
+  };
+
+  // 🔥 INFINITE QUERY
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useInfiniteQuery({
+    queryKey: ["feed"],
+    queryFn: fetchPosts,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // 🔥 THROTTLE + SCROLL REAL
   let scrollTimeout = null;
 
   const handleScroll = useCallback((e) => {
@@ -51,16 +89,11 @@ function Home() {
       const bottom =
         e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
 
-      if (bottom && !loading) {
-        setLoading(true);
-
-        setTimeout(() => {
-          setVisiblePosts((prev) => prev + 2);
-          setLoading(false);
-        }, 1000);
+      if (bottom && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage(); // 🔥 REAL
       }
     }, 200);
-  }, [loading]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
@@ -70,22 +103,16 @@ function Home() {
     { label: "🤖 AI", action: () => setShowAI(true) }
   ];
 
-  const posts = [
-    {
-      user: "DiegoFit",
-      image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e",
-      caption: "Día de pecho 💪🔥",
-      likes: 120,
-      time: "Hace 2h"
-    },
-    {
-      user: "GymBro",
-      image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61",
-      caption: "No pain no gain 🧠",
-      likes: 98,
-      time: "Hace 5h"
-    }
-  ];
+  // 🔥 PREFETCH (ejemplo)
+  const prefetchProgreso = () => {
+    queryClient.prefetchQuery({
+      queryKey: ["progreso"],
+      queryFn: async () => {
+        const { data } = await axios.get("https://jsonplaceholder.typicode.com/posts?_limit=5");
+        return data;
+      }
+    });
+  };
 
   // 🔥 POST MEMOIZADO
   const PostCard = memo(({ post }) => (
@@ -151,6 +178,7 @@ function Home() {
           return (
             <motion.div key={i} whileHover={{ scale: 1.03 }}>
               <Box
+                onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined} // 🔥 PREFETCH
                 onClick={() => {
                   if (item.path) navigate(item.path);
                   if (item.action) item.action();
@@ -254,17 +282,21 @@ function Home() {
           ))}
         </Box>
 
-        {posts.slice(0, visiblePosts).map((post, i) => (
-          <PostCard key={i} post={post} />
-        ))}
+        {/* 🔥 POSTS REALES */}
+        {isLoading ? (
+          <Skeleton variant="rectangular" height={300} />
+        ) : (
+          data.pages.map((page, i) =>
+            page.data.map((post, j) => (
+              <PostCard key={i + "-" + j} post={post} />
+            ))
+          )
+        )}
 
-        {loading && (
+        {isFetchingNextPage && (
           <Card sx={postCard}>
             <CardContent>
-              <Skeleton variant="circular" width={40} height={40} />
-              <Skeleton variant="text" width="40%" />
-              <Skeleton variant="rectangular" height={300} sx={{ mt: 1 }} />
-              <Skeleton variant="text" width="60%" />
+              <Skeleton variant="rectangular" height={300} />
             </CardContent>
           </Card>
         )}
@@ -309,7 +341,6 @@ function Home() {
   </Box>
 );
 }
-
 /* 🎨 STYLES */
 
 const sidebarStyle = {
