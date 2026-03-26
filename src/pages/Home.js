@@ -156,7 +156,7 @@ function Home() {
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
     { label: "🤖 AI", action: () => setShowAI(true) },
-   // { label: "➕ Crear", action: () => setShowCreatePost(true) }
+    { label: "➕ Crear", action: () => setShowCreatePost(true) }
   ];
 
   // =======================
@@ -290,15 +290,27 @@ function Home() {
       </Drawer>
 
       {/* 🔹 FEED CENTRAL */}
-      <Box onScroll={handleScroll} sx={{ flex: 1, overflowY: "auto" }}>
+      <Box 
+          onScroll={handleScroll} 
+          sx={{ 
+            flex: 1, 
+            overflowY: "auto",
+            marginLeft: isMobile ? 0 : 250 // 🔥 CLAVE
+          }}
+        >
         <Box sx={{ maxWidth: 500, margin: "auto" }}>
 
           {/* 🔹 Stories */}
-          <Box sx={storiesContainer}>
-            {[1,2,3].map((_,i)=>(
-              <Box key={i}>user{i}</Box>
-            ))}
-          </Box>
+            <Box sx={storiesContainer}>
+              {[1,2,3,4,5].map((_,i)=>(
+                <Box key={i} sx={storyItem}>
+                  <Box sx={storyCircle} />
+                  <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                    user{i}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
 
           {/* 🔹 POSTS */}
           {isLoading ? (
@@ -398,10 +410,14 @@ function Home() {
 const sidebarStyle = {
   width: 250,
   height: "100vh",
+  position: "fixed", // 🔥 CLAVE
+  left: 0,
+  top: 0,
   bgcolor: "#0b0b0b",
   p: 2,
   display: "flex",
-  flexDirection: "column"
+  flexDirection: "column",
+  zIndex: 100
 };
 
 const centerContent = (isMobile) => ({
