@@ -146,19 +146,38 @@ const fetchPosts = async ({ pageParam = 1 }) => {
     throw error; // Re-throw para que React Query maneje el error
   }
 };
+  const [showRetry, setShowRetry] = useState(false);
+
   // 🔥 INFINITE QUERY
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading
+    isLoading,
+    error
   } = useInfiniteQuery({
     queryKey: ["feed"],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage) => lastPage.nextPage,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    retry: false, // No auto-retry para control manual
+    onError: () => setShowRetry(true)
   });
+
+  // 🔥 TIMEOUT PARA MOSTRAR RETRY DESPUÉS DE 3s
+  React.useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        if (!data?.pages?.some(p => p.data?.length > 0)) {
+          setShowRetry(true);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowRetry(false);
+    }
+  }, [isLoading, data]);
 
     // =======================
   // 🔹 SCROLL DETECCIÓN
@@ -249,14 +268,6 @@ const handleScroll = useCallback((e) => {
      </Box>
    );
 
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "grid", placeItems: "center", minHeight: "100vh", bgcolor: "#060a0f", color: "#fff" }}>
-        <Typography variant="h6">Cargando contenido... un momento, por favor.</Typography>
-      </Box>
-    );
-  }
-
   const hasPosts = data?.pages?.some((page) => Array.isArray(page.data) && page.data.length > 0);
 
  return (
@@ -340,10 +351,27 @@ const handleScroll = useCallback((e) => {
         </Box>
 
         {/* 🔥 POSTS REALES */}
-        {!hasPosts ? (
+        {isLoading ? (
+          <>
+            <Skeleton variant="rectangular" height={300} sx={{ bgcolor: "#111", mb: 2 }} />
+            <Skeleton variant="rectangular" height={300} sx={{ bgcolor: "#111", mb: 2 }} />
+            <Skeleton variant="rectangular" height={300} sx={{ bgcolor: "#111", mb: 2 }} />
+          </>
+        ) : !hasPosts ? (
           <Card sx={postCard}>
-            <CardContent>
-              <Typography sx={{ color: "#fff" }}>No hay posts disponibles aún.</Typography>
+            <CardContent sx={{ textAlign: "center" }}>
+              <Typography sx={{ color: "#fff", mb: 2 }}>No hay posts disponibles aún.</Typography>
+              {showRetry && (
+                <Button
+                  onClick={() => {
+                    setShowRetry(false);
+                    queryClient.invalidateQueries({ queryKey: ["feed"] });
+                  }}
+                  sx={{ bgcolor: "#00ff88", color: "#000", fontWeight: "bold" }}
+                >
+                  Intentar otra vez
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
