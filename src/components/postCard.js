@@ -12,6 +12,7 @@ const PostCard = memo(({ post }) => {
   const { token } = useContext(AuthContext);
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
+  const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState("");
@@ -91,6 +92,7 @@ const PostCard = memo(({ post }) => {
       if (response.data.success) {
         // Backend devuelve: { success: true, comment: { id, user, comment, time } }
         setComments([...comments, response.data.comment]);
+        setCommentsCount((prev) => prev + 1);
         setNewComment("");
         console.log("Comentario agregado exitosamente");
       }
@@ -115,9 +117,11 @@ const PostCard = memo(({ post }) => {
       
       if (response.data.success) {
         // Backend devuelve: { success: true, comments: [...] }
-        setComments(response.data.comments || []);
+        const fetchedComments = response.data.comments || [];
+        setComments(fetchedComments);
+        setCommentsCount(fetchedComments.length);
         setShowComments(true);
-        console.log(`${response.data.comments?.length || 0} comentarios cargados`);
+        console.log(`${fetchedComments.length} comentarios cargados`);
       }
     } catch (error) {
       console.error("Error fetching comments:", error.response?.data || error.message);
@@ -156,6 +160,16 @@ const PostCard = memo(({ post }) => {
             mt: 1
           }} />
 
+          {/* Pie de foto (caption) */}
+          <Typography sx={{ color: "#ccc", mt: 1 }}>
+            <b>{post.nombre || post.user || "Usuario"}</b> {post.caption}
+          </Typography>
+
+          {/* Contadores Likes / Comentarios (debajo del caption) */}
+          <Typography sx={{ color: "#fff", mt: 1, fontWeight: "bold" }}>
+            {likesCount} {likesCount === 1 ? "like" : "likes"} • {commentsCount} {commentsCount === 1 ? "comentario" : "comentarios"}
+          </Typography>
+
           {/* Botones Like y Comentarios */}
           <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
             <IconButton onClick={handleLike} disabled={loadingLike}>
@@ -165,16 +179,6 @@ const PostCard = memo(({ post }) => {
               <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
             </IconButton>
           </Box>
-
-          {/* Contador de Likes */}
-          <Typography sx={{ color: "#fff", mt: 1, fontWeight: "bold" }}>
-            {likesCount} {likesCount === 1 ? "like" : "likes"}
-          </Typography>
-
-          {/* Caption */}
-          <Typography sx={{ color: "#ccc", mt: 1 }}>
-            <b>{post.nombre || post.user || "Usuario"}</b> {post.caption}
-          </Typography>
 
           {/* Sección de Comentarios */}
           <Collapse in={showComments}>

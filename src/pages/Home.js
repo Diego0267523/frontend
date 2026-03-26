@@ -110,6 +110,8 @@ const handleCreatePost = async () => {
         image_url: URL.createObjectURL(file),
         caption: postCaption,
         likes: 0,
+        commentsCount: 0,
+        liked: false,
         time: "Ahora"
       };
 
