@@ -2,7 +2,7 @@
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useContext, useState, useCallback, useRef } from "react";
+import React, { useContext, useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
 
 
@@ -19,7 +19,8 @@ import {
   useMediaQuery,
   Skeleton,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from "@mui/material";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -31,9 +32,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ChatAssistant from "../components/ChatAssistant";
 
 // 🔥 NUEVO
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import API_URL from "../utils/config";
+import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, deleteFoodEntry } from "../api";
 
 function Home() {
   const { user, logout } = useContext(AuthContext);
@@ -81,6 +80,22 @@ function Home() {
   const [todayTotal, setTodayTotal] = useState(0);
   const [todayProtein, setTodayProtein] = useState(0);
   const [todayCarbs, setTodayCarbs] = useState(0);
+  const [loadingFood, setLoadingFood] = useState(false);
+
+  // Editable macros
+  const [editableCalories, setEditableCalories] = useState("");
+  const [editableProtein, setEditableProtein] = useState("");
+  const [editableCarbs, setEditableCarbs] = useState("");
+
+  // Debounced food text
+  const [debouncedFoodText, setDebouncedFoodText] = useState("");
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFoodText(foodText);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [foodText]);
 
 
   // 🔥 NOTIFICACIONES
@@ -190,6 +205,9 @@ const handleAnalyzeFood = async () => {
 
     if (response.data) {
       setFoodAnalysis(response.data);
+      setEditableCalories(response.data.calories || "");
+      setEditableProtein(response.data.proteina || "");
+      setEditableCarbs(response.data.carbohidratos || "");
       setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
     }
   } catch (error) {
@@ -201,40 +219,107 @@ const handleAnalyzeFood = async () => {
   }
 };
 
-const handleSaveFoodEntry = () => {
-  const calories = Number(foodAnalysis?.calories || 0);
-  const proteina = Number(foodAnalysis?.proteina || 0);
-  const carbohidratos = Number(foodAnalysis?.carbohidratos || 0);
+const handleSaveFoodEntry = async () => {
+  const calories = Number(editableCalories || 0);
+  const proteina = Number(editableProtein || 0);
+  const carbohidratos = Number(editableCarbs || 0);
 
-  if (!foodAnalysis || (!calories && !proteina && !carbohidratos)) {
-    setSnackbar({ open: true, message: "Necesitas analizar primero y obtener valores", severity: "error" });
+  // ✅ Validaciones frontend
+  if (!foodText.trim() && !foodImageFile) {
+    setSnackbar({ open: true, message: "Ingresa una descripción o sube una imagen", severity: "error" });
     return;
   }
 
-  const entry = {
-    id: Date.now(),
-    text: foodText.trim(),
-    imageUrl: foodImageFile ? URL.createObjectURL(foodImageFile) : null,
-    calories,
-    proteina,
-    carbohidratos,
-    createdAt: new Date().toISOString(),
-    rawResponse: foodAnalysis
-  };
+  if (!foodAnalysis && calories === 0 && proteina === 0 && carbohidratos === 0) {
+    setSnackbar({ open: true, message: "Ingresa valores nutricionales o analiza primero", severity: "error" });
+    return;
+  }
 
-  const nextEntries = [entry, ...dailyFoodEntries];
-  saveDailyFoodEntries(nextEntries);
-  setFoodModalOpen(false);
-  setFoodText("");
-  setFoodImageFile(null);
-  setFoodAnalysis(null);
-  setSnackbar({ open: true, message: "Comida registrada en el día", severity: "success" });
+  if (calories < 0 || proteina < 0 || carbohidratos < 0) {
+    setSnackbar({ open: true, message: "Los valores no pueden ser negativos", severity: "error" });
+    return;
+  }
+
+  setLoadingFood(true); // 🔥 Estado de carga
+
+  try {
+    const data = {
+      descripcion: foodText.trim(),
+      calorias: calories,
+      proteina,
+      carbohidratos
+    };
+
+    let response;
+    if (foodImageFile) {
+      const formData = new FormData();
+      formData.append("descripcion", foodText.trim());
+      formData.append("calorias", calories.toString());
+      formData.append("proteina", proteina.toString());
+      formData.append("carbohidratos", carbohidratos.toString());
+      formData.append("image", foodImageFile);
+      response = await createFoodEntryWithImage(formData);
+    } else {
+      response = await createFoodEntry(data);
+    }
+
+    if (response.data.success) {
+      setFoodModalOpen(false);
+      setFoodText("");
+      setFoodImageFile(null);
+      setFoodAnalysis(null);
+      setEditableCalories("");
+      setEditableProtein("");
+      setEditableCarbs("");
+      setSnackbar({ open: true, message: "Comida registrada exitosamente", severity: "success" });
+      // Recargar datos
+      await loadDailyFoodData();
+    }
+  } catch (error) {
+    console.error("Error guardando comida:", error);
+    let message = "Error al guardar la entrada";
+    if (error.response?.status === 401) {
+      message = "Sesión expirada. Inicia sesión nuevamente.";
+    } else if (error.response?.status === 400) {
+      message = error.response.data.message || "Datos inválidos";
+    } else if (error.response?.status >= 500) {
+      message = "Error del servidor. Inténtalo más tarde.";
+    } else if (!navigator.onLine) {
+      message = "Sin conexión a internet";
+    }
+    setSnackbar({ open: true, message, severity: "error" });
+  } finally {
+    setLoadingFood(false);
+  }
 };
 
-const handleDeleteFoodEntry = (id) => {
-  const filtered = dailyFoodEntries.filter((item) => item.id !== id);
-  saveDailyFoodEntries(filtered);
-  setSnackbar({ open: true, message: "Entrada eliminada", severity: "info" });
+const handleDeleteFoodEntry = async (id) => {
+  if (!id) {
+    setSnackbar({ open: true, message: "ID inválido", severity: "error" });
+    return;
+  }
+
+  setLoadingFood(true);
+
+  try {
+    await deleteFoodEntry(id);
+    setSnackbar({ open: true, message: "Entrada eliminada", severity: "info" });
+    // Recargar datos
+    await loadDailyFoodData();
+  } catch (error) {
+    console.error("Error eliminando comida:", error);
+    let message = "Error al eliminar la entrada";
+    if (error.response?.status === 401) {
+      message = "Sesión expirada";
+    } else if (error.response?.status === 404) {
+      message = "Entrada no encontrada";
+    } else if (!navigator.onLine) {
+      message = "Sin conexión";
+    }
+    setSnackbar({ open: true, message, severity: "error" });
+  } finally {
+    setLoadingFood(false);
+  }
 };
 
 
@@ -253,42 +338,51 @@ const handleDeleteFoodEntry = (id) => {
     loadStories();
   }, []);
 
-  const calculateTotals = (entries) => {
-    const calories = entries.reduce((sum, item) => sum + (item.calories || 0), 0);
-    const protein = entries.reduce((sum, item) => sum + (item.proteina || 0), 0);
-    const carbs = entries.reduce((sum, item) => sum + (item.carbohidratos || 0), 0);
-    setTodayTotal(calories);
-    setTodayProtein(protein);
-    setTodayCarbs(carbs);
-  };
-
-  const saveDailyFoodEntries = (entries) => {
-    localStorage.setItem("dailyFoodEntries", JSON.stringify(entries));
-    setDailyFoodEntries(entries);
-    calculateTotals(entries);
-  };
-
-  const loadDailyFoodEntries = () => {
-    const raw = localStorage.getItem("dailyFoodEntries");
-    if (!raw) {
-      saveDailyFoodEntries([]);
-      return;
-    }
+  const loadDailyFoodData = async () => {
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        saveDailyFoodEntries(parsed);
+      setLoadingFood(true);
+      const fecha = new Date().toISOString().split('T')[0];
+      const [entriesResponse, totalsResponse] = await Promise.all([
+        getFoodEntries(fecha),
+        getDailyTotals(fecha)
+      ]);
+
+      if (entriesResponse.data.success) {
+        setDailyFoodEntries(entriesResponse.data.entries);
       } else {
-        saveDailyFoodEntries([]);
+        console.warn("Error cargando entradas:", entriesResponse.data.message);
+        setDailyFoodEntries([]);
       }
-    } catch (err) {
-      console.error("Error parseando entradas diarias:", err);
-      saveDailyFoodEntries([]);
+
+      if (totalsResponse.data.success) {
+        const totals = totalsResponse.data.totals;
+        setTodayTotal(totals.total_calorias || 0);
+        setTodayProtein(totals.total_proteina || 0);
+        setTodayCarbs(totals.total_carbohidratos || 0);
+      } else {
+        console.warn("Error cargando totales:", totalsResponse.data.message);
+        setTodayTotal(0);
+        setTodayProtein(0);
+        setTodayCarbs(0);
+      }
+    } catch (error) {
+      console.error("Error cargando datos de comida:", error);
+      // Mostrar error solo si es crítico (ej. sin conexión)
+      if (!navigator.onLine) {
+        setSnackbar({ open: true, message: "Sin conexión a internet", severity: "warning" });
+      }
+      // Resetear estados en caso de error
+      setDailyFoodEntries([]);
+      setTodayTotal(0);
+      setTodayProtein(0);
+      setTodayCarbs(0);
+    } finally {
+      setLoadingFood(false);
     }
   };
 
   React.useEffect(() => {
-    loadDailyFoodEntries();
+    loadDailyFoodData();
   }, []);
 
   // 🔥 HISTORIAS - Subir historia
@@ -465,8 +559,9 @@ const fetchPosts = async ({ pageParam = 1 }) => {
     queryKey: ["feed"],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage) => lastPage.nextPage,
-    staleTime: 1000 * 60 * 5,
-    retry: false, // No auto-retry para control manual
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    cacheTime: 1000 * 60 * 30, // 30 minutos
+    retry: false,
     onError: () => setShowRetry(true)
   });
 
@@ -504,14 +599,14 @@ const handleScroll = useCallback((e) => {
   }, 200);
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { label: "🏋️ Rutinas", path: "/" },
     { label: "📈 Progreso", action: () => setFoodModalOpen(true) },
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
     { label: "🤖 AI", action: () => setShowAI(true) },
     { label: "➕ Crear", action: () => setShowCreatePost(true) }
-  ];
+  ], []);
 
    // =======================
   // 🔹 PREFETCH (optimización)
@@ -531,7 +626,7 @@ const handleScroll = useCallback((e) => {
    // =======================
    // 🔹 SIDEBAR
    // =======================
-   const SidebarContent = () => (
+   const SidebarContent = React.memo(() => (
      <Box sx={sidebarStyle}>
  
        {/* 🔹 Perfil */}
@@ -576,10 +671,7 @@ const handleScroll = useCallback((e) => {
          EXIT
        </Button>
      </Box>
-   );
-
-  const hasPosts = data?.pages?.some((page) => Array.isArray(page.data) && page.data.length > 0);
-
+   ));
  return (
   <Box sx={{
     display: "flex",
@@ -795,13 +887,22 @@ const handleScroll = useCallback((e) => {
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>🍽️ Entradas del día</Typography>
-            {dailyFoodEntries.length === 0 ? (
+            {loadingFood ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress size={24} sx={{ color: '#00ff88' }} />
+              </Box>
+            ) : dailyFoodEntries.length === 0 ? (
               <Typography sx={{ color: '#777', fontSize: 12 }}>Aún no hay comidas registradas.</Typography>
             ) : (
               dailyFoodEntries.slice(0, 4).map((entry) => (
-                <Box key={entry.id} sx={{ mb: 1 }}>
-                  <Typography sx={{ color: '#fff', fontSize: 12 }}>{entry.text || 'Sin descripción'}</Typography>
-                  <Typography sx={{ color: '#aaa', fontSize: 11 }}>C: {entry.calories} • P: {entry.proteina} • CH: {entry.carbohidratos}</Typography>
+                <Box key={entry.id} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography sx={{ color: '#fff', fontSize: 12 }}>{entry.descripcion || 'Sin descripción'}</Typography>
+                    <Typography sx={{ color: '#aaa', fontSize: 11 }}>C: {entry.calorias} • P: {entry.proteina} • CH: {entry.carbohidratos}</Typography>
+                  </Box>
+                  <IconButton size="small" onClick={() => handleDeleteFoodEntry(entry.id)} sx={{ color: '#ff4444' }} disabled={loadingFood}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
                 </Box>
               ))
             )}
@@ -848,6 +949,7 @@ const handleScroll = useCallback((e) => {
                       component="img"
                       src={URL.createObjectURL(file)}
                       sx={previewImage}
+                      loading="lazy"
                     />
                   )}
     
@@ -927,19 +1029,45 @@ const handleScroll = useCallback((e) => {
                     <Button onClick={handleAnalyzeFood} sx={postBtn} disabled={foodAnalyzing}>
                       {foodAnalyzing ? 'Analizando...' : 'Analizar'}
                     </Button>
-                    <Button onClick={handleSaveFoodEntry} sx={postBtn} disabled={!foodAnalysis}>
-                      Guardar
+                    <Button onClick={handleSaveFoodEntry} sx={postBtn} disabled={loadingFood}>
+                      {loadingFood ? 'Guardando...' : 'Guardar'}
                     </Button>
-                    <Button onClick={() => setFoodModalOpen(false)} sx={cancelBtn}>Cancelar</Button>
+                    <Button onClick={() => setFoodModalOpen(false)} sx={cancelBtn} disabled={loadingFood}>Cancelar</Button>
                   </Box>
 
                   {foodAnalysis && (
                     <Box sx={{ mt: 2, border: '1px solid #333', borderRadius: 8, p: 1 }}>
-                      <Typography sx={{ color:'#fff', fontWeight:'bold' }}>Resultado IA</Typography>
-                      <Typography sx={{ color:'#aaa' }}>Calorías: {foodAnalysis.calories ?? '-'} kcal</Typography>
-                      <Typography sx={{ color:'#aaa' }}>Proteína: {foodAnalysis.proteina ?? '-'} g</Typography>
-                      <Typography sx={{ color:'#aaa' }}>Carbohidratos: {foodAnalysis.carbohidratos ?? '-'} g</Typography>
-                      <Typography sx={{ color:'#777', mt: 1 }}>Texto IA: {foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || 'N/A'}</Typography>
+                      <Typography sx={{ color:'#fff', fontWeight:'bold' }}>Resultado IA (editable)</Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                        <Box>
+                          <Typography sx={{ color:'#aaa', fontSize: 12 }}>Calorías (kcal)</Typography>
+                          <input
+                            type="number"
+                            value={editableCalories}
+                            onChange={(e) => setEditableCalories(e.target.value)}
+                            style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography sx={{ color:'#aaa', fontSize: 12 }}>Proteína (g)</Typography>
+                          <input
+                            type="number"
+                            value={editableProtein}
+                            onChange={(e) => setEditableProtein(e.target.value)}
+                            style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography sx={{ color:'#aaa', fontSize: 12 }}>Carbohidratos (g)</Typography>
+                          <input
+                            type="number"
+                            value={editableCarbs}
+                            onChange={(e) => setEditableCarbs(e.target.value)}
+                            style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
+                          />
+                        </Box>
+                      </Box>
+                      <Typography sx={{ color:'#777', mt: 1, fontSize: 12 }}>Texto IA: {foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || 'N/A'}</Typography>
                     </Box>
                   )}
                 </Box>
@@ -967,6 +1095,7 @@ const handleScroll = useCallback((e) => {
                       component="img"
                       src={URL.createObjectURL(storyFile)}
                       sx={previewImage}
+                      loading="lazy"
                     />
                   )}
     
@@ -1081,6 +1210,7 @@ const handleScroll = useCallback((e) => {
                             transition={{ duration: 0.3 }}
                             onMouseEnter={stopStoryTimer}
                             onMouseLeave={startStoryTimer}
+                            loading="lazy"
                           />
                         </AnimatePresence>
 

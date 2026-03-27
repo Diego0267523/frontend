@@ -26,3 +26,11 @@ export const countCalories = (payload) => axios.post(`${API_URL}/api/ai/calories
 export const countCaloriesImage = (formData) => axios.post(`${API_URL}/api/ai/calories`, formData, {
   headers: getAuthHeaders() // axios pone boundary bien solo
 });
+// Food entries
+export const createFoodEntry = (data) => axios.post(`${API_URL}/api/food/entries`, data, { headers: getAuthHeaders() });
+export const createFoodEntryWithImage = (formData) => axios.post(`${API_URL}/api/food/entries`, formData, {
+  headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' }
+});
+export const getFoodEntries = (fecha) => axios.get(`${API_URL}/api/food/entries${fecha ? `?fecha=${fecha}` : ''}`, { headers: getAuthHeaders() });
+export const getDailyTotals = (fecha) => axios.get(`${API_URL}/api/food/totals${fecha ? `?fecha=${fecha}` : ''}`, { headers: getAuthHeaders() });
+export const deleteFoodEntry = (id) => axios.delete(`${API_URL}/api/food/entries/${id}`, { headers: getAuthHeaders() });
