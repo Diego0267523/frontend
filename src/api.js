@@ -34,3 +34,4 @@ export const createFoodEntryWithImage = (formData) => axios.post(`${API_URL}/api
 export const getFoodEntries = (fecha) => axios.get(`${API_URL}/api/food/entries${fecha ? `?fecha=${fecha}` : ''}`, { headers: getAuthHeaders() });
 export const getDailyTotals = (fecha) => axios.get(`${API_URL}/api/food/totals${fecha ? `?fecha=${fecha}` : ''}`, { headers: getAuthHeaders() });
 export const deleteFoodEntry = (id) => axios.delete(`${API_URL}/api/food/entries/${id}`, { headers: getAuthHeaders() });
+export const getWeeklyTotals = () => axios.get(`${API_URL}/api/food/weekly-totals`, { headers: getAuthHeaders() });

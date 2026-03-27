@@ -32,7 +32,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ChatAssistant from "../components/ChatAssistant";
 
 // 🔥 NUEVO
-import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, deleteFoodEntry } from "../api";
+import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import API_URL from '../utils/config';
@@ -74,6 +74,7 @@ function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
+  const [weeklyCalories, setWeeklyCalories] = useState([]);
   const [foodModalOpen, setFoodModalOpen] = useState(false);
   const [foodText, setFoodText] = useState("");
   const [foodImageFile, setFoodImageFile] = useState(null);
@@ -207,10 +208,23 @@ const handleAnalyzeFood = async () => {
     }
 
     if (response.data) {
-      setFoodAnalysis(response.data);
-      setEditableCalories(response.data.calories || "");
-      setEditableProtein(response.data.proteina || "");
-      setEditableCarbs(response.data.carbohidratos || "");
+      const aiJson = response.data.details?.aiJson || response.data.details?.imageAiJson;
+
+      setFoodAnalysis({
+        ...response.data,
+        aiJson
+      });
+
+      if (aiJson?.total) {
+        setEditableCalories(aiJson.total.calorias ?? "");
+        setEditableProtein(aiJson.total.proteina ?? "");
+        setEditableCarbs(aiJson.total.carbohidratos ?? "");
+      } else {
+        setEditableCalories(response.data.calories || "");
+        setEditableProtein(response.data.proteina || "");
+        setEditableCarbs(response.data.carbohidratos || "");
+      }
+
       setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
     }
   } catch (error) {
@@ -345,9 +359,10 @@ const handleDeleteFoodEntry = async (id) => {
     try {
       setLoadingFood(true);
       const fecha = new Date().toISOString().split('T')[0];
-      const [entriesResponse, totalsResponse] = await Promise.all([
+      const [entriesResponse, totalsResponse, weeklyResponse] = await Promise.all([
         getFoodEntries(fecha),
-        getDailyTotals(fecha)
+        getDailyTotals(fecha),
+        getWeeklyTotals()
       ]);
 
       if (entriesResponse.data.success) {
@@ -367,6 +382,13 @@ const handleDeleteFoodEntry = async (id) => {
         setTodayTotal(0);
         setTodayProtein(0);
         setTodayCarbs(0);
+      }
+
+      if (weeklyResponse.data.success) {
+        setWeeklyCalories(weeklyResponse.data.week || []);
+      } else {
+        console.warn("Error cargando totales semanales:", weeklyResponse.data.message);
+        setWeeklyCalories([]);
       }
     } catch (error) {
       console.error("Error cargando datos de comida:", error);
@@ -738,14 +760,26 @@ const handleScroll = useCallback((e) => {
           </CardContent>
         </Card>
 
-        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-          <Card key={i} sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>{item}</Typography>
-              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-            </CardContent>
-          </Card>
-        ))}
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📈 Calorías semana</Typography>
+            {weeklyCalories.length > 0 ? (
+              weeklyCalories.map((day, i) => {
+                const maxValue = Math.max(...weeklyCalories.map(item => item.total_calorias), targetCalories);
+                const value = maxValue > 0 ? (day.total_calorias / maxValue) * 100 : 0;
+                const label = new Date(day.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                return (
+                  <Box key={i} sx={{ mb: 1 }}>
+                    <Typography sx={{ color: '#aaa', fontSize: 12 }}>{label}: {day.total_calorias} kcal</Typography>
+                    <LinearProgress variant="determinate" value={Math.min(value, 100)} sx={progressStyle} />
+                  </Box>
+                );
+              })
+            ) : (
+              <Typography sx={{ color: '#777', fontSize: 12 }}>No hay datos semanales aún.</Typography>
+            )}
+          </CardContent>
+        </Card>
       </Box>
     </Drawer>
 
@@ -1042,37 +1076,73 @@ const handleScroll = useCallback((e) => {
 
                   {foodAnalysis && (
                     <Box sx={{ mt: 2, border: '1px solid #333', borderRadius: 8, p: 1 }}>
-                      <Typography sx={{ color:'#fff', fontWeight:'bold' }}>Resultado IA (editable)</Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-                        <Box>
-                          <Typography sx={{ color:'#aaa', fontSize: 12 }}>Calorías (kcal)</Typography>
-                          <input
-                            type="number"
-                            value={editableCalories}
-                            onChange={(e) => setEditableCalories(e.target.value)}
-                            style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
-                          />
+                      <Typography sx={{ color: '#fff', fontWeight: 'bold' }}>Resultado IA (editable)</Typography>
+
+                      {foodAnalysis.aiJson ? (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography sx={{ color: '#ccc', fontSize: 12, mb: 1 }}>Valores calculados por IA (JSON)</Typography>
+                          {foodAnalysis.aiJson.items?.map((item, idx) => (
+                            <Box key={idx} sx={{ mb: 1, bgcolor: '#111', p: 1, borderRadius: 2 }}>
+                              <Typography sx={{ color: '#00ff88', fontSize: 12 }}>{item.nombre || `Item ${idx + 1}`}</Typography>
+                              <Typography sx={{ color: '#fff', fontSize: 11 }}>Calorías: {item.calorias ?? 'N/A'} kcal</Typography>
+                              <Typography sx={{ color: '#fff', fontSize: 11 }}>Proteína: {item.proteina ?? 'N/A'} g</Typography>
+                              <Typography sx={{ color: '#fff', fontSize: 11 }}>Carbohidratos: {item.carbohidratos ?? 'N/A'} g</Typography>
+                            </Box>
+                          ))}
+
+                          <Box sx={{ borderTop: '1px solid #333', pt: 1, mt: 1 }}>
+                            <Typography sx={{ color: '#fff', fontSize: 13 }}>Totales IA</Typography>
+                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Calorías: {foodAnalysis.aiJson.total?.calorias ?? 'N/A'}</Typography>
+                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Proteína: {foodAnalysis.aiJson.total?.proteina ?? 'N/A'}</Typography>
+                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Carbohidratos: {foodAnalysis.aiJson.total?.carbohidratos ?? 'N/A'}</Typography>
+                          </Box>
+
+                          <Button
+                            sx={{ mt: 1, p: 1, minWidth: 120, bgcolor: '#00ff88', color: '#000' }}
+                            onClick={() => {
+                              setEditableCalories(foodAnalysis.aiJson.total?.calorias ?? '');
+                              setEditableProtein(foodAnalysis.aiJson.total?.proteina ?? '');
+                              setEditableCarbs(foodAnalysis.aiJson.total?.carbohidratos ?? '');
+                            }}
+                          >
+                            Usar totales IA
+                          </Button>
                         </Box>
-                        <Box>
-                          <Typography sx={{ color:'#aaa', fontSize: 12 }}>Proteína (g)</Typography>
-                          <input
-                            type="number"
-                            value={editableProtein}
-                            onChange={(e) => setEditableProtein(e.target.value)}
-                            style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
-                          />
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                          <Box>
+                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Calorías (kcal)</Typography>
+                            <input
+                              type="number"
+                              value={editableCalories}
+                              onChange={(e) => setEditableCalories(e.target.value)}
+                              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
+                            />
+                          </Box>
+                          <Box>
+                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Proteína (g)</Typography>
+                            <input
+                              type="number"
+                              value={editableProtein}
+                              onChange={(e) => setEditableProtein(e.target.value)}
+                              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
+                            />
+                          </Box>
+                          <Box>
+                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Carbohidratos (g)</Typography>
+                            <input
+                              type="number"
+                              value={editableCarbs}
+                              onChange={(e) => setEditableCarbs(e.target.value)}
+                              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
+                            />
+                          </Box>
                         </Box>
-                        <Box>
-                          <Typography sx={{ color:'#aaa', fontSize: 12 }}>Carbohidratos (g)</Typography>
-                          <input
-                            type="number"
-                            value={editableCarbs}
-                            onChange={(e) => setEditableCarbs(e.target.value)}
-                            style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
-                          />
-                        </Box>
-                      </Box>
-                      <Typography sx={{ color:'#777', mt: 1, fontSize: 12 }}>Texto IA: {foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || 'N/A'}</Typography>
+                      )}
+
+                      <Typography sx={{ color: '#777', mt: 1, fontSize: 12 }}>
+                        Datos brutos IA: {(foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || '').slice(0, 250)}{(foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || '').length > 250 ? '...' : ''}
+                      </Typography>
                     </Box>
                   )}
                 </Box>
