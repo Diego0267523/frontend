@@ -33,6 +33,9 @@ import ChatAssistant from "../components/ChatAssistant";
 
 // 🔥 NUEVO
 import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, deleteFoodEntry } from "../api";
+import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import API_URL from '../utils/config';
 
 function Home() {
   const { user, logout } = useContext(AuthContext);
@@ -564,6 +567,8 @@ const fetchPosts = async ({ pageParam = 1 }) => {
     retry: false,
     onError: () => setShowRetry(true)
   });
+
+  const hasPosts = data?.pages?.some(page => page.data && page.data.length > 0);
 
   // 🔥 TIMEOUT PARA MOSTRAR RETRY DESPUÉS DE 3s
   React.useEffect(() => {
