@@ -179,8 +179,7 @@ const handleAnalyzeFood = async () => {
       formData.append("image", foodImageFile);
       response = await axios.post(`${API_URL}/api/ai/calories`, formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data"
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         }
       });
     } else {

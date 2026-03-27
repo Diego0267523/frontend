@@ -24,5 +24,5 @@ export const deleteStory = (storyId) => axios.delete(`${API_URL}/api/stories/${s
 // AI/calorías
 export const countCalories = (payload) => axios.post(`${API_URL}/api/ai/calories`, payload, { headers: getAuthHeaders() });
 export const countCaloriesImage = (formData) => axios.post(`${API_URL}/api/ai/calories`, formData, {
-  headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' }
+  headers: getAuthHeaders() // axios pone boundary bien solo
 });
