@@ -267,6 +267,14 @@ const handleSaveFoodEntry = async () => {
       carbohidratos
     };
 
+    // Si tenemos análisis con items IA, enviamos json para bulk create
+    if (foodAnalysis?.aiJson?.items) {
+      data.aiJson = {
+        ...foodAnalysis.aiJson,
+        items: foodAnalysis.aiJson.items
+      };
+    }
+
     let response;
     if (foodImageFile) {
       const formData = new FormData();
@@ -274,6 +282,9 @@ const handleSaveFoodEntry = async () => {
       formData.append("calorias", calories.toString());
       formData.append("proteina", proteina.toString());
       formData.append("carbohidratos", carbohidratos.toString());
+      if (data.aiJson) {
+        formData.append("aiJson", JSON.stringify(data.aiJson));
+      }
       formData.append("image", foodImageFile);
       response = await createFoodEntryWithImage(formData);
     } else {
