@@ -411,7 +411,12 @@ const handleScroll = useCallback((e) => {
  
        {/* 🔹 Perfil */}
        <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-         <Box sx={avatarStyle} />
+         <Box 
+           sx={{
+             ...avatarStyle,
+             backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none'
+           }} 
+         />
          <Typography sx={{ color: "#fff" }}>
            {user?.nombre || "Usuario"}
          </Typography>
@@ -538,7 +543,7 @@ const handleScroll = useCallback((e) => {
           {/* Historias de otros usuarios */}
           {stories && [...new Set(stories.map(s => s.nombre))].map((userName, i) => {
             const userStory = stories.find(s => s.nombre === userName);
-            const profileImage = userStory?.avatarUrl || userStory?.image_url;
+            const profileImage = userStory?.avatar || userStory?.avatarUrl || userStory?.image_url;
             const ringColor = getStoryRingColor(userName);
             return (
               <motion.div key={i} whileHover={{ scale: 1.1 }}>
@@ -958,22 +963,23 @@ const storyCircle = {
   width: 80,
   height: 80,
   borderRadius: "50%",
-  background: "linear-gradient(45deg,#00ff88,#00ccff)",
-  padding: 4,
+  padding: 2,
   display: "flex",
   alignItems: "center",
-  justifyContent: "center"
+  justifyContent: "center",
+  cursor: "pointer",
+  transition: "transform 0.2s"
 };
 
 const storyInner = {
   width: "100%",
   height: "100%",
   borderRadius: "50%",
-  background: "#fff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  overflow: "hidden"
+  overflow: "hidden",
+  border: "2px solid #00ff88"
 };
 
 const storyItem = {
@@ -988,7 +994,10 @@ const avatarStyle = {
   width: 40,
   height: 40,
   borderRadius: "50%",
-  bgcolor: "#00ff88"
+  bgcolor: "#00ff88",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  border: "2px solid #00ff88"
 };
 
 const profileStyle = {

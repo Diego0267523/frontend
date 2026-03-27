@@ -150,9 +150,9 @@ const PostCard = memo(({ post }) => {
             <Box component="img"
               src={post.avatar || post.userAvatar || '/default-avatar.png'}
               alt="User avatar"
-              sx={{ width: 40, height: 40, borderRadius: "50%", objectFit: 'cover', border: '1px solid #00ff88' }}
+              sx={{ width: 40, height: 40, borderRadius: "50%", objectFit: 'cover', border: '2px solid #00ff88' }}
             />
-            <Box>
+            <Box sx={{ flex: 1 }}>
               <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
                 {post.nombre || post.user || "Usuario"}
               </Typography>
