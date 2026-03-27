@@ -5,6 +5,22 @@ const getAuthHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`
 });
 
+// 🔥 AXIOS ERROR INTERCEPTOR - Global handling
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("🔥 API ERROR:", error.response?.status, error.response?.data?.message);
+    
+    // Si es 401 (token expirado), ir a login
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export const getProfile = () => axios.get(`${API_URL}/api/auth/profile`, { headers: getAuthHeaders() });
 export const updateAvatar = (formData) => axios.put(`${API_URL}/api/auth/profile/avatar`, formData, {

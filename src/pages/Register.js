@@ -60,6 +60,18 @@ function Register() {
     localStorage.setItem("registerData", JSON.stringify(form));
   }, [form]);
 
+  // 🔥 ESCAPE PARA VOLVER LOGIN
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === "Escape") {
+        navigate("/login");
+      }
+    };
+
+    window.addEventListener("keydown", handleEscapeKey);
+    return () => window.removeEventListener("keydown", handleEscapeKey);
+  }, [navigate]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -83,6 +95,13 @@ function Register() {
   const handleRegister = async () => {
     try {
       setLoading(true);
+
+      if (!navigator.onLine) {
+        setMsg("Sin conexión a internet");
+        setType("error");
+        return;
+      }
+
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,10 +116,13 @@ function Register() {
         setType("success");
         setTimeout(() => navigate("/"), 1500);
       } else {
-        setMsg(data.message || "Error");
+        setMsg(data.message || "Error al registrarse");
+        setType("error");
       }
-    } catch {
-      setMsg("Error de conexión");
+    } catch (error) {
+      console.error("Error en registro:", error);
+      setMsg(error.message || "Error de conexión");
+      setType("error");
     } finally {
       setLoading(false);
     }

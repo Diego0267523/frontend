@@ -465,6 +465,23 @@ const handleDeleteFoodEntry = async (id) => {
     loadDailyFoodData();
   }, []);
 
+  // 🔥 ESCAPE KEY PARA CERRAR MODALES
+  React.useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === "Escape") {
+        if (foodModalOpen) setFoodModalOpen(false);
+        if (showCreatePost) setShowCreatePost(false);
+        if (showAI) setShowAI(false);
+        if (showStoryPreview) setShowStoryPreview(false);
+        if (viewingStory) closeStoryViewer();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscapeKey);
+    return () => window.removeEventListener("keydown", handleEscapeKey);
+  }, [foodModalOpen, showCreatePost, showAI, showStoryPreview, viewingStory]);
+
+
   // 🔥 HISTORIAS - Subir historia
   const handleUploadStory = async () => {
     if (!storyFile) {
@@ -1018,10 +1035,21 @@ const handleScroll = useCallback((e) => {
     )}
 
     {showAI && (
-      <Box sx={aiOverlay}>
-        <Box sx={aiBox}>
+      <Box sx={{...aiOverlay, onClick: () => setShowAI(false)}}>
+        <Box sx={{...aiBox, position: "relative"}} onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            onClick={() => setShowAI(false)}
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              color: "#ff4444",
+              zIndex: 100
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
           <Typography sx={titleStyle}>GYM AI</Typography>
-          <Button onClick={() => setShowAI(false)}>Cerrar</Button>
           <ChatAssistant />
         </Box>
       </Box>
@@ -1034,7 +1062,21 @@ const handleScroll = useCallback((e) => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
+                <Box sx={{...modalPro, position: "relative"}} onClick={(e) => e.stopPropagation()}>
+                  
+                  {/* BOTÓN CERRAR */}
+                  <IconButton
+                    onClick={() => setShowCreatePost(false)}
+                    sx={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      color: "#ff4444",
+                      zIndex: 100
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
     
                   <Typography sx={titlePro}>
                     Crear Post 🚀
@@ -1104,7 +1146,22 @@ const handleScroll = useCallback((e) => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
+                <Box sx={{...modalPro, position: "relative"}} onClick={(e) => e.stopPropagation()}>
+                  
+                  {/* BOTÓN CERRAR */}
+                  <IconButton
+                    onClick={() => setFoodModalOpen(false)}
+                    sx={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      color: "#ff4444",
+                      zIndex: 100
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+
                   <Typography sx={titlePro}>Registrar comida 🍽️</Typography>
 
                   <Typography sx={{ color: '#aaa', mb: 1 }}>Descripción de la comida</Typography>
@@ -1216,8 +1273,22 @@ const handleScroll = useCallback((e) => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
+                <Box sx={{...modalPro, position: "relative"}} onClick={(e) => e.stopPropagation()}>
     
+                  {/* BOTÓN CERRAR */}
+                  <IconButton
+                    onClick={() => setShowStoryPreview(false)}
+                    sx={{
+                      position: "absolute",
+                      top: 10,
+                      right: 10,
+                      color: "#ff4444",
+                      zIndex: 100
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+
                   <Typography sx={titlePro}>
                     Nueva Historia 📸
                   </Typography>

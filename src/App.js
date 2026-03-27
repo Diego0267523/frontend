@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -8,11 +8,32 @@ import Profile from "./pages/Profile";
 import Feed from "./pages/Feed";
 import Stories from "./pages/Stories";
 
-
 import { AuthContext } from "./context/AuthContext";
 
 function App() {
-  const { token } = useContext(AuthContext) || {};
+  const authContext = useContext(AuthContext);
+  const { token } = authContext || {};
+
+  // Detectar desconexión de red
+  useEffect(() => {
+    const handleOffline = () => {
+      console.warn("⚠️ Sin conexión a internet");
+    };
+    const handleOnline = () => {
+      console.log("✅ Conexión restaurada");
+    };
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
+
+  if (!authContext) {
+    return <div style={{ color: "#fff", padding: "20px" }}>Cargando...</div>;
+  }
 
   return (
     <BrowserRouter>

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import {
   Box,
@@ -17,10 +17,22 @@ function Profile() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // 🔥 ESCAPE PARA VOLVER
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === "Escape") {
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscapeKey);
+    return () => window.removeEventListener("keydown", handleEscapeKey);
+  }, [navigate]);
+
   if (!user) {
     return (
-      <Box sx={{ color: "#fff", p: 3 }}>
-        Cargando perfil...
+      <Box sx={{ color: "#fff", p: 3, minHeight: "100vh", bgcolor: "#0f0f0f" }}>
+        <Typography>Cargando perfil...</Typography>
       </Box>
     );
   }

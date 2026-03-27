@@ -21,6 +21,14 @@ function ChatAssistant() {
     });
   }, [messages, typing]);
 
+  // 🔥 MANEJO DE ENTER PARA ENVIAR
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   // 🔥 GUARDAR HISTORIAL EN LOCAL (solo últimos 10 mensajes)
   useEffect(() => {
     // Mantener solo los últimos 10 mensajes

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import API_URL from "../utils/config";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +23,18 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔥 ESCAPE PARA REGISTRARSE
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === "Escape") {
+        navigate("/register");
+      }
+    };
+
+    window.addEventListener("keydown", handleEscapeKey);
+    return () => window.removeEventListener("keydown", handleEscapeKey);
+  }, [navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -30,6 +42,12 @@ function Login() {
     // 🔥 VALIDACIÓN
     if (!email || !password) {
       setError("Completa todos los campos ⚠️");
+      return;
+    }
+
+    // Revisar conexión de internet
+    if (!navigator.onLine) {
+      setError("Sin conexión a internet 🌐");
       return;
     }
 
@@ -56,7 +74,8 @@ function Login() {
       }
 
     } catch (err) {
-      setError("Error de conexión 🚨");
+      console.error("Error login:", err);
+      setError(err.message || "Error de conexión 🚨");
     } finally {
       setLoading(false);
     }

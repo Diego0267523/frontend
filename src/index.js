@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import ErrorBoundary from "./ErrorBoundary";
 import { AuthProvider } from "./context/AuthContext";
 
 import { ThemeProvider, CssBaseline } from "@mui/material";
@@ -12,6 +13,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
 
+// Global error handler
+window.addEventListener("error", (event) => {
+  console.error("🔥 GLOBAL ERROR:", event.error);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("🔥 UNHANDLED PROMISE:", event.reason);
+});
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
@@ -19,9 +29,11 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </ErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
