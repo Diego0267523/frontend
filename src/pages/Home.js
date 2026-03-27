@@ -71,6 +71,18 @@ function Home() {
   const [showAI, setShowAI] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
+  const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
+  const [foodModalOpen, setFoodModalOpen] = useState(false);
+  const [foodText, setFoodText] = useState("");
+  const [foodImageFile, setFoodImageFile] = useState(null);
+  const [foodAnalysis, setFoodAnalysis] = useState(null);
+  const [foodAnalyzing, setFoodAnalyzing] = useState(false);
+  const [targetCalories, setTargetCalories] = useState(2000);
+  const [todayTotal, setTodayTotal] = useState(0);
+  const [todayProtein, setTodayProtein] = useState(0);
+  const [todayCarbs, setTodayCarbs] = useState(0);
+
+
   // 🔥 NOTIFICACIONES
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
@@ -150,6 +162,81 @@ const handleCreatePost = async () => {
   }
 };
 
+const handleAnalyzeFood = async () => {
+  if (!foodText.trim() && !foodImageFile) {
+    setSnackbar({ open: true, message: "Ingresa descripción o sube una imagen.", severity: "error" });
+    return;
+  }
+
+  setFoodAnalyzing(true);
+  setFoodAnalysis(null);
+
+  try {
+    let response;
+    if (foodImageFile) {
+      const formData = new FormData();
+      if (foodText.trim()) formData.append("text", foodText.trim());
+      formData.append("image", foodImageFile);
+      response = await axios.post(`${API_URL}/api/ai/calories`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    } else {
+      response = await axios.post(`${API_URL}/api/ai/calories`, { text: foodText.trim() }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+    }
+
+    if (response.data) {
+      setFoodAnalysis(response.data);
+      setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
+    }
+  } catch (error) {
+    console.error("Error analizando comida:", error);
+    setSnackbar({ open: true, message: "No se pudo analizar la comida", severity: "error" });
+  } finally {
+    setFoodAnalyzing(false);
+  }
+};
+
+const handleSaveFoodEntry = () => {
+  const calories = Number(foodAnalysis?.calories || 0);
+  const proteina = Number(foodAnalysis?.proteina || 0);
+  const carbohidratos = Number(foodAnalysis?.carbohidratos || 0);
+
+  if (!foodAnalysis || (!calories && !proteina && !carbohidratos)) {
+    setSnackbar({ open: true, message: "Necesitas analizar primero y obtener valores", severity: "error" });
+    return;
+  }
+
+  const entry = {
+    id: Date.now(),
+    text: foodText.trim(),
+    imageUrl: foodImageFile ? URL.createObjectURL(foodImageFile) : null,
+    calories,
+    proteina,
+    carbohidratos,
+    createdAt: new Date().toISOString(),
+    rawResponse: foodAnalysis
+  };
+
+  const nextEntries = [entry, ...dailyFoodEntries];
+  saveDailyFoodEntries(nextEntries);
+  setFoodModalOpen(false);
+  setFoodText("");
+  setFoodImageFile(null);
+  setFoodAnalysis(null);
+  setSnackbar({ open: true, message: "Comida registrada en el día", severity: "success" });
+};
+
+const handleDeleteFoodEntry = (id) => {
+  const filtered = dailyFoodEntries.filter((item) => item.id !== id);
+  saveDailyFoodEntries(filtered);
+  setSnackbar({ open: true, message: "Entrada eliminada", severity: "info" });
+};
+
 
   // 🔥 HISTORIAS - Cargar historias al montar
   React.useEffect(() => {
@@ -164,6 +251,44 @@ const handleCreatePost = async () => {
       }
     };
     loadStories();
+  }, []);
+
+  const calculateTotals = (entries) => {
+    const calories = entries.reduce((sum, item) => sum + (item.calories || 0), 0);
+    const protein = entries.reduce((sum, item) => sum + (item.proteina || 0), 0);
+    const carbs = entries.reduce((sum, item) => sum + (item.carbohidratos || 0), 0);
+    setTodayTotal(calories);
+    setTodayProtein(protein);
+    setTodayCarbs(carbs);
+  };
+
+  const saveDailyFoodEntries = (entries) => {
+    localStorage.setItem("dailyFoodEntries", JSON.stringify(entries));
+    setDailyFoodEntries(entries);
+    calculateTotals(entries);
+  };
+
+  const loadDailyFoodEntries = () => {
+    const raw = localStorage.getItem("dailyFoodEntries");
+    if (!raw) {
+      saveDailyFoodEntries([]);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        saveDailyFoodEntries(parsed);
+      } else {
+        saveDailyFoodEntries([]);
+      }
+    } catch (err) {
+      console.error("Error parseando entradas diarias:", err);
+      saveDailyFoodEntries([]);
+    }
+  };
+
+  React.useEffect(() => {
+    loadDailyFoodEntries();
   }, []);
 
   // 🔥 HISTORIAS - Subir historia
@@ -381,7 +506,7 @@ const handleScroll = useCallback((e) => {
 
   const menuItems = [
     { label: "🏋️ Rutinas", path: "/" },
-    { label: "📈 Progreso", path: "/progreso" },
+    { label: "📈 Progreso", action: () => setFoodModalOpen(true) },
     { label: "🔥 Calorías", path: "/calorias" },
     { label: "🎯 Objetivos", path: "/objetivos" },
     { label: "🤖 AI", action: () => setShowAI(true) },
@@ -503,6 +628,19 @@ const handleScroll = useCallback((e) => {
           </CardContent>
         </Card>
 
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📌 Hoy</Typography>
+            <Typography sx={{ color: '#aaa', mb: 1 }}>Calorías: {todayTotal}/{targetCalories}</Typography>
+            <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={progressStyle} />
+            <Typography sx={{ color:'#aaa', mt: 1 }}>Proteína: {todayProtein}g</Typography>
+            <Typography sx={{ color:'#aaa' }}>Carbohidratos: {todayCarbs}g</Typography>
+            <Button variant="contained" sx={{ mt: 1, bgcolor: '#00ff88', color:'#000' }} onClick={() => { setFoodModalOpen(true); setOpenRight(false); }}>
+              Registrar comida
+            </Button>
+          </CardContent>
+        </Card>
+
         {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
           <Card key={i} sx={postCard}>
             <CardContent>
@@ -567,6 +705,24 @@ const handleScroll = useCallback((e) => {
           })}
         </Box>
 
+        {/* 🔥 DASHBOARD CALORÍAS DIARIAS */}
+        <Card sx={{ ...postCard, mb: 2, p: 2 }}>
+          <CardContent>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+              <Typography sx={{ color: "#fff", fontWeight: "bold" }}>🔥 Progreso Calórico del Día</Typography>
+              <Button size="small" variant="contained" onClick={() => setFoodModalOpen(true)} sx={{ backgroundColor: "#00ff88", color: "#000" }}>
+                Registrar comida
+              </Button>
+            </Box>
+
+            <Typography sx={{ color: "#aaa", fontSize: 12 }}>Objetivo: {targetCalories} kcal</Typography>
+            <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={{ mt: 1, mb: 1 }}/>
+            <Typography sx={{ color: "#fff" }}>
+              {todayTotal} kcal / {targetCalories} kcal • Proteína: {todayProtein} g • Carb: {todayCarbs} g
+            </Typography>
+          </CardContent>
+        </Card>
+
         {/* 🔥 POSTS REALES */}
         {isLoading ? (
           <>
@@ -620,6 +776,35 @@ const handleScroll = useCallback((e) => {
                 <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
               ))}
             </Box>
+          </CardContent>
+        </Card>
+
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📌 Hoy</Typography>
+            <Typography sx={{ color: '#aaa', mb: 1 }}>Calorías: {todayTotal}/{targetCalories}</Typography>
+            <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={progressStyle} />
+            <Typography sx={{ color:'#aaa', mt: 1 }}>Proteína: {todayProtein}g</Typography>
+            <Typography sx={{ color:'#aaa' }}>Carbohidratos: {todayCarbs}g</Typography>
+            <Button variant="contained" sx={{ mt: 1, bgcolor: '#00ff88', color:'#000' }} onClick={() => setFoodModalOpen(true)}>
+              Registrar comida
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>🍽️ Entradas del día</Typography>
+            {dailyFoodEntries.length === 0 ? (
+              <Typography sx={{ color: '#777', fontSize: 12 }}>Aún no hay comidas registradas.</Typography>
+            ) : (
+              dailyFoodEntries.slice(0, 4).map((entry) => (
+                <Box key={entry.id} sx={{ mb: 1 }}>
+                  <Typography sx={{ color: '#fff', fontSize: 12 }}>{entry.text || 'Sin descripción'}</Typography>
+                  <Typography sx={{ color: '#aaa', fontSize: 11 }}>C: {entry.calories} • P: {entry.proteina} • CH: {entry.carbohidratos}</Typography>
+                </Box>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -707,6 +892,56 @@ const handleScroll = useCallback((e) => {
                     </Button>
                   </Box>
     
+                </Box>
+              </motion.div>
+            </Box>
+          )}
+
+          {/* 🔥 MODAL PARA REGISTRAR COMIDA */}
+          {foodModalOpen && (
+            <Box sx={overlayPro} onClick={() => setFoodModalOpen(false)}>
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
+                  <Typography sx={titlePro}>Registrar comida 🍽️</Typography>
+
+                  <Typography sx={{ color: '#aaa', mb: 1 }}>Descripción de la comida</Typography>
+                  <textarea
+                    value={foodText}
+                    onChange={(e) => setFoodText(e.target.value)}
+                    style={{ width: '100%', minHeight: 80, borderRadius: 8, padding: 8, border: '1px solid #333', background: '#111', color: '#fff' }}
+                    placeholder="Ej: Ensalada de pollo con quinoa..."
+                  />
+
+                  <Typography sx={{ color: '#aaa', mt: 2, mb: 1 }}>O sube imagen (opcional)</Typography>
+                  <Button variant="contained" component="label" sx={uploadBtn}>
+                    Subir imagen
+                    <input type="file" hidden onChange={(e) => setFoodImageFile(e.target.files[0])} />
+                  </Button>
+                  {foodImageFile && <Typography sx={{ color:'#00ff88', mt:1 }}>{foodImageFile.name}</Typography>}
+
+                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                    <Button onClick={handleAnalyzeFood} sx={postBtn} disabled={foodAnalyzing}>
+                      {foodAnalyzing ? 'Analizando...' : 'Analizar'}
+                    </Button>
+                    <Button onClick={handleSaveFoodEntry} sx={postBtn} disabled={!foodAnalysis}>
+                      Guardar
+                    </Button>
+                    <Button onClick={() => setFoodModalOpen(false)} sx={cancelBtn}>Cancelar</Button>
+                  </Box>
+
+                  {foodAnalysis && (
+                    <Box sx={{ mt: 2, border: '1px solid #333', borderRadius: 8, p: 1 }}>
+                      <Typography sx={{ color:'#fff', fontWeight:'bold' }}>Resultado IA</Typography>
+                      <Typography sx={{ color:'#aaa' }}>Calorías: {foodAnalysis.calories ?? '-'} kcal</Typography>
+                      <Typography sx={{ color:'#aaa' }}>Proteína: {foodAnalysis.proteina ?? '-'} g</Typography>
+                      <Typography sx={{ color:'#aaa' }}>Carbohidratos: {foodAnalysis.carbohidratos ?? '-'} g</Typography>
+                      <Typography sx={{ color:'#777', mt: 1 }}>Texto IA: {foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || 'N/A'}</Typography>
+                    </Box>
+                  )}
                 </Box>
               </motion.div>
             </Box>

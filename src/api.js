@@ -20,3 +20,9 @@ export const createStory = (formData) => axios.post(`${API_URL}/api/stories`, fo
   headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' }
 });
 export const deleteStory = (storyId) => axios.delete(`${API_URL}/api/stories/${storyId}`, { headers: getAuthHeaders() });
+
+// AI/calorías
+export const countCalories = (payload) => axios.post(`${API_URL}/api/ai/calories`, payload, { headers: getAuthHeaders() });
+export const countCaloriesImage = (formData) => axios.post(`${API_URL}/api/ai/calories`, formData, {
+  headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' }
+});
