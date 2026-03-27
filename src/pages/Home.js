@@ -30,54 +30,12 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CloseIcon from "@mui/icons-material/Close";
 
 import ChatAssistant from "../components/ChatAssistant";
+
+// 🔥 NUEVO
 import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
-import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
-import axios from "axios";
-import API_URL from "../utils/config";
-
-// Estilos globales para este page
-const overlayPro = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: "rgba(0,0,0,0.75)",
-  zIndex: 1300,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "16px",
-  overflowY: "auto"
-};
-
-const modalPro = {
-  width: "100%",
-  maxWidth: 520,
-  maxHeight: "90vh",
-  overflowY: "auto",
-  borderRadius: 14,
-  padding: "16px",
-  backgroundColor: "#0b0b0b",
-  boxShadow: "0 0 20px rgba(0,0,0,0.5)",
-  boxSizing: "border-box"
-};
-
-const postCard = {
-  background: "#0f0f0f",
-  color: "#fff",
-  borderRadius: 14,
-  border: "1px solid #222",
-  boxShadow: "0 0 20px rgba(0,0,0,0.3)",
-  overflow: "hidden"
-};
-
-const titlePro = {
-  color: "#00ff88",
-  fontWeight: "bold",
-  marginBottom: "8px"
-};
-
+import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import API_URL from '../utils/config';
 
 function Home() {
   const { user, logout } = useContext(AuthContext);
@@ -344,8 +302,6 @@ const handleSaveFoodEntry = async () => {
       setSnackbar({ open: true, message: "Comida registrada exitosamente", severity: "success" });
       // Recargar datos
       await loadDailyFoodData();
-      // Volver a home para que el usuario vea el dashboard actualizado
-      navigate("/");
     }
   } catch (error) {
     console.error("Error guardando comida:", error);
@@ -464,23 +420,6 @@ const handleDeleteFoodEntry = async (id) => {
   React.useEffect(() => {
     loadDailyFoodData();
   }, []);
-
-  // 🔥 ESCAPE KEY PARA CERRAR MODALES
-  React.useEffect(() => {
-    const handleEscapeKey = (e) => {
-      if (e.key === "Escape") {
-        if (foodModalOpen) setFoodModalOpen(false);
-        if (showCreatePost) setShowCreatePost(false);
-        if (showAI) setShowAI(false);
-        if (showStoryPreview) setShowStoryPreview(false);
-        if (viewingStory) closeStoryViewer();
-      }
-    };
-
-    window.addEventListener("keydown", handleEscapeKey);
-    return () => window.removeEventListener("keydown", handleEscapeKey);
-  }, [foodModalOpen, showCreatePost, showAI, showStoryPreview, viewingStory]);
-
 
   // 🔥 HISTORIAS - Subir historia
   const handleUploadStory = async () => {
@@ -774,12 +713,9 @@ const handleScroll = useCallback((e) => {
  return (
   <Box sx={{
     display: "flex",
-    minHeight: "100vh",
-    width: "100%",
+    height: "100vh",
     bgcolor: "#000",
-    overflowX: "hidden",
-    overflowY: "hidden",
-    position: "relative"
+    overflow: "hidden"
   }}>
 
     {!isMobile && (
@@ -1035,21 +971,10 @@ const handleScroll = useCallback((e) => {
     )}
 
     {showAI && (
-      <Box sx={{...aiOverlay, onClick: () => setShowAI(false)}}>
-        <Box sx={{...aiBox, position: "relative"}} onClick={(e) => e.stopPropagation()}>
-          <IconButton
-            onClick={() => setShowAI(false)}
-            sx={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              color: "#ff4444",
-              zIndex: 100
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
+      <Box sx={aiOverlay}>
+        <Box sx={aiBox}>
           <Typography sx={titleStyle}>GYM AI</Typography>
+          <Button onClick={() => setShowAI(false)}>Cerrar</Button>
           <ChatAssistant />
         </Box>
       </Box>
@@ -1062,21 +987,7 @@ const handleScroll = useCallback((e) => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={{...modalPro, position: "relative"}} onClick={(e) => e.stopPropagation()}>
-                  
-                  {/* BOTÓN CERRAR */}
-                  <IconButton
-                    onClick={() => setShowCreatePost(false)}
-                    sx={{
-                      position: "absolute",
-                      top: 10,
-                      right: 10,
-                      color: "#ff4444",
-                      zIndex: 100
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
     
                   <Typography sx={titlePro}>
                     Crear Post 🚀
@@ -1146,22 +1057,7 @@ const handleScroll = useCallback((e) => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={{...modalPro, position: "relative"}} onClick={(e) => e.stopPropagation()}>
-                  
-                  {/* BOTÓN CERRAR */}
-                  <IconButton
-                    onClick={() => setFoodModalOpen(false)}
-                    sx={{
-                      position: "absolute",
-                      top: 10,
-                      right: 10,
-                      color: "#ff4444",
-                      zIndex: 100
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
                   <Typography sx={titlePro}>Registrar comida 🍽️</Typography>
 
                   <Typography sx={{ color: '#aaa', mb: 1 }}>Descripción de la comida</Typography>
@@ -1273,22 +1169,8 @@ const handleScroll = useCallback((e) => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Box sx={{...modalPro, position: "relative"}} onClick={(e) => e.stopPropagation()}>
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
     
-                  {/* BOTÓN CERRAR */}
-                  <IconButton
-                    onClick={() => setShowStoryPreview(false)}
-                    sx={{
-                      position: "absolute",
-                      top: 10,
-                      right: 10,
-                      color: "#ff4444",
-                      zIndex: 100
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-
                   <Typography sx={titlePro}>
                     Nueva Historia 📸
                   </Typography>
@@ -1502,7 +1384,7 @@ const rightPanel = {
   bgcolor: "#0b0b0b"
 };
 
-// (postCard ya está definido arriba con estilo mejorado)
+const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
 
 const headerStyle = { display: "flex", alignItems: "center", gap: 10, mb: 1 };
 const username = { color: "#fff", fontWeight: "bold" };
@@ -1620,7 +1502,35 @@ const aiOverlay = {
 };
 
 // 🔥 MODAL CREAR POST (ESTILO PRO)
-// Estilos específicos ya están definidos en la parte superior para evitar duplicados.
+
+const overlayPro = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.85)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 999
+};
+
+const modalPro = {
+  width: 350,
+  bgcolor: "#111",
+  borderRadius: 4,
+  p: 3,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  boxShadow: "0 0 30px #00ff8840"
+};
+
+const titlePro = {
+  color: "#00ff88",
+  fontWeight: "bold",
+  mb: 2,
+  fontSize: 20
+};
+
 const previewImage = {
   width: "100%",
   height: 200,
