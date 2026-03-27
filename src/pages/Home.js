@@ -194,7 +194,8 @@ const handleAnalyzeFood = async () => {
     }
   } catch (error) {
     console.error("Error analizando comida:", error);
-    setSnackbar({ open: true, message: "No se pudo analizar la comida", severity: "error" });
+    const message = error.response?.data?.message || error.message || "No se pudo analizar la comida";
+    setSnackbar({ open: true, message, severity: "error" });
   } finally {
     setFoodAnalyzing(false);
   }
