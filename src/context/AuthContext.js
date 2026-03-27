@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
 
   const [user, setUser] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(null);
   const profileRetryCount = React.useRef(0);
 
   // ==========================
@@ -22,6 +23,7 @@ export function AuthProvider({ children }) {
   // ==========================
   const login = (newToken) => {
     setToken(newToken);
+    setProfileError(null);
     localStorage.setItem("token", newToken);
   };
 
@@ -31,14 +33,15 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setToken(null);
     setUser(null);
+    setProfileError(null);
     localStorage.removeItem("token");
   };
 
   // ==========================
   // 👤 GET PROFILE
   // ==========================
-  const getProfile = async () => {
-    if (!token || profileLoading) {
+  const getProfile = React.useCallback(async () => {
+    if (!token || profileLoading || profileError) {
       return;
     }
 
@@ -52,6 +55,7 @@ export function AuthProvider({ children }) {
       });
 
       setUser(res.data);
+      setProfileError(null);
       profileRetryCount.current = 0;
 
     } catch (error) {
@@ -61,28 +65,38 @@ export function AuthProvider({ children }) {
       if (status === 401) {
         logout();
       } else if (status === 429) {
-        // Evitar bloqueo total por rate-limiter; reintentar con backoff.
+        setProfileError('rate-limit');
+
         if (profileRetryCount.current < 3) {
           const delay = 2000 * (profileRetryCount.current + 1);
           profileRetryCount.current += 1;
           setTimeout(() => {
+            setProfileError(null);
             getProfile();
           }, delay);
+        } else {
+          // Después de 3 reintentos, permitir nuevo intento desde usuario tras 10s
+          setTimeout(() => {
+            setProfileError(null);
+            profileRetryCount.current = 0;
+          }, 10000);
         }
+      } else {
+        setProfileError('unknown');
       }
     } finally {
       setProfileLoading(false);
     }
-  };
+  }, [token, profileLoading, profileError]);
 
   // ==========================
   // 🔄 AUTO LOAD PROFILE
   // ==========================
   useEffect(() => {
-    if (token && !user && !profileLoading) {
+    if (token && !user && !profileLoading && !profileError) {
       getProfile();
     }
-  }, [token, user, profileLoading]);
+  }, [token, user, profileLoading, profileError, getProfile]);
 
   return (
     <AuthContext.Provider
