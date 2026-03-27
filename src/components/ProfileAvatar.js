@@ -13,8 +13,9 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
         const response = await axios.get(`${API_URL}/api/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (response.data.avatarUrl) {
-          setAvatarUrl(response.data.avatarUrl);
+        // 🔥 Backend devuelve 'avatar', no 'avatarUrl'
+        if (response.data.avatar) {
+          setAvatarUrl(response.data.avatar);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -40,8 +41,9 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
         }
       });
 
-      if (response.data.success) {
-        setAvatarUrl(response.data.avatarUrl);
+      // 🔥 Backend devuelve 'avatar', no 'avatarUrl'
+      if (response.data.success && response.data.avatar) {
+        setAvatarUrl(response.data.avatar);
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);

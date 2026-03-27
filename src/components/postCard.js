@@ -147,7 +147,11 @@ const PostCard = memo(({ post }) => {
 
           {/* Header - Usuario y Tiempo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#00ff88" }} />
+            <Box component="img"
+              src={post.avatar || post.userAvatar || '/default-avatar.png'}
+              alt="User avatar"
+              sx={{ width: 40, height: 40, borderRadius: "50%", objectFit: 'cover', border: '1px solid #00ff88' }}
+            />
             <Box>
               <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
                 {post.nombre || post.user || "Usuario"}

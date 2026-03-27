@@ -107,6 +107,7 @@ const handleCreatePost = async () => {
 
       const newPost = {
         nombre: user?.nombre || "Usuario",
+        avatar: user?.avatar || '/default-avatar.png',
         image_url: URL.createObjectURL(file),
         caption: postCaption,
         likes: 0,
