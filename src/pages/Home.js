@@ -30,12 +30,54 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CloseIcon from "@mui/icons-material/Close";
 
 import ChatAssistant from "../components/ChatAssistant";
-
-// 🔥 NUEVO
 import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
-import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import API_URL from '../utils/config';
+import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import axios from "axios";
+import API_URL from "../utils/config";
+
+// Estilos globales para este page
+const overlayPro = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.75)",
+  zIndex: 1300,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "16px",
+  overflowY: "auto"
+};
+
+const modalPro = {
+  width: "100%",
+  maxWidth: 520,
+  maxHeight: "90vh",
+  overflowY: "auto",
+  borderRadius: 14,
+  padding: "16px",
+  backgroundColor: "#0b0b0b",
+  boxShadow: "0 0 20px rgba(0,0,0,0.5)",
+  boxSizing: "border-box"
+};
+
+const postCard = {
+  background: "#0f0f0f",
+  color: "#fff",
+  borderRadius: 14,
+  border: "1px solid #222",
+  boxShadow: "0 0 20px rgba(0,0,0,0.3)",
+  overflow: "hidden"
+};
+
+const titlePro = {
+  color: "#00ff88",
+  fontWeight: "bold",
+  marginBottom: "8px"
+};
+
 
 function Home() {
   const { user, logout } = useContext(AuthContext);
@@ -302,6 +344,8 @@ const handleSaveFoodEntry = async () => {
       setSnackbar({ open: true, message: "Comida registrada exitosamente", severity: "success" });
       // Recargar datos
       await loadDailyFoodData();
+      // Volver a home para que el usuario vea el dashboard actualizado
+      navigate("/");
     }
   } catch (error) {
     console.error("Error guardando comida:", error);
@@ -713,9 +757,12 @@ const handleScroll = useCallback((e) => {
  return (
   <Box sx={{
     display: "flex",
-    height: "100vh",
+    minHeight: "100vh",
+    width: "100%",
     bgcolor: "#000",
-    overflow: "hidden"
+    overflowX: "hidden",
+    overflowY: "hidden",
+    position: "relative"
   }}>
 
     {!isMobile && (
@@ -1384,7 +1431,7 @@ const rightPanel = {
   bgcolor: "#0b0b0b"
 };
 
-const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
+// (postCard ya está definido arriba con estilo mejorado)
 
 const headerStyle = { display: "flex", alignItems: "center", gap: 10, mb: 1 };
 const username = { color: "#fff", fontWeight: "bold" };
@@ -1502,35 +1549,7 @@ const aiOverlay = {
 };
 
 // 🔥 MODAL CREAR POST (ESTILO PRO)
-
-const overlayPro = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.85)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 999
-};
-
-const modalPro = {
-  width: 350,
-  bgcolor: "#111",
-  borderRadius: 4,
-  p: 3,
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  boxShadow: "0 0 30px #00ff8840"
-};
-
-const titlePro = {
-  color: "#00ff88",
-  fontWeight: "bold",
-  mb: 2,
-  fontSize: 20
-};
-
+// Estilos específicos ya están definidos en la parte superior para evitar duplicados.
 const previewImage = {
   width: "100%",
   height: 200,

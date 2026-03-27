@@ -14,10 +14,8 @@ export function AuthProvider({ children }) {
   });
 
   const [user, setUser] = useState(null);
-
- 
-  
-  
+  const [profileLoading, setProfileLoading] = useState(false);
+  const profileRetryCount = React.useRef(0);
 
   // ==========================
   // 🔐 LOGIN
@@ -40,6 +38,12 @@ export function AuthProvider({ children }) {
   // 👤 GET PROFILE
   // ==========================
   const getProfile = async () => {
+    if (!token || profileLoading) {
+      return;
+    }
+
+    setProfileLoading(true);
+
     try {
       const res = await axios.get(`${API_URL}/api/auth/profile`, {
         headers: {
@@ -48,13 +52,26 @@ export function AuthProvider({ children }) {
       });
 
       setUser(res.data);
+      profileRetryCount.current = 0;
 
     } catch (error) {
       console.error("ERROR PROFILE:", error.response?.data || error.message);
-      // Si el token es inválido, hacer logout automático
-      if (error.response?.status === 401) {
+      const status = error.response?.status;
+
+      if (status === 401) {
         logout();
+      } else if (status === 429) {
+        // Evitar bloqueo total por rate-limiter; reintentar con backoff.
+        if (profileRetryCount.current < 3) {
+          const delay = 2000 * (profileRetryCount.current + 1);
+          profileRetryCount.current += 1;
+          setTimeout(() => {
+            getProfile();
+          }, delay);
+        }
       }
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -62,10 +79,10 @@ export function AuthProvider({ children }) {
   // 🔄 AUTO LOAD PROFILE
   // ==========================
   useEffect(() => {
-    if (token) {
+    if (token && !user && !profileLoading) {
       getProfile();
     }
-  }, [token]);
+  }, [token, user, profileLoading]);
 
   return (
     <AuthContext.Provider
