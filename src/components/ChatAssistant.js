@@ -10,6 +10,11 @@ function ChatAssistant() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
 
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem("chat");
+  };
+
   const token = localStorage.getItem("token");
   const chatRef = useRef(null);
 
@@ -82,7 +87,16 @@ function ChatAssistant() {
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
-        <h2 style={styles.title}>🤖 Asistente Fitness</h2>
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.avatarCoach}>💪</div>
+            <div>
+              <div style={styles.title}>Asistente Fitness</div>
+              <div style={styles.subTitle}>Pregúntame sobre comidas, rutinas y progreso</div>
+            </div>
+          </div>
+          <button style={styles.clearButton} onClick={clearChat}>Borrar chat</button>
+        </div>
 
         <div style={styles.chatBox} ref={chatRef}>
           {messages.length === 0 && (
@@ -162,10 +176,10 @@ const styles = {
     textAlign: "center",
     marginTop: "50%"
   },
-  userWrapper: { display: "flex", justifyContent: "flex-end" },
-  aiWrapper: { display: "flex", justifyContent: "flex-start" },
+  userWrapper: { display: "flex", justifyContent: "flex-end", marginLeft: "20%" },
+  aiWrapper: { display: "flex", justifyContent: "flex-start", marginRight: "20%" },
   userMessage: {
-    background: "#00ff88",
+    background: "linear-gradient(120deg,#7dff59,#00cc88)",
     color: "#000",
     padding: "10px 14px",
     borderRadius: "16px 16px 0 16px",
@@ -188,11 +202,49 @@ const styles = {
     display: "flex",
     gap: "5px"
   },
+  header: {
+    padding: "12px 16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    background: "linear-gradient(145deg, #0c0c0c, #131313)",
+    borderBottom: "1px solid #1f1f1f"
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px"
+  },
+  avatarCoach: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    background: "#00ff88",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold"
+  },
+  subTitle: {
+    color: "#aaa",
+    fontSize: "12px",
+    marginTop: "2px"
+  },
+  clearButton: {
+    border: "1px solid #00ff88",
+    background: "transparent",
+    color: "#00ff88",
+    borderRadius: "8px",
+    padding: "6px 10px",
+    cursor: "pointer",
+    fontWeight: "bold"
+  },
   inputArea: {
     display: "flex",
     padding: "10px",
     borderTop: "1px solid #1f1f1f",
-    gap: "10px"
+    gap: "10px",
+    background: "#0d0d0d"
   },
   input: {
     flex: 1,

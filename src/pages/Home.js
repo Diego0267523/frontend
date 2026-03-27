@@ -91,6 +91,16 @@ function Home() {
   const [editableProtein, setEditableProtein] = useState("");
   const [editableCarbs, setEditableCarbs] = useState("");
 
+  const resetFoodForm = () => {
+    setFoodText("");
+    setFoodImageFile(null);
+    setFoodAnalysis(null);
+    setEditableCalories("");
+    setEditableProtein("");
+    setEditableCarbs("");
+    setLoadingFood(false);
+  };
+
   // Debounced food text
   const [debouncedFoodText, setDebouncedFoodText] = useState("");
 
@@ -292,16 +302,12 @@ const handleSaveFoodEntry = async () => {
     }
 
     if (response.data.success) {
+      resetFoodForm();
       setFoodModalOpen(false);
-      setFoodText("");
-      setFoodImageFile(null);
-      setFoodAnalysis(null);
-      setEditableCalories("");
-      setEditableProtein("");
-      setEditableCarbs("");
       setSnackbar({ open: true, message: "Comida registrada exitosamente", severity: "success" });
       // Recargar datos
       await loadDailyFoodData();
+      navigate('/');
     }
   } catch (error) {
     console.error("Error guardando comida:", error);
@@ -765,7 +771,7 @@ const handleScroll = useCallback((e) => {
             <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={progressStyle} />
             <Typography sx={{ color:'#aaa', mt: 1 }}>Proteína: {todayProtein}g</Typography>
             <Typography sx={{ color:'#aaa' }}>Carbohidratos: {todayCarbs}g</Typography>
-            <Button variant="contained" sx={{ mt: 1, bgcolor: '#00ff88', color:'#000' }} onClick={() => { setFoodModalOpen(true); setOpenRight(false); }}>
+            <Button variant="contained" sx={{ mt: 1, bgcolor: '#00ff88', color:'#000' }} onClick={() => { resetFoodForm(); setFoodModalOpen(true); setOpenRight(false); }}>
               Registrar comida
             </Button>
           </CardContent>
@@ -852,7 +858,7 @@ const handleScroll = useCallback((e) => {
           <CardContent>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
               <Typography sx={{ color: "#fff", fontWeight: "bold" }}>🔥 Progreso Calórico del Día</Typography>
-              <Button size="small" variant="contained" onClick={() => setFoodModalOpen(true)} sx={{ backgroundColor: "#00ff88", color: "#000" }}>
+              <Button size="small" variant="contained" onClick={() => { resetFoodForm(); setFoodModalOpen(true); }} sx={{ backgroundColor: "#00ff88", color: "#000" }}>
                 Registrar comida
               </Button>
             </Box>
@@ -1051,7 +1057,7 @@ const handleScroll = useCallback((e) => {
 
           {/* 🔥 MODAL PARA REGISTRAR COMIDA */}
           {foodModalOpen && (
-            <Box sx={overlayPro} onClick={() => setFoodModalOpen(false)}>
+            <Box sx={overlayPro} onClick={() => { setFoodModalOpen(false); resetFoodForm(); }}>
               <motion.div
                 initial={{ scale: 0.7, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -1082,7 +1088,7 @@ const handleScroll = useCallback((e) => {
                     <Button onClick={handleSaveFoodEntry} sx={postBtn} disabled={loadingFood}>
                       {loadingFood ? 'Guardando...' : 'Guardar'}
                     </Button>
-                    <Button onClick={() => setFoodModalOpen(false)} sx={cancelBtn} disabled={loadingFood}>Cancelar</Button>
+                    <Button onClick={() => { setFoodModalOpen(false); resetFoodForm(); }} sx={cancelBtn} disabled={loadingFood}>Cancelar</Button>
                   </Box>
 
                   {foodAnalysis && (
