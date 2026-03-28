@@ -76,6 +76,8 @@ function Home() {
   const [showAI, setShowAI] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPostsAvailable, setNewPostsAvailable] = useState(0);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const creatingPostRef = useRef(false);
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
   const [weeklyCalories, setWeeklyCalories] = useState([]);
@@ -172,15 +174,22 @@ const handleCreatePost = async () => {
     return;
   }
 
-  // 🔹 Evitar múltiples clics
-  if (createPostMutation.isLoading) return;
+  // 🔹 Evitar múltiples envíos concurrentes
+  if (creatingPostRef.current || isCreatingPost || createPostMutation.isLoading) return;
+
+  creatingPostRef.current = true;
+  setIsCreatingPost(true);
 
   try {
     const formData = new FormData();
     formData.append("image", file);
     formData.append("caption", postCaption);
 
-    await createPostMutation.mutateAsync(formData);
+    const result = await createPostMutation.mutateAsync(formData);
+
+    if (!result?.success) {
+      throw new Error(result?.message || "Respuesta de API inesperada");
+    }
 
     // ✅ NOTIFICACIÓN DE ÉXITO
     setSnackbar({ open: true, message: "¡Post publicado exitosamente!", severity: "success" });
@@ -191,11 +200,12 @@ const handleCreatePost = async () => {
       setFile(null);
       setPostCaption("");
     }, 800);
-
   } catch (error) {
-    console.error(error);
-    // ❌ NOTIFICACIÓN DE ERROR
+    console.error("Error en publicacion:", error.response?.data || error.message || error);
     setSnackbar({ open: true, message: "Error al publicar el post. Inténtalo de nuevo.", severity: "error" });
+  } finally {
+    creatingPostRef.current = false;
+    setIsCreatingPost(false);
   }
 };
 
@@ -1048,15 +1058,15 @@ const handleScroll = useCallback((e) => {
                     <Button 
                       onClick={handleCreatePost} 
                       sx={postBtn}
-                      disabled={createPostMutation.isLoading}
+                      disabled={isCreatingPost || createPostMutation.isLoading}
                     >
-                      {createPostMutation.isLoading ? "Publicando..." : "Publicar"}
+                      {isCreatingPost || createPostMutation.isLoading ? "Publicando..." : "Publicar"}
                     </Button>
     
                     <Button 
                       onClick={() => setShowCreatePost(false)} 
                       sx={cancelBtn}
-                      disabled={createPostMutation.isLoading}
+                      disabled={isCreatingPost || createPostMutation.isLoading}
                     >
                       Cancelar
                     </Button>
