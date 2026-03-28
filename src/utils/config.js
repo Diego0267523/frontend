@@ -1,3 +1,2 @@
-// const API_URL = "https://gym-app-gytx.onrender.com";
-const API_URL = "http://localhost:9090";  // Use only for local development
+const API_URL = process.env.REACT_APP_API_URL || "https://gym-app-gytx.onrender.com";
 export default API_URL;
