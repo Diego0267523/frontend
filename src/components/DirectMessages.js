@@ -393,28 +393,28 @@ const styles = {
     width: "100%",
     display: "flex",
     justifyContent: "center",
-    padding: "10px",
-    background: "#0a0a0a"
+    padding: "0",
+    background: "transparent"
   },
   container: {
     width: "100%",
     maxWidth: "100%",
     height: "100%",
     maxHeight: "70vh",
-    borderRadius: "18px",
-    boxShadow: "0 12px 48px rgba(0, 255, 136, 0.12), 0 0 0 1px rgba(0, 255, 136, 0.1)",
+    borderRadius: "20px",
+    boxShadow: "0 20px 60px rgba(0, 255, 136, 0.15), 0 0 0 1px rgba(0, 255, 136, 0.15)",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
-    background: "#0d0d0d"
+    background: "linear-gradient(135deg, #0d0d0d 0%, #0f0f0f 100%)"
   },
   header: {
     padding: "14px 16px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "linear-gradient(145deg, #0c0c0c, #131313)",
-    borderBottom: "1px solid #1f1f1f"
+    background: "rgba(12, 12, 12, 0.8)",
+    borderBottom: "1px solid rgba(0, 255, 136, 0.1)"
   },
   headerLeft: {
     display: "flex",
@@ -468,7 +468,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    background: "#0d0d0d"
+    background: "linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)"
   },
   placeholder: {
     color: "#555",
@@ -512,10 +512,10 @@ const styles = {
   },
   inputArea: {
     display: "flex",
-    padding: "12px",
-    borderTop: "1px solid #1f1f1f",
+    padding: "12px 16px",
+    borderTop: "1px solid rgba(0, 255, 136, 0.1)",
     gap: "10px",
-    background: "#0d0d0d",
+    background: "rgba(12, 12, 12, 0.6)",
     alignItems: "center"
   },
   input: {
