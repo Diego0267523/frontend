@@ -38,7 +38,12 @@ const PostCard = memo(({ post }) => {
 
     const handleLikeUpdate = (data) => {
       if (data.postId !== post.id) return;
-      setLikesCount(data.likes);
+
+      const newLikes = typeof data.likesCount === "number"
+        ? data.likesCount
+        : (typeof data.likes === "number" ? data.likes : likesCount);
+
+      setLikesCount(newLikes);
       if (typeof data.likedByCurrent === 'boolean') {
         setLiked(data.likedByCurrent);
       }
@@ -47,9 +52,11 @@ const PostCard = memo(({ post }) => {
     const handleCommentAdded = (data) => {
       if (data.postId !== post.id) return;
 
-      // Replace optimistic comment with real one
+      // Elimina comentario optimista y agrega el real (útil para quien hizo el comentario)
       setComments((prev) => {
-        const withoutOptimistic = prev.filter(c => c.id !== data.comment.id);
+        const withoutOptimistic = prev.filter(
+          (c) => !(c.isOptimistic && c.comment === data.comment.comment && c.user === data.comment.user)
+        );
         return [...withoutOptimistic, data.comment];
       });
       setCommentsCount(data.commentsCount);
@@ -139,10 +146,11 @@ const PostCard = memo(({ post }) => {
     if (socket && connected) {
       // Optimistic update
       const optimisticComment = {
-        id: Date.now(), // temporary ID
+        id: `optimistic-${Date.now()}`, // temporary unique ID
         user: "Tú", // current user
         comment: newComment,
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
+        isOptimistic: true,
       };
       setComments(prev => [...prev, optimisticComment]);
       setCommentsCount(prev => prev + 1);
