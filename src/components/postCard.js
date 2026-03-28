@@ -39,11 +39,12 @@ const PostCard = memo(({ post }) => {
     const handleLikeUpdate = (data) => {
       if (data.postId !== post.id) return;
 
-      const newLikes = typeof data.likesCount === "number"
-        ? data.likesCount
-        : (typeof data.likes === "number" ? data.likes : likesCount);
+      if (typeof data.likesCount === "number") {
+        setLikesCount(data.likesCount);
+      } else if (typeof data.likes === "number") {
+        setLikesCount(data.likes);
+      }
 
-      setLikesCount(newLikes);
       if (typeof data.likedByCurrent === 'boolean') {
         setLiked(data.likedByCurrent);
       }
@@ -112,9 +113,9 @@ const PostCard = memo(({ post }) => {
     setLoadingLike(true);
 
     if (socket && connected) {
-      // Optimistic update
-      setLiked(!liked);
-      setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+      // Optimistic update (aún mantenemos la verdad del servidor desde socket)
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => prev + (liked ? -1 : 1));
 
       socket.emit("like_post", { postId: post.id });
       setLoadingLike(false);
