@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import API_URL from "../utils/config";
 import { useSocket } from "../context/SocketContext";
 
-function ChatAssistant() {
+function ChatAssistant({ onClose }) {
   const [messages, setMessages] = useState(() => {
     const saved = JSON.parse(localStorage.getItem("chat")) || [];
     return saved.slice(-10);
@@ -131,9 +131,21 @@ function ChatAssistant() {
               <div style={theme.subTitle}>Pregúntame sobre comidas, rutinas y progreso</div>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={onClose ? onClose : () => {}}
+              style={{
+                ...theme.closeButton,
+                border: "none",
+                background: "transparent",
+                fontSize: "18px",
+                cursor: "pointer"
+              }}
+            >
+              ✕
+            </button>
             <span style={theme.statusDot}>{connected ? "🟢 Conectado" : "🔴 Desconectado"}</span>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px", marginLeft: "8px" }}>
               <button style={theme.themeButton} onClick={toggleTheme}>
                 {isDarkMode ? "☀️" : "🌙"}
               </button>
@@ -253,12 +265,6 @@ const darkTheme = {
     padding: "10px",
     background: "#0a0a0a"
   },
-  container: {
-    width: "100%",
-    maxWidth: "600px",
-    height: "90vh",
-    background: "#121212",
-    borderRadius: "16px",
     boxShadow: "0 0 25px rgba(0,255,136,0.08)",
     display: "flex",
     flexDirection: "column",
@@ -323,6 +329,14 @@ const darkTheme = {
     padding: "6px 10px",
     cursor: "pointer",
     fontSize: "16px"
+  },
+  closeButton: {
+    color: "#ffffff",
+    fontSize: "18px",
+    background: "transparent",
+    border: "none",
+    padding: "0",
+    lineHeight: "1",
   },
   chatBox: {
     flex: 1,
