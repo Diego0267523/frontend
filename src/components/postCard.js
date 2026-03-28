@@ -170,7 +170,7 @@ const PostCard = memo(({ post }) => {
   };
 
   const handleAddComment = async () => {
-    if (!token || !newComment.trim()) {
+    if (!token || !newComment.trim() || loadingComment) {
       console.warn("No token o comentario vacío");
       return;
     }
@@ -462,7 +462,7 @@ const PostCard = memo(({ post }) => {
                     <Box sx={{ maxHeight: 200, overflowY: "auto", mb: 2 }}>
                       {comments.map((comment, i) => (
                         <motion.div
-                          key={i}
+                          key={comment.id || i}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.05 }}
@@ -489,7 +489,9 @@ const PostCard = memo(({ post }) => {
                     <TextField
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                      onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddComment();
+                        }}
                       placeholder="Agregar comentario..."
                       size="small"
                       disabled={loadingComment}
