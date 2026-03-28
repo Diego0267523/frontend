@@ -164,15 +164,13 @@ function ChatAssistant({ onClose }) {
           <motion.div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <motion.button
               onClick={onClose ? onClose : () => {}}
-              style={{
-                ...theme.closeButton,
-                border: "none",
-                background: "transparent",
-                fontSize: "18px",
-                cursor: "pointer"
+              style={theme.closeButton}
+              whileHover={{ 
+                scale: 1.1,
+                backgroundColor: isDarkMode ? "rgba(255, 107, 107, 0.2)" : "rgba(255, 107, 107, 0.12)",
+                borderColor: isDarkMode ? "rgba(255, 107, 107, 0.5)" : "rgba(255, 107, 107, 0.4)"
               }}
-              whileHover={{ scale: 1.2, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
               ✕
@@ -367,16 +365,16 @@ const darkTheme = {
     width: "100%",
     display: "flex",
     justifyContent: "center",
-    padding: "10px",
-    background: "#0a0a0a"
+    padding: "0",
+    background: "transparent"
   },
   container: {
     width: "100%",
     maxWidth: "100%",
     height: "100%",
     maxHeight: "70vh",
-    borderRadius: "18px",
-    boxShadow: "0 12px 48px rgba(0, 255, 136, 0.12), 0 0 0 1px rgba(0, 255, 136, 0.1)",
+    borderRadius: "20px",
+    boxShadow: "0 16px 48px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 255, 136, 0.1)",
     display: "flex",
     flexDirection: "column",
     overflow: "hidden",
@@ -387,8 +385,8 @@ const darkTheme = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "linear-gradient(145deg, #0c0c0c, #131313)",
-    borderBottom: "1px solid #1f1f1f"
+    background: "rgba(12, 12, 12, 0.8)",
+    borderBottom: "1px solid rgba(0, 255, 136, 0.1)"
   },
   headerLeft: {
     display: "flex",
@@ -447,13 +445,15 @@ const darkTheme = {
     transition: "all 0.2s ease"
   },
   closeButton: {
-    color: "#ffffff",
+    color: "#ff6b6b",
     fontSize: "18px",
-    background: "transparent",
-    border: "none",
-    padding: "0",
+    background: "rgba(255, 107, 107, 0.1)",
+    border: "1px solid rgba(255, 107, 107, 0.3)",
+    padding: "6px 8px",
     lineHeight: "1",
-    cursor: "pointer"
+    cursor: "pointer",
+    borderRadius: "6px",
+    transition: "all 0.2s ease"
   },
   chatBox: {
     flex: 1,
@@ -462,7 +462,7 @@ const darkTheme = {
     display: "flex",
     flexDirection: "column",
     gap: "12px",
-    background: "#0d0d0d"
+    background: "linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%)"
   },
   placeholder: {
     color: "#555",
@@ -537,10 +537,10 @@ const darkTheme = {
   },
   inputArea: {
     display: "flex",
-    padding: "12px",
-    borderTop: "1px solid #1f1f1f",
+    padding: "12px 16px",
+    borderTop: "1px solid rgba(0, 255, 136, 0.1)",
     gap: "10px",
-    background: "#0d0d0d"
+    background: "rgba(12, 12, 12, 0.6)"
   },
   input: {
     flex: 1,
@@ -572,17 +572,17 @@ const lightTheme = {
   ...darkTheme,
   wrapper: {
     ...darkTheme.wrapper,
-    background: "#f5f5f5"
+    background: "transparent"
   },
   container: {
     ...darkTheme.container,
     background: "#ffffff",
-    boxShadow: "0 12px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08)"
+    boxShadow: "0 16px 48px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 170, 102, 0.1)"
   },
   header: {
     ...darkTheme.header,
-    background: "linear-gradient(145deg, #f8f8f8, #ffffff)",
-    borderBottom: "1px solid #e8e8e8"
+    background: "rgba(255, 255, 255, 0.9)",
+    borderBottom: "1px solid rgba(0, 170, 102, 0.1)"
   },
   avatarCoach: {
     ...darkTheme.avatarCoach,
@@ -614,7 +614,7 @@ const lightTheme = {
   },
   chatBox: {
     ...darkTheme.chatBox,
-    background: "#fafafa"
+    background: "linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%)"
   },
   placeholder: {
     ...darkTheme.placeholder,
@@ -651,8 +651,8 @@ const lightTheme = {
   },
   inputArea: {
     ...darkTheme.inputArea,
-    background: "#f8f8f8",
-    borderTop: "1px solid #e8e8e8"
+    background: "rgba(248, 248, 248, 0.8)",
+    borderTop: "1px solid rgba(0, 170, 102, 0.1)"
   },
   input: {
     ...darkTheme.input,

@@ -48,6 +48,13 @@ const FloatingChatBubble = ({ onClick, isOpen }) => {
         animate={{ rotate: 0, opacity: 1 }}
         exit={{ rotate: 180, opacity: 0 }}
         transition={{ duration: 0.3 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          height: "100%"
+        }}
       >
         {isOpen ? "✕" : "💬"}
       </motion.span>
