@@ -66,21 +66,11 @@ export function AuthProvider({ children }) {
         logout();
       } else if (status === 429) {
         setProfileError('rate-limit');
-
-        if (profileRetryCount.current < 3) {
-          const delay = 2000 * (profileRetryCount.current + 1);
-          profileRetryCount.current += 1;
-          setTimeout(() => {
-            setProfileError(null);
-            getProfile();
-          }, delay);
-        } else {
-          // Después de 3 reintentos, permitir nuevo intento desde usuario tras 10s
-          setTimeout(() => {
-            setProfileError(null);
-            profileRetryCount.current = 0;
-          }, 10000);
-        }
+        profileRetryCount.current = 0;
+        // Si hay 429, esperamos 60s antes de dejar de bloquear, para no generar otro 429.
+        setTimeout(() => {
+          setProfileError(null);
+        }, 60000);
       } else {
         setProfileError('unknown');
       }
