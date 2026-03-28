@@ -235,6 +235,30 @@ const PostCard = memo(({ post }) => {
 
       if (response?.data?.success) {
         setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
+        // Optimistic update: eliminar el post del cache sin recargar toda la lista
+        queryClient.setQueryData(['feed'], (oldData) => {
+          if (!oldData || !oldData.pages) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((p) => String(p.id) !== String(post.id)),
+            })),
+          };
+        });
+
+        // también limpiar cualquier query adicional relacionada
+        queryClient.setQueryData(['posts'], (oldPosts) => {
+          if (!oldPosts || !oldPosts.pages) return oldPosts;
+          return {
+            ...oldPosts,
+            pages: oldPosts.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((p) => String(p.id) !== String(post.id)),
+            })),
+          };
+        });
+
         queryClient.invalidateQueries({ queryKey: ['feed'] });
         queryClient.invalidateQueries({ queryKey: ['posts'] });
       } else {
