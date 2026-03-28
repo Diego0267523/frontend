@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../utils/api";
 
 // Hook useAuth con React Query
@@ -8,37 +8,23 @@ export function useAuth() {
   const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   // Query para obtener perfil
-  const {
-    data: user,
-    isLoading: loading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const response = await api.get("/api/auth/profile");
-      return response.data;
+      const res = await api.get("/api/auth/profile");
+      return res.data;
     },
     enabled: !!token, // Solo si hay token
-    staleTime: 10 * 60 * 1000, // 10 minutos
-    cacheTime: 30 * 60 * 1000, // 30 minutos
+    retry: 1, // máximo 1 reintento
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    retry: (failureCount, error) => {
-      if (error?.response?.status === 401) return false; // No retry en 401
-      if (error?.response?.status === 429) return false; // No retry en 429
-      return failureCount < 2;
-    },
-    onError: (error) => {
-      console.error("Error fetching profile:", error.response?.data || error.message);
-      const status = error?.response?.status;
-      if (status === 401) {
-        logout(); // Limpiar sesión
-      } else if (status === 429) {
-        console.warn("Rate limit alcanzado, esperando...");
-      }
-    },
+    staleTime: 1000 * 60 * 5, // 5 minutos cache
   });
+
+  // Manejar errores
+  if (error) {
+    console.error("Error profile:", error);
+  }
 
   // Login
   const login = (newToken) => {
@@ -54,23 +40,12 @@ export function useAuth() {
     queryClient.clear(); // Limpiar todo el cache
   };
 
-  // Sincronizar token con localStorage
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const storedToken = localStorage.getItem("token");
-      setToken(storedToken);
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
   return {
-    user,
-    loading,
+    user: data,
+    loading: isLoading,
     error,
     token,
     login,
     logout,
-    refetch,
   };
 }
