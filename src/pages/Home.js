@@ -35,7 +35,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ChatAssistant from "../components/ChatAssistant";
 
 // 🔥 NUEVO
-import { createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
+import { createStory, createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import API_URL from '../utils/config';
@@ -375,21 +375,52 @@ const handleDeleteFoodEntry = async (id) => {
   }
 };
 
+// 🔥 HISTORIAS - Cargar historias al montar
+const loadStories = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/stories`);
+    if (response.data.success) {
+      setStories(response.data.stories || []);
+    }
+  } catch (error) {
+    console.error("Error loading stories:", error);
+  }
+};
 
-  // 🔥 HISTORIAS - Cargar historias al montar
-  React.useEffect(() => {
-    const loadStories = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/api/stories`);
-        if (response.data.success) {
-          setStories(response.data.stories || []);
-        }
-      } catch (error) {
-        console.error("Error loading stories:", error);
-      }
-    };
-    loadStories();
-  }, []);
+React.useEffect(() => {
+  loadStories();
+}, []);
+
+const handleUploadStory = async () => {
+  if (!storyFile) {
+    setSnackbar({ open: true, message: "Selecciona una imagen para la historia", severity: "error" });
+    return;
+  }
+
+  setIsUploadingStory(true);
+  try {
+    const formData = new FormData();
+    formData.append("image", storyFile);
+
+    const response = await createStory(formData);
+
+    if (response.data?.success) {
+      setSnackbar({ open: true, message: "Historia subida exitosamente", severity: "success" });
+      setShowStoryPreview(false);
+      setStoryFile(null);
+      await loadStories();
+    } else {
+      const message = response.data?.message || "No se pudo subir la historia";
+      setSnackbar({ open: true, message, severity: "error" });
+    }
+  } catch (error) {
+    console.error("Error subiendo historia:", error);
+    const message = error.response?.data?.message || "Error al subir historia";
+    setSnackbar({ open: true, message, severity: "error" });
+  } finally {
+    setIsUploadingStory(false);
+  }
+};
 
   const loadDailyFoodData = async () => {
     try {
@@ -445,45 +476,6 @@ const handleDeleteFoodEntry = async (id) => {
   React.useEffect(() => {
     loadDailyFoodData();
   }, []);
-
-  // 🔥 HISTORIAS - Subir historia
-  const handleUploadStory = async () => {
-    if (!storyFile) {
-      setSnackbar({ open: true, message: "Selecciona una imagen para tu historia", severity: "error" });
-      return;
-    }
-
-    setIsUploadingStory(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", storyFile);
-
-      const response = await axios.post(`${API_URL}/api/stories`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
-
-      if (response.data.success) {
-        // Recargar historias
-        const storiesResponse = await axios.get(`${API_URL}/api/stories`);
-        if (storiesResponse.data.success) {
-          setStories(storiesResponse.data.stories || []);
-        }
-
-        setSnackbar({ open: true, message: "¡Historia publicada!", severity: "success" });
-        setTimeout(() => {
-          setShowStoryPreview(false);
-          setStoryFile(null);
-          setIsUploadingStory(false);
-        }, 800);
-      }
-    } catch (error) {
-      console.error("Error uploading story:", error);
-      setSnackbar({ open: true, message: "Error al publicar la historia", severity: "error" });
-      setIsUploadingStory(false);
-    }
-  };
 
   // 🔥 HISTORIAS - Eliminar historia propia
   const handleDeleteStory = async (storyId) => {
