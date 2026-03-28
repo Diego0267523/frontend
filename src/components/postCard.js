@@ -229,14 +229,23 @@ const PostCard = memo(({ post }) => {
   };
 
   const handleConfirmDelete = async () => {
-    if (!token || !post.id) return;
+    if (!token || !post.id) {
+      setToast({ open: true, message: "No se puede eliminar: token o ID faltante", severity: "error" });
+      return;
+    }
 
     try {
-      await deletePostMutation.mutateAsync(post.id);
-      setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
-      setVisible(false); // Ocultar inmediatamente la tarjeta
+      const result = await deletePostMutation.mutateAsync(post.id);
+
+      if (result?.success) {
+        setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
+        setVisible(false); // Ocultar inmediatamente la tarjeta
+      } else {
+        setToast({ open: true, message: result?.message || "No se pudo eliminar el post", severity: "error" });
+      }
     } catch (error) {
       setToast({ open: true, message: "No se pudo eliminar el post", severity: "error" });
+      console.error("Error en handleConfirmDelete:", error.response?.data || error.message);
     } finally {
       setConfirmOpen(false);
     }
@@ -371,6 +380,7 @@ const PostCard = memo(({ post }) => {
             autoHideDuration={3500}
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
             onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+            onExited={() => setToast({ open: false, message: '', severity: 'success' })}
           >
             <Alert
               onClose={() => setToast((prev) => ({ ...prev, open: false }))}
