@@ -1,6 +1,6 @@
 import { memo, useState, useContext, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem } from "@mui/material";
+import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useSocket } from "../context/SocketContext";
@@ -24,6 +24,8 @@ const PostCard = memo(({ post }) => {
   const [newComment, setNewComment] = useState("");
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
 
@@ -216,31 +218,39 @@ const PostCard = memo(({ post }) => {
     setMenuAnchorEl(null);
   };
 
-  const handleDeletePost = async () => {
+  const handleDeletePost = () => {
     if (!token || isDeleting || !post.id) return;
+    setConfirmOpen(true);
+    handleCloseMenu();
+  };
 
-    const valid = window.confirm("¿Estás seguro que deseas eliminar este post? Esta acción no se puede deshacer.");
-    if (!valid) {
-      handleCloseMenu();
-      return;
-    }
+  const handleConfirmDelete = async () => {
+    if (!token || isDeleting || !post.id) return;
 
     setIsDeleting(true);
     try {
-      await axios.delete(`${API_URL}/api/posts/${post.id}`, {
+      const response = await axios.delete(`${API_URL}/api/posts/${post.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setIsDeleting(false);
-      handleCloseMenu();
-      // Invalidar caché y refrescar los posts.
-      queryClient.invalidateQueries({ queryKey: ['feed'] });
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+      if (response?.data?.success) {
+        setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
+        queryClient.invalidateQueries({ queryKey: ['feed'] });
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+      } else {
+        setToast({ open: true, message: response?.data?.message || "No se pudo eliminar el post", severity: "error" });
+      }
     } catch (error) {
       console.error("Error deleting post:", error.response?.data || error.message);
+      setToast({ open: true, message: error.response?.data?.message || error.message || "No se pudo eliminar el post", severity: "error" });
+    } finally {
       setIsDeleting(false);
-      handleCloseMenu();
-      alert("No se pudo eliminar el post. Intenta de nuevo.");
+      setConfirmOpen(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmOpen(false);
   };
 
   const loadComments = async () => {
@@ -345,6 +355,38 @@ const PostCard = memo(({ post }) => {
               <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
             </IconButton>
           </Box>
+
+          {/* Dialogo de confirmación de borrado */}
+          <Dialog open={confirmOpen} onClose={handleCancelDelete}>
+            <DialogTitle>Confirmar eliminación</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                ¿Estás seguro de eliminar este post? Esta acción no se puede deshacer.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCancelDelete} disabled={isDeleting}>Cancelar</Button>
+              <Button onClick={handleConfirmDelete} color="error" disabled={isDeleting}>
+                {isDeleting ? "Eliminando..." : "Eliminar"}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Toast de confirmación */}
+          <Snackbar
+            open={toast.open}
+            autoHideDuration={3500}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+          >
+            <Alert
+              onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+              severity={toast.severity}
+              sx={{ width: '100%' }}
+            >
+              {toast.message}
+            </Alert>
+          </Snackbar>
 
           {/* Sección de Comentarios */}
           <Collapse in={showComments}>
