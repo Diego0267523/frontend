@@ -72,6 +72,7 @@ function Home() {
   
   const [showAI, setShowAI] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [newPostsAvailable, setNewPostsAvailable] = useState(0);
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
   const [weeklyCalories, setWeeklyCalories] = useState([]);
@@ -609,6 +610,33 @@ const fetchPosts = async ({ pageParam = 1 }) => {
 
   const hasPosts = data?.pages?.some(page => page.data && page.data.length > 0);
 
+  // 🔥 INDICADOR DE NUEVAS PUBLICACIONES
+  React.useEffect(() => {
+    const checkNewPosts = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/posts?page=1&limit=1`);
+        const newFirstPost = response.data?.posts?.[0];
+        const currentFirstPost = data?.pages?.[0]?.data?.[0];
+
+        if (!newFirstPost || !currentFirstPost) {
+          return;
+        }
+
+        if (newFirstPost.id !== currentFirstPost.id) {
+          // calcular cuántos posts nuevos pueden haber (19? 1?)
+          // para no sobrecontar, sólo indica >0
+          setNewPostsAvailable(1);
+        }
+      } catch (error) {
+        console.warn('No se pudo verificar nuevas publicaciones:', error.message || error);
+      }
+    };
+
+    const interv = setInterval(checkNewPosts, 15000); // cada 15s
+    checkNewPosts();
+    return () => clearInterval(interv);
+  }, [data]);
+
   // 🔥 TIMEOUT PARA MOSTRAR RETRY DESPUÉS DE 3s
   React.useEffect(() => {
     if (isLoading) {
@@ -852,6 +880,22 @@ const handleScroll = useCallback((e) => {
             );
           })}
         </Box>
+
+        {/* NUEVAS PUBLICACIONES */}
+        {newPostsAvailable > 0 && (
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Button
+              variant="contained"
+              sx={{ bgcolor: '#00ff88', color: '#000', fontWeight: 'bold' }}
+              onClick={async () => {
+                queryClient.invalidateQueries({ queryKey: ['feed'] });
+                setNewPostsAvailable(0);
+              }}
+            >
+              Ver {newPostsAvailable} publicación{newPostsAvailable > 1 ? 'es' : ' nueva'}
+            </Button>
+          </Box>
+        )}
 
         {/* 🔥 DASHBOARD CALORÍAS DIARIAS */}
         <Card sx={{ ...postCard, mb: 2, p: 2 }}>
