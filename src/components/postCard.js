@@ -1,17 +1,20 @@
 import { memo, useState, useContext, useEffect, useRef } from "react";
-import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse } from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useSocket } from "../context/SocketContext";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import API_URL from "../utils/config";
 import { AuthContext } from "../context/AuthContext";
 
 const PostCard = memo(({ post }) => {
   const { token, user } = useContext(AuthContext);
   const { socket, connected } = useSocket();
+  const queryClient = useQueryClient();
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
@@ -19,6 +22,8 @@ const PostCard = memo(({ post }) => {
   const likeThrottleRef = useRef(false);
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState("");
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
 
@@ -209,6 +214,40 @@ const PostCard = memo(({ post }) => {
     }
   };
 
+  const handleOpenMenu = (event) => {
+    setMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setMenuAnchorEl(null);
+  };
+
+  const handleDeletePost = async () => {
+    if (!token || isDeleting || !post.id) return;
+
+    const valid = window.confirm("¿Estás seguro que deseas eliminar este post? Esta acción no se puede deshacer.");
+    if (!valid) {
+      handleCloseMenu();
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API_URL}/api/posts/${post.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsDeleting(false);
+      handleCloseMenu();
+      // Invalidar caché y refrescar los posts.
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+    } catch (error) {
+      console.error("Error deleting post:", error.response?.data || error.message);
+      setIsDeleting(false);
+      handleCloseMenu();
+      alert("No se pudo eliminar el post. Intenta de nuevo.");
+    }
+  };
+
   const loadComments = async () => {
     if (showComments) {
       setShowComments(false);
@@ -244,7 +283,7 @@ const PostCard = memo(({ post }) => {
         <CardContent>
 
           {/* Header - Usuario y Tiempo */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, position: 'relative' }}>
             <Box component="img"
               src={post.avatar || post.userAvatar || '/default-avatar.png'}
               alt="User avatar"
@@ -258,6 +297,29 @@ const PostCard = memo(({ post }) => {
                 {getTimeAgo(post.time)}
               </Typography>
             </Box>
+            {(user && post.user_id && user.id === post.user_id) && (
+              <>
+                <IconButton
+                  size="small"
+                  onClick={handleOpenMenu}
+                  sx={{ color: '#aaa', ml: 1 }}
+                  aria-label="Opciones del post"
+                >
+                  <MoreVertIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={menuAnchorEl}
+                  open={Boolean(menuAnchorEl)}
+                  onClose={handleCloseMenu}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                  <MenuItem onClick={handleDeletePost} disabled={isDeleting}>
+                    {isDeleting ? 'Eliminando...' : 'Eliminar post'}
+                  </MenuItem>
+                </Menu>
+              </>
+            )}
           </Box>
 
           {/* Imagen */}
