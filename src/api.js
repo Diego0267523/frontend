@@ -29,7 +29,7 @@ export const countCaloriesImage = (formData) => axios.post(`${API_URL}/api/ai/ca
 // Food entries
 export const createFoodEntry = (data) => axios.post(`${API_URL}/api/food/entries`, data, { headers: getAuthHeaders() });
 export const createFoodEntryWithImage = (formData) => axios.post(`${API_URL}/api/food/entries`, formData, {
-  headers: { ...getAuthHeaders(), 'Content-Type': 'multipart/form-data' }
+  headers: getAuthHeaders() // axios pone boundary bien solo
 });
 export const getFoodEntries = (fecha) => axios.get(`${API_URL}/api/food/entries${fecha ? `?fecha=${fecha}` : ''}`, { headers: getAuthHeaders() });
 export const getDailyTotals = (fecha) => axios.get(`${API_URL}/api/food/totals${fecha ? `?fecha=${fecha}` : ''}`, { headers: getAuthHeaders() });
