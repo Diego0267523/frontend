@@ -42,25 +42,28 @@ export function useDeletePost() {
           ...oldData,
           pages: oldData.pages.map((page) => ({
             ...page,
-            posts: page.posts.filter((post) => String(post.id) !== String(postId)),
+            posts: Array.isArray(page.posts)
+              ? page.posts.filter((post) => String(post.id) !== String(postId))
+              : [],
           })),
         };
       });
 
       return { previous };
     },
-    onError: (_error, _postId, context) => {
+    onError: (error, _postId, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["posts"], context.previous);
       }
-      console.error("Error deleting post:", _error.response?.data || _error.message);
+      console.error("Error deleting post:", error.response?.data || error.message);
     },
-    onSuccess: (_data, postId) => {
+    onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
-    onError: (error) => {
-      console.error("Error deleting post:", error.response?.data || error.message);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
   });
 }

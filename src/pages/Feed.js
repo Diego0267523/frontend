@@ -12,8 +12,8 @@ const Feed = () => {
     <Box sx={{ p: 2, bgcolor: '#000', minHeight: '100vh' }}>
       <Typography variant="h4" sx={{ color: '#fff', mb: 2 }}>Feed</Typography>
       {data?.pages && data.pages.map((page, i) =>
-        page?.posts && Array.isArray(page.posts) && page.posts.map((post, j) => (
-          <PostCard key={`${i}-${j}`} post={post} />
+        page?.posts && Array.isArray(page.posts) && page.posts.map((post) => (
+          <PostCard key={post.id ?? `${i}-${Math.random()}`} post={post} />
         ))
       )}
       {hasNextPage && (
