@@ -10,7 +10,7 @@ import API_URL from "../utils/config";
 import { AuthContext } from "../context/AuthContext";
 
 const PostCard = memo(({ post }) => {
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const { socket, connected } = useSocket();
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
@@ -52,13 +52,22 @@ const PostCard = memo(({ post }) => {
     const handleCommentAdded = (data) => {
       if (data.postId !== post.id) return;
 
-      // Elimina comentario optimista y agrega el real (útil para quien hizo el comentario)
+      // Elimina comentario optimista equivalente y agrega la versión real recibida
       setComments((prev) => {
         const withoutOptimistic = prev.filter(
-          (c) => !(c.isOptimistic && c.comment === data.comment.comment && c.user === data.comment.user)
+          (c) => !(
+            c.isOptimistic &&
+            c.comment === data.comment.comment &&
+            c.user === data.comment.user
+          )
         );
+
+        const existsReal = withoutOptimistic.some(c => c.id === data.comment.id);
+        if (existsReal) return withoutOptimistic;
+
         return [...withoutOptimistic, data.comment];
       });
+
       setCommentsCount(data.commentsCount);
     };
 
@@ -70,7 +79,7 @@ const PostCard = memo(({ post }) => {
       socket.off("post_like_updated", handleLikeUpdate);
       socket.off("post_comment_added", handleCommentAdded);
     };
-  }, [socket, post.id]);
+  }, [socket, post.id, likesCount]);
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";
@@ -145,9 +154,10 @@ const PostCard = memo(({ post }) => {
 
     if (socket && connected) {
       // Optimistic update
+      const currentUserName = user?.nombre || "Tú";
       const optimisticComment = {
         id: `optimistic-${Date.now()}`, // temporary unique ID
-        user: "Tú", // current user
+        user: currentUserName,
         comment: newComment,
         time: new Date().toISOString(),
         isOptimistic: true,
@@ -185,19 +195,18 @@ const PostCard = memo(({ post }) => {
   };
 
   const loadComments = async () => {
-    if (comments.length > 0) {
-      setShowComments(!showComments);
+    if (showComments) {
+      setShowComments(false);
       return;
     }
 
     try {
       console.log(`Cargando comentarios del post ${post.id}`);
       const response = await axios.get(`${API_URL}/api/posts/${post.id}/comments`);
-      
+
       console.log("Comments response:", response.data);
-      
+
       if (response.data.success) {
-        // Backend devuelve: { success: true, comments: [...] }
         const fetchedComments = response.data.comments || [];
         setComments(fetchedComments);
         setCommentsCount(fetchedComments.length);
@@ -206,7 +215,7 @@ const PostCard = memo(({ post }) => {
       }
     } catch (error) {
       console.error("Error fetching comments:", error.response?.data || error.message);
-      setShowComments(true); // Mostrar sección vacía aunque falle
+      setShowComments(true);
     }
   };
 
