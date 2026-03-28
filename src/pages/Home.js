@@ -1,9 +1,9 @@
 
-import { AuthContext } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../context/SocketContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import React, { useContext, useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
 
 
@@ -39,7 +39,7 @@ import axios from 'axios';
 import API_URL from '../utils/config';
 
 function Home() {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useAuth();
   const { socket, connected } = useSocket();
 
   const [file, setFile] = useState(null);

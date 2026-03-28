@@ -1,18 +1,18 @@
-import { memo, useState, useContext, useEffect, useRef } from "react";
+import { memo, useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useSocket } from "../context/SocketContext";
+import { useAuth } from "../hooks/useAuth";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import API_URL from "../utils/config";
-import { AuthContext } from "../context/AuthContext";
 
 const PostCard = memo(({ post }) => {
-  const { token, user } = useContext(AuthContext);
+  const { token, user } = useAuth();
   const { socket, connected } = useSocket();
   const queryClient = useQueryClient();
   const [liked, setLiked] = useState(post.liked || false);

@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./ErrorBoundary";
-import { AuthProvider } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
 
 import { ThemeProvider, CssBaseline } from "@mui/material";
@@ -31,11 +30,9 @@ root.render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ErrorBoundary>
-          <AuthProvider>
-            <SocketProvider>
-              <App />
-            </SocketProvider>
-          </AuthProvider>
+          <SocketProvider>
+            <App />
+          </SocketProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>

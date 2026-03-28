@@ -1,5 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 import API_URL from "../utils/config";
 import { useNavigate } from "react-router-dom";
 
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 
 function Login() {
-  const { login } = useContext(AuthContext);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");

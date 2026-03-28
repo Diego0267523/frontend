@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -8,11 +8,10 @@ import Profile from "./pages/Profile";
 import Feed from "./pages/Feed";
 import Stories from "./pages/Stories";
 
-import { AuthContext } from "./context/AuthContext";
+import { useAuth } from "./hooks/useAuth";
 
 function App() {
-  const authContext = useContext(AuthContext);
-  const { token } = authContext || {};
+  const { token, loading } = useAuth();
 
   // Detectar desconexión de red
   useEffect(() => {
@@ -31,7 +30,7 @@ function App() {
     };
   }, []);
 
-  if (!authContext) {
+  if (loading) {
     return <div style={{ color: "#fff", padding: "20px" }}>Cargando...</div>;
   }
 

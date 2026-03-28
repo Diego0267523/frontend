@@ -1,5 +1,5 @@
-import React, { useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
+import React, { useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
 import {
   Box,
   Typography,
@@ -14,7 +14,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ProfileAvatar from "../components/ProfileAvatar";
 
 function Profile() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // 🔥 ESCAPE PARA VOLVER
