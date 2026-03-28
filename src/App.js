@@ -11,7 +11,7 @@ import Stories from "./pages/Stories";
 import { useAuth } from "./hooks/useAuth";
 
 function App() {
-  const { token, loading } = useAuth();
+  const { token, profileLoading } = useAuth();
 
   // Detectar desconexión de red
   useEffect(() => {
@@ -30,7 +30,7 @@ function App() {
     };
   }, []);
 
-  if (loading) {
+  if (profileLoading) {
     return <div style={{ color: "#fff", padding: "20px" }}>Cargando...</div>;
   }
 

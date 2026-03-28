@@ -119,9 +119,11 @@ export function AuthProvider({ children }) {
       value={{
         token,
         user,
+        profileLoading,
+        profileError,
         login,
         logout,
-        getProfile
+        getProfile,
       }}
     >
       {children}
