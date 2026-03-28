@@ -1,4 +1,4 @@
-import { memo, useState, useContext, useEffect } from "react";
+import { memo, useState, useContext, useEffect, useRef } from "react";
 import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -16,6 +16,7 @@ const PostCard = memo(({ post }) => {
   const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
   const [showComments, setShowComments] = useState(false);
+  const likeThrottleRef = useRef(false);
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState("");
   const [loadingLike, setLoadingLike] = useState(false);
@@ -45,7 +46,7 @@ const PostCard = memo(({ post }) => {
         setLikesCount(data.likes);
       }
 
-      if (typeof data.likedByCurrent === 'boolean') {
+      if (data.toggledByUserId === user?.id && typeof data.likedByCurrent === 'boolean') {
         setLiked(data.likedByCurrent);
       }
     };
@@ -110,12 +111,25 @@ const PostCard = memo(({ post }) => {
       return;
     }
 
+    if (likeThrottleRef.current) {
+      console.warn("Like action is throttled, please wait.");
+      return;
+    }
+
+    likeThrottleRef.current = true;
+    setTimeout(() => {
+      likeThrottleRef.current = false;
+    }, 500); // 500ms throttle
+
     setLoadingLike(true);
 
     if (socket && connected) {
       // Optimistic update (aún mantenemos la verdad del servidor desde socket)
-      setLiked((prev) => !prev);
-      setLikesCount((prev) => prev + (liked ? -1 : 1));
+      setLiked((prevLiked) => {
+        const nextLiked = !prevLiked;
+        setLikesCount((prevCount) => prevCount + (nextLiked ? 1 : -1));
+        return nextLiked;
+      });
 
       socket.emit("like_post", { postId: post.id });
       setLoadingLike(false);
