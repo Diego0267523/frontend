@@ -46,6 +46,7 @@ function Home() {
   const createPostMutation = useCreatePost();
 
   const [file, setFile] = useState(null);
+
   const [postCaption, setPostCaption] = useState("");
 
   // 🔥 HISTORIAS
@@ -117,6 +118,14 @@ function Home() {
     }, 300);
     return () => clearTimeout(timer);
   }, [foodText]);
+React.useEffect(() => {
+  return () => {
+    if (file) URL.revokeObjectURL(file);
+  };
+}, [file]);
+React.useEffect(() => {
+  setNewPostsAvailable(0);
+}, [location.pathname]);
 
   // 🔥 Escuchar nuevas publicaciones en tiempo real (realtime)
   React.useEffect(() => {
@@ -126,7 +135,7 @@ function Home() {
       if (!post) return;
 
       queryClient.setQueryData(["posts"], (old) => {
-        if (!old?.pages) return old;
+        if (!old?.pages) return old || { pages: [] };
         return {
           ...old,
           pages: old.pages.map((page, index) => {
@@ -159,7 +168,7 @@ function Home() {
     return () => {
       socket.off('new_post', handleNewPost);
     };
-  }, [socket, connected, queryClient]);
+ }, [socket?.id, connected]);
 
   // 🔥 NOTIFICACIONES
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -578,18 +587,21 @@ const handleUploadStory = async () => {
     stopStoryTimer();
   };
 
-  const startStoryTimer = () => {
-    const interval = setInterval(() => {
-      setStoryProgress((prev) => {
-        if (prev >= 100) {
-          nextStory();
-          return 0;
-        }
-        return prev + 1; // 15 seconds total (150ms * 100)
-      });
-    }, 150);
-    setStoryTimer(interval);
-  };
+const startStoryTimer = () => {
+  stopStoryTimer(); // 🔥 importante
+
+  const interval = setInterval(() => {
+    setStoryProgress((prev) => {
+      if (prev >= 100) {
+        nextStory();
+        return 0;
+      }
+      return prev + 1;
+    });
+  }, 150);
+
+  setStoryTimer(interval);
+};
 
   const stopStoryTimer = () => {
     if (storyTimer) {
@@ -670,8 +682,10 @@ const handleScroll = useCallback((e) => {
   scrollTimeout.current = setTimeout(() => {
     scrollTimeout.current = null;
 
-    const bottom =
-      e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+const target = e.currentTarget;
+
+const bottom =
+  target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
 
     if (bottom && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -818,7 +832,10 @@ const handleScroll = useCallback((e) => {
             <Typography sx={titleStyle}>📈 Calorías semana</Typography>
             {weeklyCalories.length > 0 ? (
               weeklyCalories.map((day, i) => {
-                const maxValue = Math.max(...weeklyCalories.map(item => item.total_calorias), targetCalories);
+                const maxValue = Math.max(
+                  ...(weeklyCalories.length ? weeklyCalories.map(item => item.total_calorias) : [0]),
+                  targetCalories
+                );
                 const value = maxValue > 0 ? (day.total_calorias / maxValue) * 100 : 0;
                 const label = new Date(day.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: '2-digit' });
                 return (
