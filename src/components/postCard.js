@@ -240,6 +240,7 @@ const PostCard = memo(({ post }) => {
       handleCloseMenu();
       // Invalidar caché y refrescar los posts.
       queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
       console.error("Error deleting post:", error.response?.data || error.message);
       setIsDeleting(false);
@@ -297,7 +298,7 @@ const PostCard = memo(({ post }) => {
                 {getTimeAgo(post.time)}
               </Typography>
             </Box>
-            {(user && post.user_id && user.id === post.user_id) && (
+            {(user?.id !== undefined && post.user_id !== undefined && String(user.id) === String(post.user_id)) && (
               <>
                 <IconButton
                   size="small"
