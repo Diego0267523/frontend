@@ -1050,166 +1050,100 @@ const handleScroll = useCallback((e) => {
 {showCreatePost && (
   <Box sx={overlayPro} onClick={() => setShowCreatePost(false)}>
     <motion.div
-      initial={{ scale: 0.85, opacity: 0, y: 40 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.85, opacity: 0 }}
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.25 }}
+      style={{ width: "100%", maxWidth: 500 }}
     >
       <Box
         onClick={(e) => e.stopPropagation()}
         sx={{
-          width: 430,
-          maxWidth: "95vw",
-          borderRadius: "22px",
-          overflow: "hidden",
-          backdropFilter: "blur(25px)",
-          background: "rgba(15,15,15,0.85)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
+          bgcolor: "#fff",
+          borderRadius: "16px 16px 0 0",
+          width: "100%",
+          position: "fixed",
+          bottom: 0,
+          left: 0,
         }}
       >
 
         {/* HEADER */}
         <Box sx={{
-          px: 2,
-          py: 1.5,
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
           textAlign: "center",
-          fontWeight: 600,
-          color: "#fff"
+          py: 1.5,
+          borderBottom: "1px solid #eee",
+          fontWeight: "bold"
         }}>
           Crear publicación
         </Box>
 
-        {/* BODY */}
-        <Box sx={{ p: 2 }}>
-
-          {/* DROPZONE */}
-          <Box
-            onDrop={(e) => {
-              e.preventDefault();
-              setFile(e.dataTransfer.files[0]);
-            }}
-            onDragOver={(e) => e.preventDefault()}
-            sx={{
-              height: 260,
-              borderRadius: "16px",
-              border: "2px dashed #333",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: 2,
-              overflow: "hidden",
-              cursor: "pointer",
-              position: "relative",
-              transition: "0.2s",
-              "&:hover": { borderColor: "#00ff88" }
-            }}
-          >
-            {file ? (
-              <Box
-                component="img"
-                src={URL.createObjectURL(file)}
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
+        {/* PREVIEW */}
+        <Box sx={{
+          width: "100%",
+          height: 250,
+          bgcolor: "#f5f5f5",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          {file ? (
+            <img
+              src={URL.createObjectURL(file)}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <label style={{ cursor: "pointer", color: "#666" }}>
+              Seleccionar imagen
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                onChange={(e) => setFile(e.target.files[0])}
               />
-            ) : (
-              <Typography sx={{ color: "#666" }}>
-                Arrastra una imagen o haz click
-              </Typography>
-            )}
-
-            <input
-              type="file"
-              hidden
-              onChange={(e) => setFile(e.target.files[0])}
-              style={{ position: "absolute", width: "100%", height: "100%", opacity: 0 }}
-            />
-          </Box>
-
-          {/* PROGRESS BAR */}
-          {isCreatingPost && (
-            <Box sx={{
-              height: 6,
-              borderRadius: 10,
-              background: "#222",
-              overflow: "hidden",
-              mb: 2
-            }}>
-              <Box sx={{
-                width: "100%",
-                height: "100%",
-                background: "linear-gradient(90deg, #00ff88, #00ccff)",
-                animation: "loading 1s linear infinite"
-              }} />
-            </Box>
+            </label>
           )}
-
-          {/* INPUT */}
-          <Box sx={{
-            background: "#0f0f0f",
-            borderRadius: "14px",
-            px: 1.5,
-            py: 1.2,
-            border: "1px solid #222"
-          }}>
-            <input
-              placeholder="Escribe un caption..."
-              value={postCaption}
-              onChange={(e) => setPostCaption(e.target.value)}
-              style={{
-                width: "100%",
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "#fff",
-                fontSize: 14
-              }}
-            />
-          </Box>
-
         </Box>
 
-        {/* FOOTER */}
-        <Box sx={{ display: "flex", borderTop: "1px solid #222" }}>
+        {/* INPUT */}
+        <Box sx={{ p: 2 }}>
+          <input
+            placeholder="Escribe un caption..."
+            value={postCaption}
+            onChange={(e) => setPostCaption(e.target.value)}
+            style={{
+              width: "100%",
+              border: "none",
+              outline: "none",
+              fontSize: 16
+            }}
+          />
+        </Box>
+
+        {/* BOTONES */}
+        <Box sx={{ display: "flex", borderTop: "1px solid #eee" }}>
 
           <Button
             onClick={() => setShowCreatePost(false)}
-            sx={{
-              flex: 1,
-              color: "#aaa",
-              py: 1.5,
-              textTransform: "none"
-            }}
-            disabled={isCreatingPost}
+            sx={{ flex: 1, color: "#999" }}
           >
             Cancelar
           </Button>
-
-          <Box sx={{ width: 1, background: "#222" }} />
 
           <Button
             onClick={handleCreatePost}
             disabled={!file || isCreatingPost}
             sx={{
               flex: 1,
-              py: 1.5,
               fontWeight: "bold",
-              textTransform: "none",
-              color: file ? "#00ff88" : "#555",
-              transition: "0.2s",
-              "&:hover": {
-                background: "rgba(0,255,136,0.08)"
-              }
+              color: file ? "#0095f6" : "#ccc"
             }}
           >
             {isCreatingPost ? "Publicando..." : "Publicar"}
           </Button>
 
         </Box>
+
       </Box>
     </motion.div>
   </Box>
