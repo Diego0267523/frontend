@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Feed from "./pages/Feed";
 import Stories from "./pages/Stories";
-import DirectMessages from "./components/DirectMessages";
+import UnifiedChat from "./components/UnifiedChat";
 import FloatingChatBubble from "./components/FloatingChatBubble";
 import ProfessionalLoader from "./components/ProfessionalLoader";
 
@@ -75,7 +75,7 @@ function App() {
           <AnimatePresence mode="wait">
             {dmsOpen && (
               <motion.div
-                key="direct-messages"
+                key="unified-chat"
                 style={{
                   position: "fixed",
                   right: 16,
@@ -90,7 +90,7 @@ function App() {
                 animate="visible"
                 exit="exit"
               >
-                <DirectMessages onClose={() => setDmsOpen(false)} />
+                <UnifiedChat onClose={() => setDmsOpen(false)} />
               </motion.div>
             )}
           </AnimatePresence>

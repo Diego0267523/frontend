@@ -125,13 +125,13 @@ function DirectMessages({ onClose }) {
 
   return (
     <motion.div
-      style={styles.wrapper}
+      style={styles.container}
       variants={slideInDownVariants}
       initial="hidden"
       animate="visible"
       exit="exit"
+      layoutId="dm-container"
     >
-      <motion.div style={styles.container} layoutId="dm-container">
         {!selectedConversation ? (
           <>
             {/* HEADER - Lista de chats */}
@@ -384,18 +384,10 @@ function DirectMessages({ onClose }) {
           </>
         )}
       </motion.div>
-    </motion.div>
   );
 }
 
 const styles = {
-  wrapper: {
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    padding: "0",
-    background: "transparent"
-  },
   container: {
     width: "100%",
     maxWidth: "100%",
