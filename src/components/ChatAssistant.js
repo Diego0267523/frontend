@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { io } from "socket.io-client";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import API_URL from "../utils/config";
@@ -10,6 +11,8 @@ function ChatAssistant() {
   });
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [connected, setConnected] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("chatTheme") !== "light";
   });
@@ -36,6 +39,43 @@ function ChatAssistant() {
     });
   }, [messages, typing]);
 
+  // 🔥 Configurar Socket.IO
+  useEffect(() => {
+    const socketClient = io(API_URL, {
+      path: '/socket.io',
+      transports: ['websocket'],
+      auth: {
+        token: localStorage.getItem('token')
+      }
+    });
+
+    setSocket(socketClient);
+
+    socketClient.on('connect', () => {
+      setConnected(true);
+      console.log('✅ Socket conectado:', socketClient.id);
+    });
+
+    socketClient.on('disconnect', () => {
+      setConnected(false);
+      console.log('⚠️ Socket desconectado');
+    });
+
+    socketClient.on('ai_response', ({ pregunta, respuesta }) => {
+      setMessages((prev) => [...prev, { from: 'ai', text: respuesta }]);
+      setTyping(false);
+    });
+
+    socketClient.on('ai_error', (message) => {
+      setMessages((prev) => [...prev, { from: 'ai', text: `Error IA: ${message}` }]);
+      setTyping(false);
+    });
+
+    return () => {
+      socketClient.disconnect();
+    };
+  }, []);
+
   // 🔥 GUARDAR HISTORIAL EN LOCAL (solo últimos 10 mensajes)
   useEffect(() => {
     const limited = messages.slice(-10);
@@ -50,6 +90,12 @@ function ChatAssistant() {
     setInput("");
     setTyping(true);
 
+    if (socket && connected) {
+      socket.emit("ask_ai", { pregunta: input });
+      return;
+    }
+
+    // Fallback HTTP si socket no está disponible
     try {
       const res = await fetch(`${API_URL}/api/ai/chat`, {
         method: "POST",
@@ -65,33 +111,23 @@ function ChatAssistant() {
       if (!res.ok) {
         const errData = await res.json();
         console.error("❌ RESPUESTA ERROR IA:", errData);
-        setMessages([
-          ...newMessages,
-          { from: "ai", text: `Error IA: ${errData?.message || "Sin detalle"}` }
-        ]);
+        setMessages([...newMessages, { from: "ai", text: `Error IA: ${errData?.message || "Sin detalle"}` }]);
+        setTyping(false);
         return;
       }
 
       const data = await res.json();
       console.log("📥 RESPUESTA IA:", data);
-
-      // 🔥 DELAY SIMULADO PARA MEJOR UX (1-2 segundos)
-      const delay = Math.random() * 1000 + 1000; // 1-2 segundos
+      const delay = Math.random() * 1000 + 700;
       setTimeout(() => {
-        setMessages([
-          ...newMessages,
-          { from: "ai", text: data.respuesta || "No tengo respuesta ahora 🤔" }
-        ]);
+        setMessages([...newMessages, { from: "ai", text: data.respuesta || "No tengo respuesta ahora 🤔" }]);
         setTyping(false);
       }, delay);
 
     } catch (error) {
       console.error("🔥 ERROR CONNECT IA:", error);
       setTimeout(() => {
-        setMessages([
-          ...newMessages,
-          { from: "ai", text: "Error al conectar con la IA 😢 revisa la consola" }
-        ]);
+        setMessages([...newMessages, { from: "ai", text: "Error al conectar con la IA 😢" }]);
         setTyping(false);
       }, 1000);
     }
@@ -110,11 +146,14 @@ function ChatAssistant() {
               <div style={theme.subTitle}>Pregúntame sobre comidas, rutinas y progreso</div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button style={theme.themeButton} onClick={toggleTheme}>
-              {isDarkMode ? "☀️" : "🌙"}
-            </button>
-            <button style={theme.clearButton} onClick={clearChat}>🗑️</button>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+            <span style={theme.statusDot}>{connected ? "🟢 Conectado" : "🔴 Desconectado"}</span>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button style={theme.themeButton} onClick={toggleTheme}>
+                {isDarkMode ? "☀️" : "🌙"}
+              </button>
+              <button style={theme.clearButton} onClick={clearChat}>🗑️</button>
+            </div>
           </div>
         </div>
 
@@ -272,6 +311,15 @@ const darkTheme = {
   subTitle: {
     color: "#aaa",
     fontSize: "12px"
+  },
+  statusDot: {
+    fontSize: "12px",
+    color: "#fff",
+    padding: "2px 8px",
+    borderRadius: "12px",
+    border: "1px solid #00ff88",
+    background: "rgba(0, 255, 136, 0.15)",
+    fontWeight: "600"
   },
   themeButton: {
     border: "1px solid #00ff88",
