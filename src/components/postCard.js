@@ -129,13 +129,7 @@ const PostCard = memo(({ post }) => {
     setLoadingLike(true);
 
     if (socket && connected) {
-      // Optimistic update (aún mantenemos la verdad del servidor desde socket)
-      setLiked((prevLiked) => {
-        const nextLiked = !prevLiked;
-        setLikesCount((prevCount) => prevCount + (nextLiked ? 1 : -1));
-        return nextLiked;
-      });
-
+      // No optimistic update for likes, let socket event handle it
       socket.emit("like_post", { postId: post.id });
       setLoadingLike(false);
       return;
