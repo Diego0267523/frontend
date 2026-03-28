@@ -290,11 +290,15 @@ const handleSaveFoodEntry = async () => {
 
   try {
     const data = {
-      descripcion: foodText.trim(),
       calorias: calories,
       proteina,
       carbohidratos
     };
+
+    const cleanedDescription = foodText.trim();
+    if (cleanedDescription.length > 0) {
+      data.descripcion = cleanedDescription;
+    }
 
     // Si tenemos análisis con items IA, enviamos json para bulk create
     if (foodAnalysis?.aiJson?.items) {
