@@ -1047,107 +1047,75 @@ const handleScroll = useCallback((e) => {
         <ChatAssistant onClose={() => setShowAI(false)} />
       </Box>
     )}
-{showCreatePost && (
-  <Box sx={overlayPro} onClick={() => setShowCreatePost(false)}>
-    <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.25 }}
-      style={{ width: "100%", maxWidth: 500 }}
-    >
-      <Box
-        onClick={(e) => e.stopPropagation()}
-        sx={{
-          bgcolor: "#fff",
-          borderRadius: "16px 16px 0 0",
-          width: "100%",
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-        }}
-      >
 
-        {/* HEADER */}
-        <Box sx={{
-          textAlign: "center",
-          py: 1.5,
-          borderBottom: "1px solid #eee",
-          fontWeight: "bold"
-        }}>
-          Crear publicación
-        </Box>
-
-        {/* PREVIEW */}
-        <Box sx={{
-          width: "100%",
-          height: 250,
-          bgcolor: "#f5f5f5",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-          {file ? (
-            <img
-              src={URL.createObjectURL(file)}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            <label style={{ cursor: "pointer", color: "#666" }}>
-              Seleccionar imagen
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-            </label>
+          {showCreatePost && (
+            <Box sx={overlayPro} onClick={() => setShowCreatePost(false)}>
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
+    
+                  <Typography sx={titlePro}>
+                    Crear Post 🚀
+                  </Typography>
+    
+                  {/* PREVIEW */}
+                  {file && (
+                    <Box
+                      component="img"
+                      src={URL.createObjectURL(file)}
+                      sx={previewImage}
+                      loading="lazy"
+                    />
+                  )}
+    
+                  {/* INPUT FILE */}
+                  <Button
+                    variant="contained"
+                    component="label"
+                    sx={uploadBtn}
+                  >
+                    Subir imagen
+                    <input
+                      type="file"
+                      hidden
+                      onChange={(e) => setFile(e.target.files[0])}
+                    />
+                  </Button>
+    
+                  {/* CAPTION */}
+                  <input
+                    placeholder="¿Qué estás pensando?"
+                    value={postCaption}
+                    onChange={(e) => setPostCaption(e.target.value)}
+                    style={inputPro}
+                  />
+    
+                  {/* BOTONES */}
+                  <Box sx={{ display: "flex", gap: 1.5, mt: 2, width: "100%" }}>
+                    <Button 
+                      onClick={handleCreatePost} 
+                      sx={postBtn}
+                      disabled={isCreatingPost || createPostMutation.isLoading}
+                    >
+                      {isCreatingPost || createPostMutation.isLoading ? "Publicando..." : "Publicar"}
+                    </Button>
+    
+                    <Button 
+                      onClick={() => setShowCreatePost(false)} 
+                      sx={cancelBtn}
+                      disabled={isCreatingPost || createPostMutation.isLoading}
+                    >
+                      Cancelar
+                    </Button>
+                  </Box>
+    
+                </Box>
+              </motion.div>
+            </Box>
           )}
-        </Box>
-
-        {/* INPUT */}
-        <Box sx={{ p: 2 }}>
-          <input
-            placeholder="Escribe un caption..."
-            value={postCaption}
-            onChange={(e) => setPostCaption(e.target.value)}
-            style={{
-              width: "100%",
-              border: "none",
-              outline: "none",
-              fontSize: 16
-            }}
-          />
-        </Box>
-
-        {/* BOTONES */}
-        <Box sx={{ display: "flex", borderTop: "1px solid #eee" }}>
-
-          <Button
-            onClick={() => setShowCreatePost(false)}
-            sx={{ flex: 1, color: "#999" }}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            onClick={handleCreatePost}
-            disabled={!file || isCreatingPost}
-            sx={{
-              flex: 1,
-              fontWeight: "bold",
-              color: file ? "#0095f6" : "#ccc"
-            }}
-          >
-            {isCreatingPost ? "Publicando..." : "Publicar"}
-          </Button>
-
-        </Box>
-
-      </Box>
-    </motion.div>
-  </Box>
-)}
 
           {/* 🔥 MODAL PARA REGISTRAR COMIDA */}
           {foodModalOpen && (
