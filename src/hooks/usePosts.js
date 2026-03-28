@@ -8,7 +8,7 @@ export function usePosts() {
     queryFn: async ({ pageParam = 1 }) => {
       const response = await api.get(`/api/posts?page=${pageParam}`);
       return {
-        data: response.data.posts || [],
+        posts: response.data.posts || [],
         nextPage: response.data.posts?.length > 0 ? pageParam + 1 : undefined,
       };
     },
@@ -32,21 +32,32 @@ export function useDeletePost() {
       const response = await api.delete(`/api/posts/${postId}`);
       return response.data;
     },
-    onSuccess: (data, postId) => {
-      // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      // Optimistic update: remover del cache
+    onMutate: async (postId) => {
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+      const previous = queryClient.getQueryData(["posts"]);
+
       queryClient.setQueryData(["posts"], (oldData) => {
         if (!oldData || !oldData.pages) return oldData;
         return {
           ...oldData,
           pages: oldData.pages.map((page) => ({
             ...page,
-            data: page.data.filter((post) => String(post.id) !== String(postId)),
+            posts: page.posts.filter((post) => String(post.id) !== String(postId)),
           })),
         };
       });
+
+      return { previous };
+    },
+    onError: (_error, _postId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["posts"], context.previous);
+      }
+      console.error("Error deleting post:", _error.response?.data || _error.message);
+    },
+    onSuccess: (_data, postId) => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
     onError: (error) => {
       console.error("Error deleting post:", error.response?.data || error.message);

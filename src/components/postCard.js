@@ -29,6 +29,7 @@ const PostCard = memo(({ post }) => {
   const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   // 🔥 Actualizar estado cuando el post cambia (ej: infinite scroll)
   useEffect(() => {
@@ -90,6 +91,8 @@ const PostCard = memo(({ post }) => {
       socket.off("post_comment_added", handleCommentAdded);
     };
   }, [socket, post.id, likesCount]);
+
+  if (!visible) return null;
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";
@@ -231,6 +234,7 @@ const PostCard = memo(({ post }) => {
     try {
       await deletePostMutation.mutateAsync(post.id);
       setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
+      setVisible(false); // Ocultar inmediatamente la tarjeta
     } catch (error) {
       setToast({ open: true, message: "No se pudo eliminar el post", severity: "error" });
     } finally {
