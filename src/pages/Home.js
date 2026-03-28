@@ -883,17 +883,28 @@ const handleScroll = useCallback((e) => {
 
         {/* NUEVAS PUBLICACIONES */}
         {newPostsAvailable > 0 && (
-          <Box sx={{ textAlign: 'center', mb: 2 }}>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: '#00ff88', color: '#000', fontWeight: 'bold' }}
-              onClick={async () => {
-                queryClient.invalidateQueries({ queryKey: ['feed'] });
-                setNewPostsAvailable(0);
-              }}
-            >
-              Ver {newPostsAvailable} publicación{newPostsAvailable > 1 ? 'es' : ' nueva'}
-            </Button>
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1200,
+              bgcolor: '#000000cc',
+              p: 1,
+              borderRadius: 999,
+              boxShadow: '0 0 20px rgba(0,255,136,0.25)',
+              backdropFilter: 'blur(4px)',
+              cursor: 'pointer'
+            }}
+            onClick={async () => {
+              queryClient.invalidateQueries({ queryKey: ['feed'] });
+              setNewPostsAvailable(0);
+            }}
+          >
+            <Typography sx={{ color: '#00ff88', fontWeight: 'bold', fontSize: 13 }}>
+              Ver {newPostsAvailable} publicaci{newPostsAvailable > 1 ? 'ones' : 'ón'} nuevas
+            </Typography>
           </Box>
         )}
 
