@@ -31,6 +31,10 @@ const PostCard = memo(({ post }) => {
   const [loadingComment, setLoadingComment] = useState(false);
   const [visible, setVisible] = useState(true);
 
+  if (!visible) {
+    return null;
+  }
+
   // 🔥 Actualizar estado cuando el post cambia (ej: infinite scroll)
   useEffect(() => {
     setLiked(post.liked || false);
