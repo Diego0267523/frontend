@@ -1,9 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import API_URL from "../utils/config";
 import { useSocket } from "../context/SocketContext";
+import {
+  chatBubbleVariants,
+  slideInDownVariants,
+} from "../utils/motion-variants";
 
+/**
+ * 🎯 ChatAssistant - Asistente IA con animaciones profesionales
+ * Características:
+ * - Animaciones suaves de mensajes
+ * - Transiciones profesionales
+ * - Indicador de escritura animado
+ * - Soporte para temas claro/oscuro
+ */
 function ChatAssistant({ onClose }) {
   const [messages, setMessages] = useState(() => {
     const saved = JSON.parse(localStorage.getItem("chat")) || [];
@@ -121,18 +134,35 @@ function ChatAssistant({ onClose }) {
   const theme = isDarkMode ? darkTheme : lightTheme;
 
   return (
-    <div style={theme.wrapper}>
-      <div style={theme.container}>
-        <div style={theme.header}>
-          <div style={theme.headerLeft}>
-            <div style={theme.avatarCoach}>🤖</div>
+    <motion.div
+      style={theme.wrapper}
+      variants={slideInDownVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
+      <motion.div
+        style={theme.container}
+        layoutId="chat-container"
+      >
+        {/* HEADER */}
+        <motion.div style={theme.header} layoutId="chat-header">
+          <motion.div style={theme.headerLeft}>
+            <motion.div
+              style={theme.avatarCoach}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              🤖
+            </motion.div>
             <div>
               <div style={theme.title}>Asistente Fitness</div>
               <div style={theme.subTitle}>Pregúntame sobre comidas, rutinas y progreso</div>
             </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <button
+          </motion.div>
+
+          <motion.div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <motion.button
               onClick={onClose ? onClose : () => {}}
               style={{
                 ...theme.closeButton,
@@ -141,122 +171,197 @@ function ChatAssistant({ onClose }) {
                 fontSize: "18px",
                 cursor: "pointer"
               }}
+              whileHover={{ scale: 1.2, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ duration: 0.2 }}
             >
               ✕
-            </button>
-            <span style={theme.statusDot}>{connected ? "🟢 Conectado" : "🔴 Desconectado"}</span>
+            </motion.button>
+
+            <motion.span style={theme.statusDot}>
+              {connected ? "🟢 Conectado" : "🔴 Desconectado"}
+            </motion.span>
+
             <div style={{ display: "flex", gap: "8px", marginLeft: "8px" }}>
-              <button style={theme.themeButton} onClick={toggleTheme}>
+              <motion.button
+                style={theme.themeButton}
+                onClick={toggleTheme}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+              >
                 {isDarkMode ? "☀️" : "🌙"}
-              </button>
-              <button style={theme.clearButton} onClick={clearChat}>🗑️</button>
+              </motion.button>
+
+              <motion.button
+                style={theme.clearButton}
+                onClick={clearChat}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+              >
+                🗑️
+              </motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        <div style={theme.chatBox} ref={chatRef}>
-          {messages.length === 0 && (
-            <p style={theme.placeholder}>Pregunta algo sobre entrenamiento 💪</p>
-          )}
+        {/* CHAT BOX */}
+        <motion.div style={theme.chatBox} ref={chatRef} layoutId="chat-messages">
+          <AnimatePresence mode="popLayout">
+            {messages.length === 0 && (
+              <motion.p
+                style={theme.placeholder}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                Pregunta algo sobre entrenamiento 💪
+              </motion.p>
+            )}
 
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              style={msg.from === "user" ? theme.userWrapper : theme.aiWrapper}
-            >
-              <div style={msg.from === "user" ? theme.userMessage : theme.aiMessage}>
-                {msg.from === "ai" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ children }) => <p style={{ margin: 0, lineHeight: 1.5 }}>{children}</p>,
-                      strong: ({ children }) => <strong style={{ color: theme.markdownStrong }}>{children}</strong>,
-                      ul: ({ children }) => <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>{children}</ul>,
-                      ol: ({ children }) => <ol style={{ margin: '8px 0', paddingLeft: '20px' }}>{children}</ol>,
-                      li: ({ children }) => <li style={{ margin: '4px 0' }}>{children}</li>,
-                      code: ({ children }) => (
-                        <code style={{
-                          background: theme.codeBg,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontSize: '0.9em'
-                        }}>
-                          {children}
-                        </code>
-                      ),
-                      pre: ({ children }) => (
-                        <pre style={{
-                          background: theme.codeBg,
-                          padding: '12px',
-                          borderRadius: '8px',
-                          overflowX: 'auto',
-                          margin: '8px 0'
-                        }}>
-                          {children}
-                        </pre>
-                      )
+            {messages.map((msg, index) => (
+              <motion.div
+                key={`${index}-${msg.from}`}
+                style={msg.from === "user" ? theme.userWrapper : theme.aiWrapper}
+                variants={chatBubbleVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                layout
+              >
+                <motion.div
+                  style={msg.from === "user" ? theme.userMessage : theme.aiMessage}
+                  whileHover={{ y: -2 }}
+                >
+                  {msg.from === "ai" ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p style={{ margin: 0, lineHeight: 1.5 }}>{children}</p>,
+                        strong: ({ children }) => <strong style={{ color: theme.markdownStrong }}>{children}</strong>,
+                        ul: ({ children }) => <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>{children}</ul>,
+                        ol: ({ children }) => <ol style={{ margin: '8px 0', paddingLeft: '20px' }}>{children}</ol>,
+                        li: ({ children }) => <li style={{ margin: '4px 0' }}>{children}</li>,
+                        code: ({ children }) => (
+                          <code style={{
+                            background: theme.codeBg,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '0.9em'
+                          }}>
+                            {children}
+                          </code>
+                        ),
+                        pre: ({ children }) => (
+                          <pre style={{
+                            background: theme.codeBg,
+                            padding: '12px',
+                            borderRadius: '8px',
+                            overflowX: 'auto',
+                            margin: '8px 0'
+                          }}>
+                            {children}
+                          </pre>
+                        )
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.text
+                  )}
+                </motion.div>
+              </motion.div>
+            ))}
+
+            {typing && (
+              <motion.div
+                key="typing"
+                style={theme.aiWrapper}
+                variants={chatBubbleVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                layout
+              >
+                <motion.div style={theme.typingContainer}>
+                  <motion.div
+                    style={theme.typingBubble}
+                    animate={{
+                      boxShadow: [
+                        "0 0 0px rgba(0, 255, 136, 0)",
+                        "0 0 8px rgba(0, 255, 136, 0.3)",
+                        "0 0 0px rgba(0, 255, 136, 0)"
+                      ]
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
                     }}
                   >
-                    {msg.text}
-                  </ReactMarkdown>
-                ) : (
-                  msg.text
-                )}
-              </div>
-            </div>
-          ))}
+                    <motion.div style={theme.typingDots} layout>
+                      {[0, 1, 2].map((i) => (
+                        <motion.span
+                          key={`dot-${i}`}
+                          style={theme[`dot${i + 1}`]}
+                          animate={{
+                            y: [0, -10, 0],
+                            opacity: [0.4, 1, 0.4]
+                          }}
+                          transition={{
+                            duration: 1.4,
+                            delay: i * 0.2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-          {typing && (
-            <div style={theme.aiWrapper}>
-              <div style={theme.typingContainer}>
-                <div style={theme.typingBubble}>
-                  <div style={theme.typingDots}>
-                  <span className="typing-dot" style={theme.dot1}></span>
-                  <span className="typing-dot" style={theme.dot2}></span>
-                  <span className="typing-dot" style={theme.dot3}></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div style={theme.inputArea}>
-          <input
+        {/* INPUT AREA */}
+        <motion.div style={theme.inputArea} layoutId="chat-input">
+          <motion.input
             type="text"
             placeholder="Escribe tu pregunta..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             style={theme.input}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            whileFocus={{
+              boxShadow: `0 0 0 2px ${isDarkMode ? "rgba(0, 255, 136, 0.2)" : "rgba(0, 170, 102, 0.2)"}`
+            }}
+            transition={{ duration: 0.2 }}
           />
-          <button onClick={sendMessage} style={theme.button} disabled={!input.trim()}>
+
+          <motion.button
+            onClick={sendMessage}
+            style={theme.button}
+            disabled={!input.trim()}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: `0 8px 16px ${isDarkMode ? "rgba(0, 255, 136, 0.3)" : "rgba(0, 170, 102, 0.3)"}`
+            }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
             ➤
-          </button>
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes typing {
-          0%, 60%, 100% {
-            transform: translateY(0);
-            opacity: 0.4;
-          }
-          30% {
-            transform: translateY(-10px);
-            opacity: 1;
-          }
-        }
-
-        .typing-dot:nth-child(1) { animation: typing 1.4s infinite ease-in-out; }
-        .typing-dot:nth-child(2) { animation: typing 1.4s infinite ease-in-out 0.2s; }
-        .typing-dot:nth-child(3) { animation: typing 1.4s infinite ease-in-out 0.4s; }
-      `}</style>
-    </div>
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
 
-// 🎨 TEMAS OSCURO Y CLARO
+// 🎨 TEMAS OSCURO Y CLARO (igual que antes, pero optimizado)
 const darkTheme = {
   wrapper: {
     width: "100%",
@@ -265,13 +370,20 @@ const darkTheme = {
     padding: "10px",
     background: "#0a0a0a"
   },
-    boxShadow: "0 0 25px rgba(0,255,136,0.08)",
+  container: {
+    width: "100%",
+    maxWidth: "100%",
+    height: "100%",
+    maxHeight: "70vh",
+    borderRadius: "18px",
+    boxShadow: "0 12px 48px rgba(0, 255, 136, 0.12), 0 0 0 1px rgba(0, 255, 136, 0.1)",
     display: "flex",
     flexDirection: "column",
-    overflow: "hidden"
+    overflow: "hidden",
+    background: "#0d0d0d"
   },
   header: {
-    padding: "12px 16px",
+    padding: "14px 16px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -287,29 +399,31 @@ const darkTheme = {
     width: "42px",
     height: "42px",
     borderRadius: "50%",
-    background: "#00ff88",
+    background: "linear-gradient(135deg, #00ff88, #00bfa5)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "20px"
+    fontSize: "20px",
+    boxShadow: "0 4px 12px rgba(0, 255, 136, 0.3)"
   },
   title: {
     color: "#00ff88",
-    fontSize: "18px",
-    fontWeight: "bold",
-    marginBottom: "4px"
+    fontSize: "16px",
+    fontWeight: "700",
+    marginBottom: "2px"
   },
   subTitle: {
-    color: "#aaa",
-    fontSize: "12px"
+    color: "#888",
+    fontSize: "11px",
+    fontWeight: "500"
   },
   statusDot: {
-    fontSize: "12px",
+    fontSize: "11px",
     color: "#fff",
-    padding: "2px 8px",
+    padding: "4px 10px",
     borderRadius: "12px",
     border: "1px solid #00ff88",
-    background: "rgba(0, 255, 136, 0.15)",
+    background: "rgba(0, 255, 136, 0.12)",
     fontWeight: "600"
   },
   themeButton: {
@@ -319,7 +433,8 @@ const darkTheme = {
     borderRadius: "8px",
     padding: "6px 10px",
     cursor: "pointer",
-    fontSize: "16px"
+    fontSize: "14px",
+    transition: "all 0.2s ease"
   },
   clearButton: {
     border: "1px solid #ff4444",
@@ -328,7 +443,8 @@ const darkTheme = {
     borderRadius: "8px",
     padding: "6px 10px",
     cursor: "pointer",
-    fontSize: "16px"
+    fontSize: "14px",
+    transition: "all 0.2s ease"
   },
   closeButton: {
     color: "#ffffff",
@@ -337,42 +453,48 @@ const darkTheme = {
     border: "none",
     padding: "0",
     lineHeight: "1",
+    cursor: "pointer"
   },
   chatBox: {
     flex: 1,
     overflowY: "auto",
-    padding: "15px",
+    padding: "16px",
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
+    gap: "12px",
     background: "#0d0d0d"
   },
   placeholder: {
-    color: "#666",
+    color: "#555",
     textAlign: "center",
-    marginTop: "50%"
+    margin: "auto",
+    fontSize: "14px",
+    fontWeight: "500"
   },
-  userWrapper: { display: "flex", justifyContent: "flex-end", marginLeft: "20%" },
-  aiWrapper: { display: "flex", justifyContent: "flex-start", marginRight: "20%" },
+  userWrapper: { display: "flex", justifyContent: "flex-end", marginLeft: "15%" },
+  aiWrapper: { display: "flex", justifyContent: "flex-start", marginRight: "15%" },
   userMessage: {
-    background: "linear-gradient(120deg,#7dff59,#00cc88)",
+    background: "linear-gradient(120deg, #7dff59, #00cc88)",
     color: "#000",
-    padding: "12px 16px",
+    padding: "11px 15px",
     borderRadius: "16px 16px 0 16px",
-    maxWidth: "75%",
+    maxWidth: "80%",
     wordBreak: "break-word",
     fontSize: "14px",
-    lineHeight: "1.4"
+    lineHeight: "1.4",
+    fontWeight: "500",
+    boxShadow: "0 4px 12px rgba(0, 255, 136, 0.2)"
   },
   aiMessage: {
     background: "#1f1f1f",
     color: "#fff",
-    padding: "12px 16px",
+    padding: "11px 15px",
     borderRadius: "16px 16px 16px 0",
-    maxWidth: "75%",
+    maxWidth: "80%",
     wordBreak: "break-word",
     fontSize: "14px",
-    lineHeight: "1.5"
+    lineHeight: "1.5",
+    border: "1px solid #2a2a2a"
   },
   typingContainer: {
     display: "flex",
@@ -384,11 +506,12 @@ const darkTheme = {
     padding: "12px 16px",
     borderRadius: "16px 16px 16px 0",
     display: "flex",
-    alignItems: "center"
+    alignItems: "center",
+    border: "1px solid #2a2a2a"
   },
   typingDots: {
     display: "flex",
-    gap: "4px",
+    gap: "5px",
     alignItems: "center"
   },
   dot1: {
@@ -396,7 +519,6 @@ const darkTheme = {
     height: "8px",
     borderRadius: "50%",
     background: "#00ff88",
-    animation: "typing 1.4s infinite ease-in-out",
     display: "inline-block"
   },
   dot2: {
@@ -404,7 +526,6 @@ const darkTheme = {
     height: "8px",
     borderRadius: "50%",
     background: "#00ff88",
-    animation: "typing 1.4s infinite ease-in-out 0.2s",
     display: "inline-block"
   },
   dot3: {
@@ -412,41 +533,36 @@ const darkTheme = {
     height: "8px",
     borderRadius: "50%",
     background: "#00ff88",
-    animation: "typing 1.4s infinite ease-in-out 0.4s",
     display: "inline-block"
   },
   inputArea: {
     display: "flex",
-    padding: "10px",
+    padding: "12px",
     borderTop: "1px solid #1f1f1f",
     gap: "10px",
     background: "#0d0d0d"
   },
   input: {
     flex: 1,
-    padding: "12px",
+    padding: "11px 14px",
     borderRadius: "10px",
     border: "1px solid #333",
     background: "#1a1a1a",
     color: "#fff",
     outline: "none",
-    fontSize: "14px"
+    fontSize: "14px",
+    transition: "all 0.2s ease"
   },
   button: {
     padding: "0 16px",
     borderRadius: "10px",
     border: "none",
-    background: "#00ff88",
+    background: "linear-gradient(135deg, #00ff88, #00bfa5)",
     color: "#000",
-    fontWeight: "bold",
+    fontWeight: "700",
     cursor: "pointer",
     fontSize: "16px",
-    opacity: 1,
-    transition: "opacity 0.2s",
-    ":disabled": {
-      opacity: 0.5,
-      cursor: "not-allowed"
-    }
+    transition: "all 0.2s ease"
   },
   markdownStrong: "#00ff88",
   codeBg: "#2a2a2a"
@@ -461,20 +577,30 @@ const lightTheme = {
   container: {
     ...darkTheme.container,
     background: "#ffffff",
-    boxShadow: "0 0 25px rgba(0,0,0,0.1)"
+    boxShadow: "0 12px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08)"
   },
   header: {
     ...darkTheme.header,
     background: "linear-gradient(145deg, #f8f8f8, #ffffff)",
-    borderBottom: "1px solid #e0e0e0"
+    borderBottom: "1px solid #e8e8e8"
+  },
+  avatarCoach: {
+    ...darkTheme.avatarCoach,
+    background: "linear-gradient(135deg, #00cc99, #00aa66)",
+    boxShadow: "0 4px 12px rgba(0, 170, 102, 0.2)"
   },
   title: {
     ...darkTheme.title,
     color: "#00aa66"
   },
-  avatarCoach: {
-    ...darkTheme.avatarCoach,
-    background: "#00aa66"
+  subTitle: {
+    ...darkTheme.subTitle,
+    color: "#999"
+  },
+  statusDot: {
+    ...darkTheme.statusDot,
+    border: "1px solid #00aa66",
+    background: "rgba(0, 170, 102, 0.08)"
   },
   themeButton: {
     ...darkTheme.themeButton,
@@ -483,8 +609,8 @@ const lightTheme = {
   },
   clearButton: {
     ...darkTheme.clearButton,
-    border: "1px solid #ff6666",
-    color: "#ff6666"
+    border: "1px solid #ff7777",
+    color: "#ff7777"
   },
   chatBox: {
     ...darkTheme.chatBox,
@@ -496,17 +622,20 @@ const lightTheme = {
   },
   userMessage: {
     ...darkTheme.userMessage,
-    background: "linear-gradient(120deg,#66cc99,#00aa66)",
-    color: "#fff"
+    background: "linear-gradient(120deg, #66cc99, #00aa66)",
+    color: "#fff",
+    boxShadow: "0 4px 12px rgba(0, 170, 102, 0.2)"
   },
   aiMessage: {
     ...darkTheme.aiMessage,
-    background: "#f0f0f0",
-    color: "#333"
+    background: "#f5f5f5",
+    color: "#333",
+    border: "1px solid #e0e0e0"
   },
   typingBubble: {
     ...darkTheme.typingBubble,
-    background: "#f0f0f0"
+    background: "#f5f5f5",
+    border: "1px solid #e0e0e0"
   },
   dot1: {
     ...darkTheme.dot1,
@@ -523,7 +652,7 @@ const lightTheme = {
   inputArea: {
     ...darkTheme.inputArea,
     background: "#f8f8f8",
-    borderTop: "1px solid #e0e0e0"
+    borderTop: "1px solid #e8e8e8"
   },
   input: {
     ...darkTheme.input,
@@ -533,7 +662,7 @@ const lightTheme = {
   },
   button: {
     ...darkTheme.button,
-    background: "#00aa66"
+    background: "linear-gradient(135deg, #00cc99, #00aa66)"
   },
   markdownStrong: "#00aa66",
   codeBg: "#f5f5f5"

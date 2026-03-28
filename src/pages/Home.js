@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
 import { useCreatePost, usePosts } from "../hooks/usePosts";
+import { containerVariants, itemVariants, buttonVariants, slideInUpVariants } from "../utils/motion-variants";
 
 
 import {

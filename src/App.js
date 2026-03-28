@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -9,8 +10,10 @@ import Feed from "./pages/Feed";
 import Stories from "./pages/Stories";
 import ChatAssistant from "./components/ChatAssistant";
 import FloatingChatBubble from "./components/FloatingChatBubble";
+import ProfessionalLoader from "./components/ProfessionalLoader";
 
 import { useAuth } from "./hooks/useAuth";
+import { pageTransitionVariants } from "./utils/motion-variants";
 
 function App() {
   const { token, profileLoading } = useAuth();
@@ -34,7 +37,7 @@ function App() {
   }, []);
 
   if (profileLoading) {
-    return <div style={{ color: "#fff", padding: "20px" }}>Cargando...</div>;
+    return <ProfessionalLoader message="Iniciando sesión..." />;
   }
 
   return (
@@ -69,22 +72,28 @@ function App() {
             isOpen={chatOpen}
             onClick={() => setChatOpen((prev) => !prev)}
           />
-          {chatOpen && (
-            <div
-              style={{
-                position: "fixed",
-                left: 16,
-                bottom: 90,
-                zIndex: 1900,
-                width: 350,
-                maxWidth: "calc(100vw - 32px)",
-                transform: "translateY(0)",
-                pointerEvents: "auto"
-              }}
-            >
-              <ChatAssistant onClose={() => setChatOpen(false)} />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {chatOpen && (
+              <motion.div
+                key="chat-assistant"
+                style={{
+                  position: "fixed",
+                  left: 16,
+                  bottom: 90,
+                  zIndex: 1900,
+                  width: 350,
+                  maxWidth: "calc(100vw - 32px)",
+                  pointerEvents: "auto"
+                }}
+                variants={pageTransitionVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <ChatAssistant onClose={() => setChatOpen(false)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
 

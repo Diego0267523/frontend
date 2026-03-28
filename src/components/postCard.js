@@ -1,11 +1,12 @@
 import { memo, useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert } from "@mui/material";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../hooks/useAuth";
 import { useDeletePost } from "../hooks/usePosts";
+import { cardVariants, buttonVariants, hoverScaleVariants } from "../utils/motion-variants";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -286,11 +287,20 @@ const PostCard = memo(({ post }) => {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="visible"
+      whileHover="hover"
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.4 }}
     >
-      <Card sx={{ bgcolor: "#111", mb: 2, borderRadius: 4 }}>
+      <Card sx={{
+        bgcolor: "#111",
+        mb: 2,
+        borderRadius: 4,
+        border: "1px solid #1a1a1a",
+        background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+      }}>
         <CardContent>
 
           {/* Header - Usuario y Tiempo */}
@@ -354,12 +364,54 @@ const PostCard = memo(({ post }) => {
 
           {/* Botones Like y Comentarios */}
           <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-            <IconButton onClick={handleLike} disabled={loadingLike}>
-              <FavoriteIcon sx={{ color: liked ? "#ff0000" : "#aaa" }} />
-            </IconButton>
-            <IconButton onClick={loadComments}>
-              <ChatBubbleOutlineIcon sx={{ color: "#aaa" }} />
-            </IconButton>
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconButton
+                onClick={handleLike}
+                disabled={loadingLike}
+                sx={{
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    background: "rgba(255, 0, 0, 0.1)"
+                  }
+                }}
+              >
+                <motion.div
+                  animate={{
+                    scale: liked ? [1, 1.3, 1] : 1
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <FavoriteIcon sx={{
+                    color: liked ? "#ff3333" : "#aaa",
+                    transition: "color 0.2s ease",
+                    textShadow: liked ? "0 0 10px rgba(255, 0, 0, 0.5)" : "none"
+                  }} />
+                </motion.div>
+              </IconButton>
+            </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconButton
+                onClick={loadComments}
+                sx={{
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    background: "rgba(0, 255, 136, 0.1)"
+                  }
+                }}
+              >
+                <ChatBubbleOutlineIcon sx={{
+                  color: "#aaa",
+                  transition: "color 0.2s ease"
+                }} />
+              </IconButton>
+            </motion.div>
           </Box>
 
           {/* Dialogo de confirmación de borrado */}
@@ -396,63 +448,85 @@ const PostCard = memo(({ post }) => {
           </Snackbar>
 
           {/* Sección de Comentarios */}
-          <Collapse in={showComments}>
-            <Box sx={{ mt: 2, borderTop: "1px solid #333", pt: 2 }}>
-              {/* Lista de comentarios */}
-              {comments && comments.length > 0 ? (
-                <Box sx={{ maxHeight: 200, overflowY: "auto", mb: 2 }}>
-                  {comments.map((comment, i) => (
-                    <Box key={i} sx={{ mb: 1.5 }}>
-                      <Typography sx={{ color: "#ccc", fontSize: 14 }}>
-                        <b>{comment.user || "Usuario"}</b> {comment.comment}
-                      </Typography>
-                      <Typography sx={{ color: "#777", fontSize: 12, mt: 0.5 }}>
-                        {getTimeAgo(comment.time)}
-                      </Typography>
+          <AnimatePresence>
+            {showComments && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Box sx={{ mt: 2, borderTop: "1px solid #333", pt: 2 }}>
+                  {/* Lista de comentarios */}
+                  {comments && comments.length > 0 ? (
+                    <Box sx={{ maxHeight: 200, overflowY: "auto", mb: 2 }}>
+                      {comments.map((comment, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <Box sx={{ mb: 1.5 }}>
+                            <Typography sx={{ color: "#ccc", fontSize: 14 }}>
+                              <b>{comment.user || "Usuario"}</b> {comment.comment}
+                            </Typography>
+                            <Typography sx={{ color: "#777", fontSize: 12, mt: 0.5 }}>
+                              {getTimeAgo(comment.time)}
+                            </Typography>
+                          </Box>
+                        </motion.div>
+                      ))}
                     </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography sx={{ color: "#777", fontSize: 14, mb: 2 }}>
-                  Sin comentarios aún
-                </Typography>
-              )}
+                  ) : (
+                    <Typography sx={{ color: "#777", fontSize: 14, mb: 2 }}>
+                      Sin comentarios aún
+                    </Typography>
+                  )}
 
-              {/* Input para nuevo comentario */}
-              <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                <TextField
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-                  placeholder="Agregar comentario..."
-                  size="small"
-                  disabled={loadingComment}
-                  sx={{
-                    flex: 1,
-                    input: { color: "#fff", fontSize: 14 },
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: '#00ff88' },
-                      '&:hover fieldset': { borderColor: '#00ff88' },
-                      '&.Mui-focused fieldset': { borderColor: '#00ff88' }
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleAddComment}
-                  disabled={loadingComment || !newComment.trim()}
-                  sx={{
-                    bgcolor: "#00ff88",
-                    color: "#000",
-                    fontWeight: "bold",
-                    "&:hover": { bgcolor: "#00dd77" },
-                    "&:disabled": { bgcolor: "#666", color: "#999" }
-                  }}
+                  {/* Input para nuevo comentario */}
+                  <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                    <TextField
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                      placeholder="Agregar comentario..."
+                      size="small"
+                      disabled={loadingComment}
+                      sx={{
+                        flex: 1,
+                        input: { color: "#fff", fontSize: 14 },
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: '#00ff88' },
+                          '&:hover fieldset': { borderColor: '#00ff88' },
+                          '&.Mui-focused fieldset': { borderColor: '#00ff88' }
+                        }
+                      }}
+                    />
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {loadingComment ? "..." : "Enviar"}
-                </Button>
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={loadingComment || !newComment.trim()}
+                    sx={{
+                      bgcolor: "#00ff88",
+                      color: "#000",
+                      fontWeight: "bold",
+                      "&:hover": { bgcolor: "#00dd77" },
+                      "&:disabled": { bgcolor: "#666", color: "#999" },
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    {loadingComment ? "..." : "Enviar"}
+                  </Button>
+                </motion.div>
               </Box>
-            </Box>
-          </Collapse>
+                </Box>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </CardContent>
       </Card>
