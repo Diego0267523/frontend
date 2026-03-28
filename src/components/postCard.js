@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../hooks/useAuth";
+import { useDeletePost } from "../hooks/usePosts";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -15,6 +16,7 @@ const PostCard = memo(({ post }) => {
   const { token, user } = useAuth();
   const { socket, connected } = useSocket();
   const queryClient = useQueryClient();
+  const deletePostMutation = useDeletePost();
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
@@ -23,7 +25,6 @@ const PostCard = memo(({ post }) => {
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState("");
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
   const [loadingLike, setLoadingLike] = useState(false);
@@ -219,56 +220,20 @@ const PostCard = memo(({ post }) => {
   };
 
   const handleDeletePost = () => {
-    if (!token || isDeleting || !post.id) return;
+    if (!token || deletePostMutation.isLoading || !post.id) return;
     setConfirmOpen(true);
     handleCloseMenu();
   };
 
   const handleConfirmDelete = async () => {
-    if (!token || isDeleting || !post.id) return;
+    if (!token || !post.id) return;
 
-    setIsDeleting(true);
     try {
-      const response = await axios.delete(`${API_URL}/api/posts/${post.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response?.data?.success) {
-        setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
-        // Optimistic update: eliminar el post del cache sin recargar toda la lista
-        queryClient.setQueryData(['feed'], (oldData) => {
-          if (!oldData || !oldData.pages) return oldData;
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page) => ({
-              ...page,
-              data: page.data.filter((p) => String(p.id) !== String(post.id)),
-            })),
-          };
-        });
-
-        // también limpiar cualquier query adicional relacionada
-        queryClient.setQueryData(['posts'], (oldPosts) => {
-          if (!oldPosts || !oldPosts.pages) return oldPosts;
-          return {
-            ...oldPosts,
-            pages: oldPosts.pages.map((page) => ({
-              ...page,
-              data: page.data.filter((p) => String(p.id) !== String(post.id)),
-            })),
-          };
-        });
-
-        queryClient.invalidateQueries({ queryKey: ['feed'] });
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-      } else {
-        setToast({ open: true, message: response?.data?.message || "No se pudo eliminar el post", severity: "error" });
-      }
+      await deletePostMutation.mutateAsync(post.id);
+      setToast({ open: true, message: "Post eliminado correctamente", severity: "success" });
     } catch (error) {
-      console.error("Error deleting post:", error.response?.data || error.message);
-      setToast({ open: true, message: error.response?.data?.message || error.message || "No se pudo eliminar el post", severity: "error" });
+      setToast({ open: true, message: "No se pudo eliminar el post", severity: "error" });
     } finally {
-      setIsDeleting(false);
       setConfirmOpen(false);
     }
   };
@@ -343,8 +308,8 @@ const PostCard = memo(({ post }) => {
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
-                  <MenuItem onClick={handleDeletePost} disabled={isDeleting}>
-                    {isDeleting ? 'Eliminando...' : 'Eliminar post'}
+                  <MenuItem onClick={handleDeletePost} disabled={deletePostMutation.isLoading}>
+                    {deletePostMutation.isLoading ? 'Eliminando...' : 'Eliminar post'}
                   </MenuItem>
                 </Menu>
               </>
@@ -389,9 +354,9 @@ const PostCard = memo(({ post }) => {
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCancelDelete} disabled={isDeleting}>Cancelar</Button>
-              <Button onClick={handleConfirmDelete} color="error" disabled={isDeleting}>
-                {isDeleting ? "Eliminando..." : "Eliminar"}
+              <Button onClick={handleCancelDelete} disabled={deletePostMutation.isLoading}>Cancelar</Button>
+              <Button onClick={handleConfirmDelete} color="error" disabled={deletePostMutation.isLoading}>
+                {deletePostMutation.isLoading ? "Eliminando..." : "Eliminar"}
               </Button>
             </DialogActions>
           </Dialog>

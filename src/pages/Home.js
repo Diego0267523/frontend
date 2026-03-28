@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
+import { useCreatePost } from "../hooks/usePosts";
 
 
 import {
@@ -41,10 +42,10 @@ import API_URL from '../utils/config';
 function Home() {
   const { user, logout } = useAuth();
   const { socket, connected } = useSocket();
+  const createPostMutation = useCreatePost();
 
   const [file, setFile] = useState(null);
   const [postCaption, setPostCaption] = useState("");
-  const [isPosting, setIsPosting] = useState(false);
 
   // 🔥 HISTORIAS
   const [storyFile, setStoryFile] = useState(null);
@@ -144,50 +145,14 @@ const handleCreatePost = async () => {
   }
 
   // 🔹 Evitar múltiples clics
-  if (isPosting) return;
-  setIsPosting(true);
+  if (createPostMutation.isLoading) return;
 
   try {
     const formData = new FormData();
     formData.append("image", file);
     formData.append("caption", postCaption);
 
-    // 🔹 1️⃣ Crear post en backend
-    await axios.post(`${API_URL}/api/posts`, formData, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-
-    // 🔹 2️⃣ Actualizar feed instantáneo (optimistic update)
-    queryClient.setQueryData(["feed"], (oldData) => {
-      if (!oldData) return oldData;
-
-      const newPost = {
-        nombre: user?.nombre || "Usuario",
-        avatar: user?.avatar || '/default-avatar.png',
-        image_url: URL.createObjectURL(file),
-        caption: postCaption,
-        likes: 0,
-        commentsCount: 0,
-        liked: false,
-        time: "Ahora"
-      };
-
-      return {
-        ...oldData,
-        pages: [
-          {
-            ...oldData.pages[0],
-            data: [newPost, ...oldData.pages[0].data]
-          },
-          ...oldData.pages.slice(1)
-        ]
-      };
-    });
-
-    // 🔹 3️⃣ Refrescar feed desde backend para tener datos reales
-    queryClient.invalidateQueries({ queryKey: ["feed"] });
+    await createPostMutation.mutateAsync(formData);
 
     // ✅ NOTIFICACIÓN DE ÉXITO
     setSnackbar({ open: true, message: "¡Post publicado exitosamente!", severity: "success" });
@@ -197,14 +162,12 @@ const handleCreatePost = async () => {
       setShowCreatePost(false);
       setFile(null);
       setPostCaption("");
-      setIsPosting(false);
     }, 800);
 
   } catch (error) {
     console.error(error);
     // ❌ NOTIFICACIÓN DE ERROR
     setSnackbar({ open: true, message: "Error al publicar el post. Inténtalo de nuevo.", severity: "error" });
-    setIsPosting(false);
   }
 };
 
@@ -1083,15 +1046,15 @@ const handleScroll = useCallback((e) => {
                     <Button 
                       onClick={handleCreatePost} 
                       sx={postBtn}
-                      disabled={isPosting}
+                      disabled={createPostMutation.isLoading}
                     >
-                      {isPosting ? "Publicando..." : "Publicar"}
+                      {createPostMutation.isLoading ? "Publicando..." : "Publicar"}
                     </Button>
     
                     <Button 
                       onClick={() => setShowCreatePost(false)} 
                       sx={cancelBtn}
-                      disabled={isPosting}
+                      disabled={createPostMutation.isLoading}
                     >
                       Cancelar
                     </Button>

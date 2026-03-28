@@ -11,7 +11,23 @@ import "./index.css";
 // 🔥 React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos por defecto
+      cacheTime: 10 * 60 * 1000, // 10 minutos por defecto
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: (failureCount, error) => {
+        if (error?.response?.status === 401 || error?.response?.status === 429) return false;
+        return failureCount < 2;
+      },
+    },
+    mutations: {
+      retry: false, // No retry mutations por defecto
+    },
+  },
+});
 
 // Global error handler
 window.addEventListener("error", (event) => {

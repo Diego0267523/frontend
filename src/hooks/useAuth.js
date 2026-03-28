@@ -1,16 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import API_URL from "../utils/config";
-
-// Configurar axios global para incluir token
-axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from "../utils/api";
 
 // Hook useAuth con React Query
 export function useAuth() {
@@ -26,7 +16,7 @@ export function useAuth() {
   } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const response = await axios.get(`${API_URL}/api/auth/profile`);
+      const response = await api.get("/api/auth/profile");
       return response.data;
     },
     enabled: !!token, // Solo si hay token
