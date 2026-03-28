@@ -1001,11 +1001,7 @@ const handleScroll = useCallback((e) => {
 
     {showAI && (
       <Box sx={aiOverlay}>
-        <Box sx={aiBox}>
-          <Typography sx={titleStyle}>GYM AI</Typography>
-          <Button onClick={() => setShowAI(false)}>Cerrar</Button>
-          <ChatAssistant />
-        </Box>
+        <ChatAssistant onClose={() => setShowAI(false)} />
       </Box>
     )}
 
@@ -1604,8 +1600,6 @@ const cancelBtn = {
   color: "#fff",
   flex: 1
 };
-
-const aiBox = { bgcolor: "#111", padding: 3 };
 
 // 🔥 STORY VIEWER STYLES
 const storyViewerOverlay = {
