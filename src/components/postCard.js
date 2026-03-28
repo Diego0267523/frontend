@@ -13,6 +13,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import API_URL from "../utils/config";
 
 const PostCard = memo(({ post }) => {
+  // 🔥 CRITICAL: All hooks MUST be declared before any conditionals
   const { token, user } = useAuth();
   const { socket, connected } = useSocket();
   const queryClient = useQueryClient();
@@ -30,10 +31,6 @@ const PostCard = memo(({ post }) => {
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
   const [visible, setVisible] = useState(true);
-
-  if (!visible) {
-    return null;
-  }
 
   // 🔥 Actualizar estado cuando el post cambia (ej: infinite scroll)
   useEffect(() => {
@@ -94,9 +91,12 @@ const PostCard = memo(({ post }) => {
       socket.off("post_like_updated", handleLikeUpdate);
       socket.off("post_comment_added", handleCommentAdded);
     };
-  }, [socket, post.id, likesCount]);
+    }, [socket, post.id, user?.id]);
 
-  if (!visible) return null;
+  // 🔥 Renderizar condicional basado en visible (debe estar DESPUÉS de todos los hooks)
+  if (!visible) {
+    return null;
+  }
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";

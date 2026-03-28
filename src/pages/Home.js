@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
-import { useCreatePost } from "../hooks/usePosts";
+import { useCreatePost, usePosts } from "../hooks/usePosts";
 
 
 import {
