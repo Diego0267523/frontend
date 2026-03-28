@@ -1,8 +1,30 @@
 import axios from 'axios';
 import API_URL from './utils/config';
 
+/**
+ * Obtiene el offset de zona horaria del usuario en formato "+HH:MM" o "-HH:MM"
+ * @returns {string} - Ej: "-05:00" para UTC-5
+ */
+const getTimezoneOffset = () => {
+  const now = new Date();
+  const offsetMs = -now.getTimezoneOffset() * 60000; // Convertir minutos a ms
+  const offsetDate = new Date(offsetMs);
+  
+  const hours = String(Math.abs(Math.floor(offsetMs / 3600000))).padStart(2, '0');
+  const minutes = String(Math.abs((offsetMs % 3600000) / 60000)).padStart(2, '0');
+  const sign = offsetMs >= 0 ? '+' : '-';
+  
+  return `${sign}${hours}:${minutes}`;
+};
+
+/**
+ * Headers de autorización + zona horaria
+ * IMPORTANTE: La zona horaria se envía en cada request para que el backend
+ * pueda convertir correctamente entre UTC y la zona horaria del usuario
+ */
 const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('token')}`
+  Authorization: `Bearer ${localStorage.getItem('token')}`,
+  'X-Timezone-Offset': getTimezoneOffset()  // Nuevo: enviar zona horaria
 });
 
 // Auth
