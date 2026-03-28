@@ -2,6 +2,7 @@ import { memo, useState, useContext, useEffect } from "react";
 import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { useSocket } from "../context/SocketContext";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -10,6 +11,7 @@ import { AuthContext } from "../context/AuthContext";
 
 const PostCard = memo(({ post }) => {
   const { token } = useContext(AuthContext);
+  const { socket, connected } = useSocket();
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount || 0);
@@ -25,6 +27,38 @@ const PostCard = memo(({ post }) => {
     setLikesCount(post.likes || 0);
     setCommentsCount(post.commentsCount || 0);
   }, [post.id, post.liked, post.likes, post.commentsCount]);
+
+  // Suscribirse al post room y eventos cuando cambia el post
+  useEffect(() => {
+    if (!socket || !post.id) return;
+
+    const roomName = `post_${post.id}`;
+    socket.emit("join_post", { postId: post.id });
+    console.log(`PostCard: unido a ${roomName}`);
+
+    const handleLikeUpdate = (data) => {
+      if (data.postId !== post.id) return;
+      setLikesCount(data.likes);
+      if (typeof data.likedByCurrent === 'boolean') {
+        setLiked(data.likedByCurrent);
+      }
+    };
+
+    const handleCommentAdded = (data) => {
+      if (data.postId !== post.id) return;
+      setCommentsCount((prev) => prev + 1);
+      setComments((prev) => [...prev, data.comment]);
+    };
+
+    socket.on("post_like_updated", handleLikeUpdate);
+    socket.on("post_comment_added", handleCommentAdded);
+
+    return () => {
+      socket.emit("leave_post", { postId: post.id });
+      socket.off("post_like_updated", handleLikeUpdate);
+      socket.off("post_comment_added", handleCommentAdded);
+    };
+  }, [socket, post.id]);
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";
@@ -53,21 +87,27 @@ const PostCard = memo(({ post }) => {
       console.error("No token found");
       return;
     }
-    
+
     setLoadingLike(true);
+
+    if (socket && connected) {
+      socket.emit("like_post", { postId: post.id });
+      setLoadingLike(false);
+      return;
+    }
+
     try {
       console.log(`Intentando dar like a post ${post.id}`);
       const response = await axios.post(`${API_URL}/api/posts/${post.id}/like`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       console.log("Response like:", response.data);
-      
+
       if (response.data.success) {
-        // Backend devuelve: { success: true, data: { action, likes } }
         const newLikesCount = response.data.data.likes;
         const isLiked = response.data.data.action === 'liked';
-        
+
         setLiked(isLiked);
         setLikesCount(newLikesCount);
         console.log(`Like actualizado: ${isLiked ? 'liked' : 'unliked'}, total: ${newLikesCount}`);
@@ -84,8 +124,16 @@ const PostCard = memo(({ post }) => {
       console.warn("No token o comentario vacío");
       return;
     }
-    
+
     setLoadingComment(true);
+
+    if (socket && connected) {
+      socket.emit("comment_post", { postId: post.id, comment: newComment });
+      setNewComment("");
+      setLoadingComment(false);
+      return;
+    }
+
     try {
       console.log(`Agregando comentario a post ${post.id}: "${newComment}"`);
       const response = await axios.post(`${API_URL}/api/posts/${post.id}/comments`, {
@@ -93,11 +141,10 @@ const PostCard = memo(({ post }) => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       console.log("Response comment:", response.data);
-      
+
       if (response.data.success) {
-        // Backend devuelve: { success: true, comment: { id, user, comment, time } }
         setComments([...comments, response.data.comment]);
         setCommentsCount((prev) => prev + 1);
         setNewComment("");

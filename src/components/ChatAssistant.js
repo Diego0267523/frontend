@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { io } from "socket.io-client";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import API_URL from "../utils/config";
+import { useSocket } from "../context/SocketContext";
 
 function ChatAssistant() {
   const [messages, setMessages] = useState(() => {
@@ -11,8 +11,6 @@ function ChatAssistant() {
   });
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const [socket, setSocket] = useState(null);
-  const [connected, setConnected] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem("chatTheme") !== "light";
   });
@@ -30,6 +28,7 @@ function ChatAssistant() {
 
   const token = localStorage.getItem("token");
   const chatRef = useRef(null);
+  const { socket, connected } = useSocket();
 
   // 🔥 AUTO SCROLL AL FINAL
   useEffect(() => {
@@ -39,42 +38,28 @@ function ChatAssistant() {
     });
   }, [messages, typing]);
 
-  // 🔥 Configurar Socket.IO
+  // 🔥 Escuchar eventos socket de IA
   useEffect(() => {
-    const socketClient = io(API_URL, {
-      path: '/socket.io',
-      transports: ['websocket'],
-      auth: {
-        token: localStorage.getItem('token')
-      }
-    });
+    if (!socket) return;
 
-    setSocket(socketClient);
-
-    socketClient.on('connect', () => {
-      setConnected(true);
-      console.log('✅ Socket conectado:', socketClient.id);
-    });
-
-    socketClient.on('disconnect', () => {
-      setConnected(false);
-      console.log('⚠️ Socket desconectado');
-    });
-
-    socketClient.on('ai_response', ({ pregunta, respuesta }) => {
+    const handleAIResponse = ({ pregunta, respuesta }) => {
       setMessages((prev) => [...prev, { from: 'ai', text: respuesta }]);
       setTyping(false);
-    });
+    };
 
-    socketClient.on('ai_error', (message) => {
+    const handleAIError = (message) => {
       setMessages((prev) => [...prev, { from: 'ai', text: `Error IA: ${message}` }]);
       setTyping(false);
-    });
+    };
+
+    socket.on('ai_response', handleAIResponse);
+    socket.on('ai_error', handleAIError);
 
     return () => {
-      socketClient.disconnect();
+      socket.off('ai_response', handleAIResponse);
+      socket.off('ai_error', handleAIError);
     };
-  }, []);
+  }, [socket]);
 
   // 🔥 GUARDAR HISTORIAL EN LOCAL (solo últimos 10 mensajes)
   useEffect(() => {
