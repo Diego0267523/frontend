@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Feed from "./pages/Feed";
 import Stories from "./pages/Stories";
-import ChatAssistant from "./components/ChatAssistant";
+import DirectMessages from "./components/DirectMessages";
 import FloatingChatBubble from "./components/FloatingChatBubble";
 import ProfessionalLoader from "./components/ProfessionalLoader";
 
@@ -17,7 +17,7 @@ import { pageTransitionVariants } from "./utils/motion-variants";
 
 function App() {
   const { token, profileLoading } = useAuth();
-  const [chatOpen, setChatOpen] = useState(false);
+  const [dmsOpen, setDmsOpen] = useState(false);
 
   // Detectar desconexión de red
   useEffect(() => {
@@ -69,16 +69,16 @@ function App() {
       {token && (
         <>
           <FloatingChatBubble
-            isOpen={chatOpen}
-            onClick={() => setChatOpen((prev) => !prev)}
+            isOpen={dmsOpen}
+            onClick={() => setDmsOpen((prev) => !prev)}
           />
           <AnimatePresence mode="wait">
-            {chatOpen && (
+            {dmsOpen && (
               <motion.div
-                key="chat-assistant"
+                key="direct-messages"
                 style={{
                   position: "fixed",
-                  left: 16,
+                  right: 16,
                   bottom: 90,
                   zIndex: 1900,
                   width: 350,
@@ -90,7 +90,7 @@ function App() {
                 animate="visible"
                 exit="exit"
               >
-                <ChatAssistant onClose={() => setChatOpen(false)} />
+                <DirectMessages onClose={() => setDmsOpen(false)} />
               </motion.div>
             )}
           </AnimatePresence>

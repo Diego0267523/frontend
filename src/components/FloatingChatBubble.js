@@ -20,7 +20,7 @@ const FloatingChatBubble = ({ onClick, isOpen }) => {
       whileTap="tap"
       style={{
         position: "fixed",
-        left: 16,
+        right: 16,
         bottom: 16,
         width: 56,
         height: 56,
@@ -39,11 +39,7 @@ const FloatingChatBubble = ({ onClick, isOpen }) => {
         zIndex: 2000,
         outline: "none",
         fontWeight: 600,
-        transition: "background 0.3s ease",
-        position: "fixed",
-        left: 16,
-        bottom: 16,
-        zIndex: 2000
+        transition: "background 0.3s ease"
       }}
     >
       <motion.span
