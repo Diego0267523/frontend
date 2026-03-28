@@ -46,8 +46,13 @@ const PostCard = memo(({ post }) => {
 
     const handleCommentAdded = (data) => {
       if (data.postId !== post.id) return;
-      setCommentsCount((prev) => prev + 1);
-      setComments((prev) => [...prev, data.comment]);
+
+      // Replace optimistic comment with real one
+      setComments((prev) => {
+        const withoutOptimistic = prev.filter(c => c.id !== data.comment.id);
+        return [...withoutOptimistic, data.comment];
+      });
+      setCommentsCount(data.commentsCount);
     };
 
     socket.on("post_like_updated", handleLikeUpdate);
@@ -91,6 +96,10 @@ const PostCard = memo(({ post }) => {
     setLoadingLike(true);
 
     if (socket && connected) {
+      // Optimistic update
+      setLiked(!liked);
+      setLikesCount(liked ? likesCount - 1 : likesCount + 1);
+
       socket.emit("like_post", { postId: post.id });
       setLoadingLike(false);
       return;
@@ -128,6 +137,16 @@ const PostCard = memo(({ post }) => {
     setLoadingComment(true);
 
     if (socket && connected) {
+      // Optimistic update
+      const optimisticComment = {
+        id: Date.now(), // temporary ID
+        user: "Tú", // current user
+        comment: newComment,
+        time: new Date().toISOString()
+      };
+      setComments(prev => [...prev, optimisticComment]);
+      setCommentsCount(prev => prev + 1);
+
       socket.emit("comment_post", { postId: post.id, comment: newComment });
       setNewComment("");
       setLoadingComment(false);
