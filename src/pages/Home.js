@@ -1051,7 +1051,7 @@ const handleScroll = useCallback((e) => {
                   />
     
                   {/* BOTONES */}
-                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                  <Box sx={{ display: "flex", gap: 1.5, mt: 2, width: "100%" }}>
                     <Button 
                       onClick={handleCreatePost} 
                       sx={postBtn}
@@ -1526,12 +1526,13 @@ const aiOverlay = {
   alignItems: "center"
 };
 
-// 🔥 MODAL CREAR POST (ESTILO PRO)
+// 🔥 MODAL CREAR POST (ESTILO PRO MEJORADO)
 
 const overlayPro = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.85)",
+  background: "rgba(0,0,0,0.92)",
+  backdropFilter: "blur(8px)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -1539,66 +1540,136 @@ const overlayPro = {
 };
 
 const modalPro = {
-  width: 350,
-  bgcolor: "#111",
-  borderRadius: 4,
-  p: 3,
+  width: 400,
+  maxWidth: "90vw",
+  bgcolor: "transparent",
+  background: "linear-gradient(135deg, rgba(17,17,17,0.95) 0%, rgba(30,30,40,0.95) 100%)",
+  borderRadius: "20px",
+  p: 4,
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  boxShadow: "0 0 30px #00ff8840"
+  boxShadow: "0 20px 60px rgba(0,255,136,0.15), 0 0 40px rgba(0,255,136,0.08)",
+  border: "1px solid rgba(0,255,136,0.2)",
+  backdropFilter: "blur(10px)"
 };
 
 const titlePro = {
   color: "#00ff88",
-  fontWeight: "bold",
-  mb: 2,
-  fontSize: 20
+  fontWeight: "700",
+  mb: 3,
+  fontSize: 24,
+  letterSpacing: "0.5px",
+  textShadow: "0 0 20px rgba(0,255,136,0.3)"
 };
 
 const previewImage = {
   width: "100%",
-  height: 200,
+  height: 240,
   objectFit: "cover",
-  borderRadius: 10,
-  marginBottom: 10
+  borderRadius: "16px",
+  marginBottom: 20,
+  border: "2px solid rgba(0,255,136,0.3)",
+  boxShadow: "0 10px 30px rgba(0,255,136,0.1)",
+  transition: "all 0.3s ease"
 };
 
 const uploadBtn = {
   bgcolor: "#00ff88",
   color: "#000",
-  fontWeight: "bold",
-  mt: 1,
+  fontWeight: "700",
+  mt: 0,
+  mb: 2,
+  width: "100%",
+  py: 1.5,
+  borderRadius: "12px",
+  fontSize: "15px",
+  letterSpacing: "0.5px",
+  boxShadow: "0 8px 20px rgba(0,255,136,0.3)",
+  transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
   '&:hover': {
-    bgcolor: "#00cc6a"
+    bgcolor: "#00ff88",
+    boxShadow: "0 12px 30px rgba(0,255,136,0.4)",
+    transform: "translateY(-2px)"
+  },
+  '&:active': {
+    transform: "translateY(0px)"
   }
 };
 
 const inputPro = {
   width: "100%",
-  marginTop: "10px",
-  padding: "10px",
-  borderRadius: "8px",
-  border: "none",
+  marginTop: "0px",
+  marginBottom: "20px",
+  padding: "14px 16px",
+  borderRadius: "12px",
+  border: "1.5px solid rgba(0,255,136,0.2)",
   outline: "none",
-  background: "#222",
-  color: "#fff"
+  background: "rgba(25,25,35,0.6)",
+  color: "#fff",
+  fontSize: "15px",
+  fontFamily: "inherit",
+  letterSpacing: "0.3px",
+  transition: "all 0.3s ease",
+  backdropFilter: "blur(4px)",
+  '&:focus': {
+    borderColor: "rgba(0,255,136,0.5)",
+    background: "rgba(25,25,35,0.8)",
+    boxShadow: "0 0 0 3px rgba(0,255,136,0.1)"
+  },
+  '&::placeholder': {
+    color: "rgba(255,255,255,0.4)"
+  }
 };
 
 const postBtn = {
   bgcolor: "#00ff88",
   color: "#000",
-  fontWeight: "bold",
+  fontWeight: "700",
   flex: 1,
+  py: 1.3,
+  borderRadius: "12px",
+  fontSize: "15px",
+  letterSpacing: "0.5px",
+  boxShadow: "0 8px 20px rgba(0,255,136,0.3)",
+  transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
   '&:hover': {
-    bgcolor: "#00cc6a"
+    bgcolor: "#00ff88",
+    boxShadow: "0 12px 30px rgba(0,255,136,0.4)",
+    transform: "translateY(-2px)"
+  },
+  '&:active': {
+    transform: "translateY(0px)"
+  },
+  '&:disabled': {
+    opacity: 0.6,
+    boxShadow: "0 4px 10px rgba(0,255,136,0.2)"
   }
 };
 
 const cancelBtn = {
-  bgcolor: "#222",
+  bgcolor: "rgba(100,100,120,0.2)",
   color: "#fff",
-  flex: 1
+  border: "1px solid rgba(100,100,120,0.4)",
+  flex: 1,
+  py: 1.3,
+  borderRadius: "12px",
+  fontSize: "15px",
+  letterSpacing: "0.5px",
+  fontWeight: "600",
+  transition: "all 0.3s ease",
+  backdropFilter: "blur(4px)",
+  '&:hover': {
+    bgcolor: "rgba(100,100,120,0.35)",
+    border: "1px solid rgba(100,100,120,0.6)",
+    transform: "translateY(-1px)"
+  },
+  '&:active': {
+    transform: "translateY(0px)"
+  },
+  '&:disabled': {
+    opacity: 0.5
+  }
 };
 
 // 🔥 STORY VIEWER STYLES
