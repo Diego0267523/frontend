@@ -1,5 +1,6 @@
 
 import { AuthContext } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useContext, useState, useCallback, useRef, useMemo } from "react";
@@ -39,6 +40,7 @@ import API_URL from '../utils/config';
 
 function Home() {
   const { user, logout } = useContext(AuthContext);
+  const { socket, connected } = useSocket();
 
   const [file, setFile] = useState(null);
   const [postCaption, setPostCaption] = useState("");
@@ -112,6 +114,20 @@ function Home() {
     return () => clearTimeout(timer);
   }, [foodText]);
 
+  // 🔥 Escuchar nuevas publicaciones
+  React.useEffect(() => {
+    if (!socket || !connected) return;
+
+    const handleNewPost = (data) => {
+      setNewPostsAvailable(prev => prev + 1);
+    };
+
+    socket.on('new_post', handleNewPost);
+
+    return () => {
+      socket.off('new_post', handleNewPost);
+    };
+  }, [socket, connected]);
 
   // 🔥 NOTIFICACIONES
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -610,33 +626,6 @@ const fetchPosts = async ({ pageParam = 1 }) => {
 
   const hasPosts = data?.pages?.some(page => page.data && page.data.length > 0);
 
-  // 🔥 INDICADOR DE NUEVAS PUBLICACIONES
-  React.useEffect(() => {
-    const checkNewPosts = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/api/posts?page=1&limit=1`);
-        const newFirstPost = response.data?.posts?.[0];
-        const currentFirstPost = data?.pages?.[0]?.data?.[0];
-
-        if (!newFirstPost || !currentFirstPost) {
-          return;
-        }
-
-        if (newFirstPost.id !== currentFirstPost.id) {
-          // calcular cuántos posts nuevos pueden haber (19? 1?)
-          // para no sobrecontar, sólo indica >0
-          setNewPostsAvailable(1);
-        }
-      } catch (error) {
-        console.warn('No se pudo verificar nuevas publicaciones:', error.message || error);
-      }
-    };
-
-    const interv = setInterval(checkNewPosts, 15000); // cada 15s
-    checkNewPosts();
-    return () => clearInterval(interv);
-  }, [data]);
-
   // 🔥 TIMEOUT PARA MOSTRAR RETRY DESPUÉS DE 3s
   React.useEffect(() => {
     if (isLoading) {
@@ -898,8 +887,11 @@ const handleScroll = useCallback((e) => {
               cursor: 'pointer'
             }}
             onClick={async () => {
-              queryClient.invalidateQueries({ queryKey: ['feed'] });
               setNewPostsAvailable(0);
+              const firstPost = document.querySelector('[class*="PostCard"]');
+              if (firstPost) {
+                firstPost.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
             }}
           >
             <Typography sx={{ color: '#00ff88', fontWeight: 'bold', fontSize: 13 }}>
