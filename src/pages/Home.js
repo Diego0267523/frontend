@@ -481,6 +481,53 @@ const handleUploadStory = async () => {
     loadDailyFoodData();
   }, []);
 
+  // 🔥 Auto-refresh cada minuto para actualizar gráficas en tiempo real
+  React.useEffect(() => {
+    // Recargar datos cada minuto
+    const interval = setInterval(() => {
+      loadDailyFoodData();
+    }, 60000); // 60000ms = 1 minuto
+
+    return () => clearInterval(interval);
+  }, []);
+  React.useEffect(() => {
+    const scheduleWeeklyRefresh = () => {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = domingo, 1 = lunes, ...
+      
+      // Calcular próximo lunes a las 0:00
+      let daysUntilMonday;
+      if (dayOfWeek === 1) {
+        // Si es lunes, esperar hasta próximo lunes
+        daysUntilMonday = 7;
+      } else {
+        // Calcular días hasta próximo lunes
+        daysUntilMonday = (1 - dayOfWeek + 7) % 7;
+        if (daysUntilMonday === 0) daysUntilMonday = 7;
+      }
+
+      const nextMonday = new Date(now);
+      nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
+      nextMonday.setHours(0, 0, 0, 0); // Medianoche
+
+      const timeUntilMonday = nextMonday - now;
+
+      console.log(`⏰ Próximo refresh semanal en: ${Math.round(timeUntilMonday / 1000 / 60)} minutos`);
+
+      // Setear timeout para el próximo lunes
+      const timeout = setTimeout(() => {
+        console.log("🔄 Actualizando datos semanales...");
+        loadDailyFoodData(); // Recargar datos
+        scheduleWeeklyRefresh(); // Programar el siguiente
+      }, timeUntilMonday);
+
+      return timeout;
+    };
+
+    const timeout = scheduleWeeklyRefresh();
+    return () => clearTimeout(timeout);
+  }, []);
+
   // 🔥 HISTORIAS - Eliminar historia propia
   const handleDeleteStory = async (storyId) => {
     try {
