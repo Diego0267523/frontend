@@ -79,12 +79,91 @@ export function useCreatePost() {
       });
       return response.data;
     },
-    onSuccess: () => {
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+      await queryClient.cancelQueries({ queryKey: ["feed"] });
+
+      const previousPosts = queryClient.getQueryData(["posts"]);
+      const previousFeed = queryClient.getQueryData(["feed"]);
+
+      const tempPost = {
+        id: `temp-${Date.now()}`,
+        user_id: null,
+        image_url: URL.createObjectURL(formData.get('image')),
+        caption: formData.get('caption'),
+        time: new Date().toISOString(),
+        nombre: 'Tu publicación',
+        avatar: null,
+        likes: 0,
+        commentsCount: 0,
+        liked: 0,
+        isDraft: true,
+      };
+
+      queryClient.setQueryData(["posts"], (old) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page, index) => {
+            if (index !== 0) return page;
+            return { ...page, posts: [tempPost, ...(page.posts || [])] };
+          }),
+        };
+      });
+
+      queryClient.setQueryData(["feed"], (old) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page, index) => {
+            if (index !== 0) return page;
+            return { ...page, data: [tempPost, ...(page.data || [])] };
+          }),
+        };
+      });
+
+      return { previousPosts, previousFeed, tempPostId: tempPost.id };
+    },
+    onSuccess: (data, _variables, context) => {
+      if (data?.post) {
+        queryClient.setQueryData(["posts"], (old) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              posts: (page.posts || []).map((post) =>
+                post.id === context?.tempPostId ? data.post : post
+              ),
+            })),
+          };
+        });
+
+        queryClient.setQueryData(["feed"], (old) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: (page.data || []).map((p) =>
+                p.id === context?.tempPostId ? data.post : p
+              ),
+            })),
+          };
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
       console.error("Error creating post:", error.response?.data || error.message);
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["posts"], context.previousPosts);
+      }
+      if (context?.previousFeed) {
+        queryClient.setQueryData(["feed"], context.previousFeed);
+      }
     },
   });
 }

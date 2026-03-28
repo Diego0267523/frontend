@@ -115,12 +115,40 @@ function Home() {
     return () => clearTimeout(timer);
   }, [foodText]);
 
-  // 🔥 Escuchar nuevas publicaciones
+  // 🔥 Escuchar nuevas publicaciones en tiempo real (realtime)
   React.useEffect(() => {
     if (!socket || !connected) return;
 
-    const handleNewPost = (data) => {
-      setNewPostsAvailable(prev => prev + 1);
+    const handleNewPost = ({ post }) => {
+      if (!post) return;
+
+      queryClient.setQueryData(["posts"], (old) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page, index) => {
+            if (index !== 0) return page;
+            const exists = (page.posts || []).some((p) => Number(p.id) === Number(post.id));
+            if (exists) return page;
+            return { ...page, posts: [post, ...(page.posts || [])] };
+          }),
+        };
+      });
+
+      queryClient.setQueryData(["feed"], (old) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page, index) => {
+            if (index !== 0) return page;
+            const exists = (page.data || []).some((p) => Number(p.id) === Number(post.id));
+            if (exists) return page;
+            return { ...page, data: [post, ...(page.data || [])] };
+          }),
+        };
+      });
+
+      setNewPostsAvailable((prev) => prev + 1);
     };
 
     socket.on('new_post', handleNewPost);
@@ -128,7 +156,7 @@ function Home() {
     return () => {
       socket.off('new_post', handleNewPost);
     };
-  }, [socket, connected]);
+  }, [socket, connected, queryClient]);
 
   // 🔥 NOTIFICACIONES
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -551,57 +579,31 @@ const handleDeleteFoodEntry = async (id) => {
     }
   };
 
-  // 🔥 FETCH POSTS (AQUÍ VA)
-const fetchPosts = async ({ pageParam = 1 }) => {
-  try {
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await axios.get(`${API_URL}/api/posts?page=${pageParam}`, { headers });
-    const { posts } = response.data; // Backend devuelve { success: true, posts: [...] }
-    return {
-      data: posts || [],
-      nextPage: posts && posts.length > 0 ? pageParam + 1 : undefined
-    };
-  } catch (error) {
-    console.error("Error fetching posts:", error);
-    throw error; // Re-throw para que React Query maneje el error
-  }
-};
   const [showRetry, setShowRetry] = useState(false);
 
-  // 🔥 INFINITE QUERY
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error
-  } = useInfiniteQuery({
-    queryKey: ["feed"],
-    queryFn: fetchPosts,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    cacheTime: 1000 * 60 * 30, // 30 minutos
-    retry: false,
-    onError: () => setShowRetry(true)
-  });
+    error,
+  } = usePosts();
 
-  const hasPosts = data?.pages?.some(page => page.data && page.data.length > 0);
-
-  // 🔥 TIMEOUT PARA MOSTRAR RETRY DESPUÉS DE 3s
+  // Mostrar retry solo cuando falla carga inicial
   React.useEffect(() => {
     if (isLoading) {
       const timer = setTimeout(() => {
-        if (!data?.pages?.some(p => p.data?.length > 0)) {
+        if (!data?.pages?.some((p) => p.posts?.length > 0)) {
           setShowRetry(true);
         }
       }, 3000);
       return () => clearTimeout(timer);
-    } else {
-      setShowRetry(false);
     }
+    setShowRetry(false);
   }, [isLoading, data]);
+
+  const hasPosts = data?.pages?.some(page => page.posts && page.posts.length > 0);
 
     // =======================
   // 🔹 SCROLL DETECCIÓN
@@ -907,8 +909,8 @@ const handleScroll = useCallback((e) => {
           </Card>
         ) : (
           data.pages.map((page, i) =>
-            page.data.map((post, j) => (
-              <PostCard key={i + "-" + j} post={post} />
+            (page.posts || []).map((post, j) => (
+              <PostCard key={post.id || `${i}-${j}`} post={post} />
             ))
           )
         )}
