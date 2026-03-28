@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import { usePosts } from '../hooks/usePosts';
 import PostCard from '../components/postCard';
+import { useSocket } from '../context/SocketContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Feed = () => {
+  const queryClient = useQueryClient();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts();
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePostDeleted = ({ postId }) => {
+      queryClient.setQueryData(['posts'], (oldData) => {
+        if (!oldData || !oldData.pages) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            posts: Array.isArray(page.posts)
+              ? page.posts.filter((post) => String(post.id) !== String(postId))
+              : [],
+          })),
+        };
+      });
+    };
+
+    socket.on('post_deleted', handlePostDeleted);
+
+    return () => {
+      socket.off('post_deleted', handlePostDeleted);
+    };
+  }, [socket, queryClient]);
 
   if (isLoading) return <CircularProgress sx={{ color: '#00ff88' }} />;
 
