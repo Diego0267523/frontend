@@ -1,3 +1,4 @@
+import LeftSidebarPremium from "../components/dashboard/LeftSidebarPremium";
 import RightPanelContent from "../components/dashboard/RightPanelContent";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../context/SocketContext";
@@ -609,52 +610,7 @@ const handleScroll = useCallback((e) => {
    // =======================
    // 🔹 SIDEBAR
    // =======================
-   const SidebarContent = React.memo(() => (
-     <Box sx={sidebarStyle}>
- 
-       {/* 🔹 Perfil */}
-       <Box onClick={() => navigate("/profile")} sx={profileStyle}>
-         <Box 
-           sx={{
-             ...avatarStyle,
-             backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none'
-           }} 
-         />
-         <Typography sx={{ color: "#fff" }}>
-           {user?.nombre || "Usuario"}
-         </Typography>
-       </Box>
- 
-       {/* 🔹 Menú */}
-       <Box sx={{ flex: 1 }}>
-         {menuItems.map((item, i) => {
-           const isActive = location.pathname === item.path;
- 
-           return (
-             <Box
-               key={i}
-               onMouseEnter={item.path === "/progreso" ? prefetchProgreso : undefined}
-               onClick={() => {
-                 if (item.path) navigate(item.path);
-                 if (item.action) item.action();
-               }}
-               sx={{
-                 ...menuItemStyle,
-                 bgcolor: isActive ? "#00ff8820" : "#151515"
-               }}
-             >
-               {item.label}
-             </Box>
-           );
-         })}
-       </Box>
- 
-       {/* 🔹 Logout */}
-       <Button onClick={logout} sx={logoutStyle}>
-         EXIT
-       </Button>
-     </Box>
-   ));
+  
  return (
   <Box sx={{
     display: "flex",
@@ -665,7 +621,10 @@ const handleScroll = useCallback((e) => {
 
     {!isMobile && (
       <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
-        <SidebarContent />
+        <LeftSidebarPremium
+  active={activeSection}
+  onChange={setActiveSection}
+/>
       </Box>
     )}
 
@@ -682,7 +641,10 @@ const handleScroll = useCallback((e) => {
     )}
 
     <Drawer open={open} onClose={() => setOpen(false)}>
-      <SidebarContent />
+      <LeftSidebarPremium
+  active={activeSection}
+  onChange={setActiveSection}
+/>
     </Drawer>
 
     <Drawer
