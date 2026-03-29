@@ -446,13 +446,14 @@ const handleUploadStory = async () => {
 
   // 🔥 STORY VIEWER FUNCTIONS
   const [seenStoryUsers, setSeenStoryUsers] = useState(new Set());
+const getStoryRingColor = (userName) => {
+  const userStories = stories.filter(s => s.nombre === userName);
+  const isSeen = userStories.every(s => s.visto);
 
-  const getStoryRingColor = (userName) => {
-    if (seenStoryUsers.has(userName)) {
-      return "#888"; // visto = gris
-    }
-    return "#00ff88"; // nuevo = verde
-  };
+  return isSeen
+    ? "#555"
+    : "linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)";
+};
 
   const openUserStories = (userName) => {
     const userStoriesFiltered = stories.filter(s => s.nombre === userName);
@@ -753,21 +754,28 @@ const handleScroll = useCallback((e) => {
             const ringColor = getStoryRingColor(userName);
             return (
               <motion.div key={i} whileHover={{ scale: 1.1 }}>
-                <Box sx={storyItem} onClick={() => openUserStories(userName)}>
-                  <Box sx={{ ...storyCircle, border: `3px solid ${ringColor}` }}>
-                    <Box 
-                      sx={{ 
-                        ...storyInner, 
-                        backgroundImage: `url(${profileImage})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center"
-                      }} 
-                    />
+                <Box
+                    sx={{
+                      ...storyCircle,
+                      background: ringColor, // aquí va el color o gradiente
+                      padding: "3px"
+                    }}
+                  >
+                    <Box sx={storyInner}>
+                      <img
+                        src={profileImage}
+                        alt={userName}
+                        loading="lazy"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          display: "block"
+                        }}
+                      />
+                    </Box>
                   </Box>
-                  <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
-                    {userName}
-                  </Typography>
-                </Box>
               </motion.div>
             );
           })}
