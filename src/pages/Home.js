@@ -755,14 +755,14 @@ const handleScroll = useCallback((e) => {
               <motion.div key={i} whileHover={{ scale: 1.1 }}>
                 <Box sx={storyItem} onClick={() => openUserStories(userName)}>
                   <Box sx={{ ...storyCircle, border: `3px solid ${ringColor}` }}>
-                    <Box 
+                    
                       sx={{ 
                         ...storyInner, 
                         backgroundImage: `url(${profileImage})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center"
                       }} 
-                    />
+                    
                   </Box>
                   <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
                     {userName}
