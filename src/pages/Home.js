@@ -1,3 +1,4 @@
+import FeedCenterPremium from "../components/feed/FeedCenterPremium";
 import LeftSidebarPremium from "../components/dashboard/LeftSidebarPremium";
 import RightPanelContent from "../components/dashboard/RightPanelContent";
 import { useAuth } from "../hooks/useAuth";
@@ -616,222 +617,68 @@ const handleScroll = useCallback((e) => {
    // =======================
   
  return (
-  <Box sx={{
-    display: "flex",
-    height: "100vh",
-    bgcolor: "#000",
-    overflow: "hidden"
-  }}>
 
-    {!isMobile && (
-      <Box sx={{ width: 250, flexShrink: 0, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
-        <LeftSidebarPremium
-  active={activeSection}
-  onChange={setActiveSection}
-/>
-      </Box>
-    )}
-
-    {isMobile && (
-      <Box sx={topBar}>
-        <IconButton onClick={() => setOpen(true)}>
-          <MenuIcon sx={{ color: "#00ff88" }} />
-        </IconButton>
-
-        <IconButton onClick={() => setOpenRight(true)}>
-          <BarChartIcon sx={{ color: "#00ff88" }} />
-        </IconButton>
-      </Box>
-    )}
-
-    <Drawer open={open} onClose={() => setOpen(false)}>
-      <LeftSidebarPremium
-  active={activeSection}
-  onChange={setActiveSection}
-/>
-    </Drawer>
-
-    <Drawer
-      anchor="right"
-      open={openRight}
-      onClose={() => setOpenRight(false)}
-      PaperProps={{
-  sx: {
-    bgcolor: "#0b0b0b",
-    width: 320,
-    overflowY: "auto"
-  }
-}}
-    >
-      <Box sx={{ p: 2 }}>
-  <RightPanelContent
-  loadingFood={loadingFood}
-  dailyFoodEntries={dailyFoodEntries}
-  handleDeleteFoodEntry={handleDeleteFoodEntry}
-  todayTotal={todayTotal}
-  targetCalories={targetCalories}
-  todayProtein={todayProtein}
-  targetProtein={targetProtein}
-  todayCarbs={todayCarbs}
-  todayFats={todayFats}
-  todayFiber={todayFiber}
-  todaySodium={todaySodium}
-  resetFoodForm={resetFoodForm}
-  setFoodModalOpen={setFoodModalOpen}
-/>
-      </Box>
-    </Drawer>
-
-    <Box onScroll={handleScroll} sx={{
-      flex: 1,
+  <Box
+    sx={{
       display: "flex",
-      justifyContent: "center",
-      overflowY: "auto",
-      '&::-webkit-scrollbar': { display: 'none' }
-    }}>
-      <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
+      minHeight: "100vh",
+      bgcolor: "#000",
+      overflow: "hidden",
+    }}
+  >
+    {/* LEFT SIDEBAR */}
+    <LeftSidebarPremium
+      active={activeSection}
+      onChange={setActiveSection}
+    />
 
-        <Box sx={storiesContainer}>
-          {/* Tu historia (solo en móviles) */}
-          {isMobile && (
-            <motion.div whileHover={{ scale: 1.1 }} onClick={() => setShowStoryPreview(true)}>
-              <Box sx={storyItem}>
-                <Box sx={storyCircle}>
-                  <Box sx={storyInner}>
-                    <Typography sx={{ color: "#000", fontSize: 28, fontWeight: "bold" }}>+</Typography>
-                  </Box>
-                </Box>
-                <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
-                  Tu historia
-                </Typography>
-              </Box>
-            </motion.div>
-          )}
-
-          {/* Historias de otros usuarios */}
-          {stories && [...new Set(stories.map(s => s.nombre))].map((userName, i) => {
-            const userStory = stories.find(s => s.nombre === userName);
-            const profileImage = userStory?.avatar || userStory?.avatarUrl || userStory?.image_url;
-            const ringColor = getStoryRingColor(userName);
-            return (
-              <motion.div key={i} whileHover={{ scale: 1.1 }}>
-                <Box sx={storyItem} onClick={() => openUserStories(userName)}>
-                    <Box sx={{ ...storyCircle, border: `3px solid ${ringColor}`, padding: "2px" }}>
-                      <Box sx={{ ...storyInner }}>
-                        <img
-                          src={profileImage}
-                          alt={userName}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            display: "block"
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                  <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
-                    {userName}
-                  </Typography>
-                </Box>
-              </motion.div>
-            );
-          })}
-        </Box>
-
-        {/* NUEVAS PUBLICACIONES */}
-        {newPostsAvailable > 0 && (
-          <Box
-            sx={{
-              position: 'fixed',
-              top: 16,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 1200,
-              bgcolor: '#000000cc',
-              p: 1,
-              borderRadius: 999,
-              boxShadow: '0 0 20px rgba(0,255,136,0.25)',
-              backdropFilter: 'blur(4px)',
-              cursor: 'pointer'
-            }}
-            onClick={async () => {
-              setNewPostsAvailable(0);
-              const firstPost = document.querySelector('[class*="PostCard"]');
-              if (firstPost) {
-                firstPost.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }}
-          >
-            <Typography sx={{ color: '#00ff88', fontWeight: 'bold', fontSize: 13 }}>
-              Ver {newPostsAvailable} publicaci{newPostsAvailable > 1 ? 'ones' : 'ón'} nuevas
-            </Typography>
-          </Box>
-        )}
-
-
-        {/* 🔥 POSTS REALES */}
-        {isLoading ? (
-          <>
-            <Skeleton variant="rectangular" height={300} sx={{ bgcolor: "#111", mb: 2 }} />
-            <Skeleton variant="rectangular" height={300} sx={{ bgcolor: "#111", mb: 2 }} />
-            <Skeleton variant="rectangular" height={300} sx={{ bgcolor: "#111", mb: 2 }} />
-          </>
-        ) : !hasPosts ? (
-          <Card sx={postCard}>
-            <CardContent sx={{ textAlign: "center" }}>
-              <Typography sx={{ color: "#fff", mb: 2 }}>No hay posts disponibles aún.</Typography>
-              {showRetry && (
-                <Button
-                  onClick={() => {
-                    setShowRetry(false);
-                    queryClient.invalidateQueries({ queryKey: ["feed"] });
-                  }}
-                  sx={{ bgcolor: "#00ff88", color: "#000", fontWeight: "bold" }}
-                >
-                  Intentar otra vez
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          data.pages.map((page, i) =>
-            (page.posts || []).map((post, j) => (
-              <PostCard key={post.id || `${i}-${j}`} post={post} />
-            ))
-          )
-        )}
-
-        {isFetchingNextPage && (
-          <Card sx={postCard}>
-            <CardContent>
-              <Skeleton variant="rectangular" height={300} />
-            </CardContent>
-          </Card>
-        )}
-
-      </Box>
+    {/* CENTER FEED */}
+    <Box
+      sx={{
+        flex: 1,
+        display: "flex",
+        justifyContent: "center",
+        overflowY: "auto",
+        px: { xs: 1, md: 3 },
+      }}
+    >
+      <FeedCenterPremium
+        isMobile={isMobile}
+        stories={stories}
+        setShowStoryPreview={setShowStoryPreview}
+        openUserStories={openUserStories}
+        getStoryRingColor={getStoryRingColor}
+        newPostsAvailable={newPostsAvailable}
+        setNewPostsAvailable={setNewPostsAvailable}
+        isLoading={isLoading}
+        hasPosts={hasPosts}
+        showRetry={showRetry}
+        setShowRetry={setShowRetry}
+        queryClient={queryClient}
+        data={data}
+        isFetchingNextPage={isFetchingNextPage}
+        PostCard={PostCard}
+      />
     </Box>
 
-   {!isMobile && (
-  <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
+    {/* RIGHT PANEL */}
     <RightPanelContent
-  loadingFood={loadingFood}
-  dailyFoodEntries={dailyFoodEntries}
-  handleDeleteFoodEntry={handleDeleteFoodEntry}
-  todayTotal={todayTotal}
-  targetCalories={targetCalories}
-  todayProtein={todayProtein}
-  targetProtein={targetProtein}
-  todayCarbs={todayCarbs}
-  todayFats={todayFats}
-  todayFiber={todayFiber}
-  todaySodium={todaySodium}
-  resetFoodForm={resetFoodForm}
-  setFoodModalOpen={setFoodModalOpen}
-/>
+      loadingFood={loadingFood}
+      dailyFoodEntries={dailyFoodEntries}
+      handleDeleteFoodEntry={handleDeleteFoodEntry}
+      todayTotal={todayTotal}
+      targetCalories={targetCalories}
+      todayProtein={todayProtein}
+      targetProtein={targetProtein}
+      todayCarbs={todayCarbs}
+      todayFats={todayFats}
+      todayFiber={todayFiber}
+      todaySodium={todaySodium}
+      resetFoodForm={resetFoodForm}
+      setFoodModalOpen={setFoodModalOpen}
+    />
   </Box>
+
 )}
 
     {showAI && (
