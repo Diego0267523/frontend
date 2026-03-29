@@ -85,9 +85,12 @@ function Home() {
   const [weeklyCalories, setWeeklyCalories] = useState([]);
   const [foodModalOpen, setFoodModalOpen] = useState(false); // 🔥 Agregado de vuelta para el modal
   const [targetCalories, setTargetCalories] = useState(2000);
+  const [targetProtein, setTargetProtein] = useState(150); // Objetivo de proteína en gramos
+  const [targetWater, setTargetWater] = useState(2000); // Objetivo de agua en ml
   const [todayTotal, setTodayTotal] = useState(0);
   const [todayProtein, setTodayProtein] = useState(0);
   const [todayCarbs, setTodayCarbs] = useState(0);
+  const [todayWater, setTodayWater] = useState(0); // Estado para el agua consumida hoy
   const [loadingFood, setLoadingFood] = useState(false); // 🔥 Agregado: estado de carga para operaciones de comida
   // const [debouncedFoodText, setDebouncedFoodText] = useState("");
 
@@ -789,8 +792,7 @@ const bottom =
             </Box>
 
             <Typography sx={{ color: "#aaa", fontSize: 12 }}>Objetivo: {targetCalories} kcal</Typography>
-            <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={{ mt: 1, mb: 1 }}/>
-            <Typography sx={{ color: "#fff" }}>
+            <Typography sx={{ color: "#fff", mt: 1 }}>
               {todayTotal} kcal / {targetCalories} kcal • Proteína: {todayProtein} g • Carb: {todayCarbs} g
             </Typography>
           </CardContent>
@@ -890,14 +892,24 @@ const bottom =
           </CardContent>
         </Card>
 
-        {["🔥 Calorías", "🥩 Proteína", "💧 Agua"].map((item, i) => (
-          <Card key={i} sx={postCard}>
-            <CardContent>
-              <Typography sx={titleStyle}>{item}</Typography>
-              <LinearProgress variant="determinate" value={60} sx={progressStyle} />
-            </CardContent>
-          </Card>
-        ))}
+        {[
+          { label: "🔥 Calorías", current: todayTotal, target: targetCalories, unit: "kcal" },
+          { label: "🥩 Proteína", current: todayProtein, target: targetProtein, unit: "g" },
+          { label: "💧 Agua", current: todayWater, target: targetWater, unit: "ml" }
+        ].map((item, i) => {
+          const progress = item.target > 0 ? Math.min((item.current / item.target) * 100, 100) : 0;
+          return (
+            <Card key={i} sx={postCard}>
+              <CardContent>
+                <Typography sx={titleStyle}>{item.label}</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12, mb: 1 }}>
+                  {item.current} / {item.target} {item.unit}
+                </Typography>
+                <LinearProgress variant="determinate" value={progress} sx={progressStyle} />
+              </CardContent>
+            </Card>
+          );
+        })}
       </Box>
     )}
 
