@@ -61,42 +61,7 @@ const PostCard = memo(({ post }) => {
         setLiked(data.likedByCurrent);
       }
     };
-const renderCenterContent = () => {
-  switch (activeSection) {
-    case "home":
-      return (
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          justifyContent: "center",
-          overflowY: "auto",
-          px: { xs: 1, md: 3 },
-        }}
-      >
-        {renderCenterContent()}
-      </Box>
-      );
 
-    case "workouts":
-      return <WorkoutCenterPremium />;
-
-    case "nutrition":
-      return <NutritionCenterPremium />;
-
-    case "progress":
-      return <ProgressCenterPremium />;
-
-    case "community":
-      return <CommunityCenterPremium />;
-
-    case "coach":
-      return <AICoachCenterPremium />;
-
-    default:
-      return null;
-  }
-};
     const handleCommentAdded = (data) => {
       if (data.postId !== post.id) return;
 
