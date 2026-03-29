@@ -219,10 +219,13 @@ const handleCreatePost = async () => {
     setIsCreatingPost(false);
   }
 };
-
 const handleAnalyzeFood = async () => {
-  if (!foodText.trim() && !foodImageFile) {
-    setSnackbar({ open: true, message: "Ingresa descripción o sube una imagen.", severity: "error" });
+  if (!foodText.trim()) {
+    setSnackbar({
+      open: true,
+      message: "Ingresa descripción de la comida.",
+      severity: "error",
+    });
     return;
   }
 
@@ -230,38 +233,46 @@ const handleAnalyzeFood = async () => {
   setFoodAnalysis(null);
 
   try {
-    let response = null;
-
-    if (foodImageFile) {
-      response = await analyzeFood({ text: foodText.trim(), imageFile: foodImageFile });
-    } else {
-      const maybeUrl = foodText.trim().startsWith("http") ? foodText.trim() : undefined;
-      response = await analyzeFood({ text: foodText.trim(), imageUrl: maybeUrl });
-    }
+    // 🔹 Para este plan solo usamos texto, ignoramos imagen
+    const response = await analyzeFood({
+      text: foodText.trim(),
+    });
 
     if (response) {
-      const result = response.data || response;
-      const aiJson = result.details?.aiJson || result.details?.imageAiJson;
+      // Estructura segura para frontend
+      const aiJson = response.details?.aiJson || {
+        total: {
+          calorias: response.calories || 0,
+          proteina: response.proteina || 0,
+          carbohidratos: response.carbohidratos || 0,
+        },
+        items: [],
+      };
 
       const safeNumber = (value) => {
         const num = Number(value);
         return isNaN(num) || num < 0 ? 0 : num;
       };
 
-      const calories = aiJson?.total?.calorias ?? result.calories;
-      const protein = aiJson?.total?.proteina ?? result.proteina;
-      const carbs = aiJson?.total?.carbohidratos ?? result.carbohidratos;
+      setFoodAnalysis({ ...response, aiJson });
 
-      setFoodAnalysis({ ...result, aiJson });
-      setEditableCalories(safeNumber(calories));
-      setEditableProtein(safeNumber(protein));
-      setEditableCarbs(safeNumber(carbs));
+      // Valores editables
+      setEditableCalories(safeNumber(aiJson.total.calorias));
+      setEditableProtein(safeNumber(aiJson.total.proteina));
+      setEditableCarbs(safeNumber(aiJson.total.carbohidratos));
 
-      setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
+      setSnackbar({
+        open: true,
+        message: "Análisis completado",
+        severity: "success",
+      });
     }
   } catch (error) {
     console.error("Error analizando comida:", error);
-    const message = error.response?.data?.message || error.message || "No se pudo analizar la comida";
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "No se pudo analizar la comida con texto";
     setSnackbar({ open: true, message, severity: "error" });
   } finally {
     setFoodAnalyzing(false);
