@@ -33,7 +33,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CloseIcon from "@mui/icons-material/Close";
 
-import ChatAssistant from "../components/ChatAssistant";
+import FoodModal from "../components/FoodModal"; // 🔥 Agregado: componente separado
 
 // 🔥 NUEVO
 import { createStory, createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
@@ -84,41 +84,21 @@ function Home() {
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
   const [weeklyCalories, setWeeklyCalories] = useState([]);
-  const [foodModalOpen, setFoodModalOpen] = useState(false);
-  const [foodText, setFoodText] = useState("");
-  const [foodImageFile, setFoodImageFile] = useState(null);
-  const [foodAnalysis, setFoodAnalysis] = useState(null);
-  const [foodAnalyzing, setFoodAnalyzing] = useState(false);
+  const [foodModalOpen, setFoodModalOpen] = useState(false); // 🔥 Agregado de vuelta para el modal
   const [targetCalories, setTargetCalories] = useState(2000);
   const [todayTotal, setTodayTotal] = useState(0);
   const [todayProtein, setTodayProtein] = useState(0);
   const [todayCarbs, setTodayCarbs] = useState(0);
-  const [loadingFood, setLoadingFood] = useState(false);
 
-  // Editable macros
-  const [editableCalories, setEditableCalories] = useState("");
-  const [editableProtein, setEditableProtein] = useState("");
-  const [editableCarbs, setEditableCarbs] = useState("");
+  // Debounced food text (removido, ahora en FoodModal)
+  // const [debouncedFoodText, setDebouncedFoodText] = useState("");
 
-  const resetFoodForm = () => {
-    setFoodText("");
-    setFoodImageFile(null);
-    setFoodAnalysis(null);
-    setEditableCalories("");
-    setEditableProtein("");
-    setEditableCarbs("");
-    setLoadingFood(false);
-  };
-
-  // Debounced food text
-  const [debouncedFoodText, setDebouncedFoodText] = useState("");
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedFoodText(foodText);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [foodText]);
+  // React.useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setDebouncedFoodText(foodText);
+  //   }, 300);
+  //   return () => clearTimeout(timer);
+  // }, [foodText]);
 React.useEffect(() => {
   return () => {
     if (file) URL.revokeObjectURL(file);
@@ -219,149 +199,9 @@ const handleCreatePost = async () => {
     setIsCreatingPost(false);
   }
 };
-const handleAnalyzeFood = async () => {
-  if (!foodText.trim() && !foodImageFile) {
-    setSnackbar({ open: true, message: "Ingresa descripción o sube una imagen.", severity: "error" });
-    return;
-  }
-
-  setFoodAnalyzing(true);
-  setFoodAnalysis(null);
-
-  try {
-    let response;
-    if (foodImageFile) {
-      response = await analyzeFood({ text: foodText.trim(), imageFile: foodImageFile });
-    } else {
-      response = await analyzeFood({
-        text: foodText.trim(),
-        imageUrl: foodText.trim().startsWith("http") ? foodText.trim() : undefined
-      });
-    }
-
-    // Validar que la respuesta exista
-    if (!response) throw new Error("No se recibió respuesta del servidor");
-
-    // Asegurarse de obtener el JSON correcto
-    let aiJson = response.details?.aiJson || response.details?.imageAiJson || {};
-    const total = aiJson.total || {};
-
-    const safeNumber = (value) => {
-      const num = Number(value);
-      return isNaN(num) || num < 0 ? 0 : num;
-    };
-
-    // Prioridad: datos de AI -> datos simples -> 0
-    const calories = safeNumber(total.calorias ?? response.calories ?? 0);
-    const protein = safeNumber(total.proteina ?? response.proteina ?? 0);
-    const carbs = safeNumber(total.carbohidratos ?? response.carbohidratos ?? 0);
-
-    // Guardar análisis
-    setFoodAnalysis({ ...response, aiJson });
-    setEditableCalories(calories);
-    setEditableProtein(protein);
-    setEditableCarbs(carbs);
-
-    setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
-  } catch (error) {
-    console.error("Error analizando comida:", error);
-
-    // Mensaje amigable
-    let message = "No se pudo analizar la comida";
-    if (error.response?.data?.message) message = error.response.data.message;
-    else if (error.message) message = error.message;
-
-    setSnackbar({ open: true, message, severity: "error" });
-  } finally {
-    setFoodAnalyzing(false);
-  }
-};
-const handleSaveFoodEntry = async () => {
-  const calories = Number(editableCalories || 0);
-  const proteina = Number(editableProtein || 0);
-  const carbohidratos = Number(editableCarbs || 0);
-
-  // ✅ Validaciones frontend
-  if (!foodText.trim() && !foodImageFile) {
-    setSnackbar({ open: true, message: "Ingresa una descripción o sube una imagen", severity: "error" });
-    return;
-  }
-
-  if (!foodAnalysis && calories === 0 && proteina === 0 && carbohidratos === 0) {
-    setSnackbar({ open: true, message: "Ingresa valores nutricionales o analiza primero", severity: "error" });
-    return;
-  }
-
-  if (calories < 0 || proteina < 0 || carbohidratos < 0) {
-    setSnackbar({ open: true, message: "Los valores no pueden ser negativos", severity: "error" });
-    return;
-  }
-
-  setLoadingFood(true); // 🔥 Estado de carga
-
-  try {
-    const data = {
-      calorias: calories,
-      proteina,
-      carbohidratos
-    };
-
-    const cleanedDescription = foodText.trim();
-    if (cleanedDescription.length > 0) {
-      data.text = cleanedDescription; // cambiar de "descripcion" a "text" para LogMeal
-    }
-
-    // Si tenemos análisis con items IA, enviamos JSON para bulk create
-    if (foodAnalysis?.aiJson?.items) {
-      data.aiJson = {
-        ...foodAnalysis.aiJson,
-        items: foodAnalysis.aiJson.items
-      };
-    }
-
-    let response;
-
-    if (foodImageFile) {
-      const formData = new FormData();
-      formData.append("text", cleanedDescription);         // descripción
-      formData.append("calorias", calories.toString());
-      formData.append("proteina", proteina.toString());
-      formData.append("carbohidratos", carbohidratos.toString());
-      if (foodAnalysis?.aiJson) {
-        formData.append("aiJson", JSON.stringify(foodAnalysis.aiJson));
-      }
-      formData.append("image", foodImageFile);            // archivo tipo File/Blob
-      response = await createFoodEntryWithImage(formData);
-    } else {
-      response = await createFoodEntry(data);
-    }
-
-    if (response.data.success) {
-      resetFoodForm();
-      setFoodModalOpen(false);
-      setSnackbar({ open: true, message: "Comida registrada exitosamente", severity: "success" });
-      // Recargar datos
-      await loadDailyFoodData();
-      navigate('/');
-    }
-
-  } catch (error) {
-    console.error("Error guardando comida:", error);
-    let message = "Error al guardar la entrada";
-    if (error.response?.status === 401) {
-      message = "Sesión expirada. Inicia sesión nuevamente.";
-    } else if (error.response?.status === 400) {
-      message = error.response.data.message || "Datos inválidos";
-    } else if (error.response?.status >= 500) {
-      message = "Error del servidor. Inténtalo más tarde.";
-    } else if (!navigator.onLine) {
-      message = "Sin conexión a internet";
-    }
-    setSnackbar({ open: true, message, severity: "error" });
-  } finally {
-    setLoadingFood(false);
-  }
-};
+  const resetFoodForm = () => {
+    // Función vacía, lógica movida a FoodModal
+  };
 
 const handleDeleteFoodEntry = async (id) => {
   if (!id) {
@@ -1138,117 +978,20 @@ const bottom =
             </Box>
           )}
 
-          {/* 🔥 MODAL PARA REGISTRAR COMIDA */}
-          {foodModalOpen && (
-            <Box sx={overlayPro} onClick={() => { setFoodModalOpen(false); resetFoodForm(); }}>
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
-                  <Typography sx={titlePro}>Registrar comida 🍽️</Typography>
-
-                  <Typography sx={{ color: '#aaa', mb: 1 }}>Descripción de la comida</Typography>
-                  <textarea
-                    value={foodText}
-                    onChange={(e) => setFoodText(e.target.value)}
-                    style={{ width: '100%', minHeight: 80, borderRadius: 8, padding: 8, border: '1px solid #333', background: '#111', color: '#fff' }}
-                    placeholder="Ej: Ensalada de pollo con quinoa..."
-                  />
-
-                  <Typography sx={{ color: '#aaa', mt: 2, mb: 1 }}>O sube imagen (opcional)</Typography>
-                  <Button variant="contained" component="label" sx={uploadBtn}>
-                    Subir imagen
-                    <input type="file" hidden onChange={(e) => setFoodImageFile(e.target.files[0])} />
-                  </Button>
-                  {foodImageFile && <Typography sx={{ color:'#00ff88', mt:1 }}>{foodImageFile.name}</Typography>}
-
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                    <Button onClick={handleAnalyzeFood} sx={postBtn} disabled={foodAnalyzing}>
-                      {foodAnalyzing ? 'Analizando...' : 'Analizar'}
-                    </Button>
-                    <Button onClick={handleSaveFoodEntry} sx={postBtn} disabled={loadingFood}>
-                      {loadingFood ? 'Guardando...' : 'Guardar'}
-                    </Button>
-                    <Button onClick={() => { setFoodModalOpen(false); resetFoodForm(); }} sx={cancelBtn} disabled={loadingFood}>Cancelar</Button>
-                  </Box>
-
-                  {foodAnalysis && (
-                    <Box sx={{ mt: 2, border: '1px solid #333', borderRadius: 8, p: 1 }}>
-                      <Typography sx={{ color: '#fff', fontWeight: 'bold' }}>Resultado IA (editable)</Typography>
-
-                      {foodAnalysis.aiJson ? (
-                        <Box sx={{ mt: 1 }}>
-                          <Typography sx={{ color: '#ccc', fontSize: 12, mb: 1 }}>Valores calculados por IA (JSON)</Typography>
-                          {foodAnalysis.aiJson.items?.map((item, idx) => (
-                            <Box key={idx} sx={{ mb: 1, bgcolor: '#111', p: 1, borderRadius: 2 }}>
-                              <Typography sx={{ color: '#00ff88', fontSize: 12 }}>{item.nombre || `Item ${idx + 1}`}</Typography>
-                              <Typography sx={{ color: '#fff', fontSize: 11 }}>Calorías: {item.calorias ?? 'N/A'} kcal</Typography>
-                              <Typography sx={{ color: '#fff', fontSize: 11 }}>Proteína: {item.proteina ?? 'N/A'} g</Typography>
-                              <Typography sx={{ color: '#fff', fontSize: 11 }}>Carbohidratos: {item.carbohidratos ?? 'N/A'} g</Typography>
-                            </Box>
-                          ))}
-
-                          <Box sx={{ borderTop: '1px solid #333', pt: 1, mt: 1 }}>
-                            <Typography sx={{ color: '#fff', fontSize: 13 }}>Totales IA</Typography>
-                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Calorías: {foodAnalysis.aiJson.total?.calorias ?? 'N/A'}</Typography>
-                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Proteína: {foodAnalysis.aiJson.total?.proteina ?? 'N/A'}</Typography>
-                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Carbohidratos: {foodAnalysis.aiJson.total?.carbohidratos ?? 'N/A'}</Typography>
-                          </Box>
-
-                          <Button
-                            sx={{ mt: 1, p: 1, minWidth: 120, bgcolor: '#00ff88', color: '#000' }}
-                            onClick={() => {
-                              setEditableCalories(foodAnalysis.aiJson.total?.calorias ?? '');
-                              setEditableProtein(foodAnalysis.aiJson.total?.proteina ?? '');
-                              setEditableCarbs(foodAnalysis.aiJson.total?.carbohidratos ?? '');
-                            }}
-                          >
-                            Usar totales IA
-                          </Button>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
-                          <Box>
-                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Calorías (kcal)</Typography>
-                            <input
-                              type="number"
-                              value={editableCalories}
-                              onChange={(e) => setEditableCalories(e.target.value)}
-                              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
-                            />
-                          </Box>
-                          <Box>
-                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Proteína (g)</Typography>
-                            <input
-                              type="number"
-                              value={editableProtein}
-                              onChange={(e) => setEditableProtein(e.target.value)}
-                              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
-                            />
-                          </Box>
-                          <Box>
-                            <Typography sx={{ color: '#aaa', fontSize: 12 }}>Carbohidratos (g)</Typography>
-                            <input
-                              type="number"
-                              value={editableCarbs}
-                              onChange={(e) => setEditableCarbs(e.target.value)}
-                              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #333', background: '#111', color: '#fff' }}
-                            />
-                          </Box>
-                        </Box>
-                      )}
-
-                      <Typography sx={{ color: '#777', mt: 1, fontSize: 12 }}>
-                        Datos brutos IA: {(foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || '').slice(0, 250)}{(foodAnalysis.details?.aiText || foodAnalysis.details?.imageAiText || '').length > 250 ? '...' : ''}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              </motion.div>
-            </Box>
-          )}
+          {/* 🔥 MODAL PARA REGISTRAR COMIDA - Usando componente separado */}
+          <FoodModal
+            open={foodModalOpen}
+            onClose={() => { setFoodModalOpen(false); resetFoodForm(); }}
+            onSuccess={() => {
+              // Opcional: refrescar datos si es necesario
+            }}
+            snackbar={snackbar}
+            setSnackbar={setSnackbar}
+            targetCalories={targetCalories}
+            todayTotal={todayTotal}
+            todayProtein={todayProtein}
+            todayCarbs={todayCarbs}
+          />
 
           {/* 🔥 MODAL PARA SUBIR HISTORIA */}
           {showStoryPreview && (

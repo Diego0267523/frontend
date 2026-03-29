@@ -14,7 +14,8 @@ import ProfessionalLoader from "./components/ProfessionalLoader";
 
 import { useAuth } from "./hooks/useAuth";
 import { pageTransitionVariants } from "./utils/motion-variants";
-
+// Debe ir antes de cualquier middleware que use express-rate-limit
+app.set('trust proxy', 1); // confía en 1 proxy (Render / Vercel)
 function App() {
   const { token, profileLoading } = useAuth();
   const [dmsOpen, setDmsOpen] = useState(false);
