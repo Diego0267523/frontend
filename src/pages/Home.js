@@ -37,7 +37,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import FoodModal from "../components/FoodModal"; // 🔥 Agregado: componente separado
 import ChatAssistant from "../components/ChatAssistant"; // 🔥 Agregado: componente de chat IA
-import Profile from "./Profile";
+
 import { createStory, createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
