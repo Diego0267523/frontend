@@ -755,16 +755,21 @@ const handleScroll = useCallback((e) => {
             return (
               <motion.div key={i} whileHover={{ scale: 1.1 }}>
                 <Box sx={storyItem} onClick={() => openUserStories(userName)}>
-                  <Box sx={{ ...storyCircle, border: `3px solid ${ringColor}` }}>
-                    <Box 
-                      sx={{ 
-                        ...storyInner, 
-                        backgroundImage: `url(${profileImage})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center"
-                      }} 
-                    />
-                  </Box>
+                    <Box sx={{ ...storyCircle, border: `3px solid ${ringColor}`, padding: "2px" }}>
+                      <Box sx={{ ...storyInner }}>
+                        <img
+                          src={profileImage}
+                          alt={userName}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            display: "block"
+                          }}
+                        />
+                      </Box>
+                    </Box>
                   <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
                     {userName}
                   </Typography>
