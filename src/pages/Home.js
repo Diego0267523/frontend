@@ -7,11 +7,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
+import Profile from "./Profile";
 import { useCreatePost, usePosts } from "../hooks/usePosts";
 import { containerVariants, itemVariants, buttonVariants, slideInUpVariants } from "../utils/motion-variants";
 // 🔥 NUEVO
 import { analyzeFood } from "../api/food";
-import Profile from "./Profile";
 import {
   Typography,
   Button,
@@ -37,8 +37,9 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import FoodModal from "../components/FoodModal"; // 🔥 Agregado: componente separado
 import ChatAssistant from "../components/ChatAssistant"; // 🔥 Agregado: componente de chat IA
+import Profile from "./Profile";
 import { createStory, createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
-import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import API_URL from '../utils/config';
 
@@ -588,16 +589,7 @@ const handleScroll = useCallback((e) => {
     }
   }, 200);
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-  const menuItems = useMemo(() => [
-    { label: "🏋️ Rutinas", path: "/" },
-    { label: "📈 Progreso", action: () => setFoodModalOpen(true) },
-    { label: "🔥 Calorías", path: "/calorias" },
-    { label: "🎯 Objetivos", path: "/objetivos" },
-    { label: "🤖 AI", action: () => setShowAI(true) },
-    { label: "➕ Crear", action: () => setShowCreatePost(true) }
-  ], []);
-
-   // =======================
+  // =======================
   // 🔹 PREFETCH (optimización)
   // =======================
   function prefetchProgreso() {

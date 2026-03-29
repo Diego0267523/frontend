@@ -31,9 +31,9 @@ const menuItems = [
   { id: 'home', label: 'Inicio', icon: <HomeRoundedIcon />, type: 'page' },
   { id: 'workouts', label: 'Rutinas', icon: <FitnessCenterRoundedIcon />, type: 'page' },
   { id: 'nutrition', label: 'Nutrición', icon: <RestaurantRoundedIcon />, type: 'page' },
-  { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'page' },
+  { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'action', action: () => onOpenProgress?.() },
   { id: 'community', label: 'Comunidad', icon: <GroupsRoundedIcon />, type: 'page' },
-  { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action' },
+  { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action', action: () => onOpenAI?.() },
 
   // 🔥 NUEVO PERFIL
   { id: 'profile', label: 'Perfil', icon: <Avatar sx={{ width: 20, height: 20 }}>D</Avatar>, type: 'page' },
