@@ -11,7 +11,7 @@ import { useCreatePost, usePosts } from "../hooks/usePosts";
 import { containerVariants, itemVariants, buttonVariants, slideInUpVariants } from "../utils/motion-variants";
 // 🔥 NUEVO
 import { analyzeFood } from "../api/food";
-import Profile from "../pages/Profile";
+import Profile from "./Profile";
 import {
   Typography,
   Button,
