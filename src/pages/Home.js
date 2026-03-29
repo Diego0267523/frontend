@@ -308,10 +308,10 @@ const handleSaveFoodEntry = async () => {
 
     const cleanedDescription = foodText.trim();
     if (cleanedDescription.length > 0) {
-      data.descripcion = cleanedDescription;
+      data.text = cleanedDescription; // cambiar de "descripcion" a "text" para LogMeal
     }
 
-    // Si tenemos análisis con items IA, enviamos json para bulk create
+    // Si tenemos análisis con items IA, enviamos JSON para bulk create
     if (foodAnalysis?.aiJson?.items) {
       data.aiJson = {
         ...foodAnalysis.aiJson,
@@ -320,18 +320,19 @@ const handleSaveFoodEntry = async () => {
     }
 
     let response;
-if (foodImageFile) {
-  const formData = new FormData();
-  formData.append("text", foodText.trim());          // <- cambiar descripcion a text
-  formData.append("calorias", calories.toString());
-  formData.append("proteina", proteina.toString());
-  formData.append("carbohidratos", carbohidratos.toString());
-  if (data.aiJson) {
-    formData.append("aiJson", JSON.stringify(data.aiJson));
-  }
-  formData.append("image", foodImageFile);          // <- esto ya está correcto
-  response = await createFoodEntryWithImage(formData);
-} else {
+
+    if (foodImageFile) {
+      const formData = new FormData();
+      formData.append("text", cleanedDescription);         // descripción
+      formData.append("calorias", calories.toString());
+      formData.append("proteina", proteina.toString());
+      formData.append("carbohidratos", carbohidratos.toString());
+      if (foodAnalysis?.aiJson) {
+        formData.append("aiJson", JSON.stringify(foodAnalysis.aiJson));
+      }
+      formData.append("image", foodImageFile);            // archivo tipo File/Blob
+      response = await createFoodEntryWithImage(formData);
+    } else {
       response = await createFoodEntry(data);
     }
 
@@ -343,6 +344,7 @@ if (foodImageFile) {
       await loadDailyFoodData();
       navigate('/');
     }
+
   } catch (error) {
     console.error("Error guardando comida:", error);
     let message = "Error al guardar la entrada";
