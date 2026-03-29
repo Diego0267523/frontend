@@ -637,10 +637,13 @@ return (
             "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
         }}
       >
-        <LeftSidebarPremium
-          active={activeSection}
-          onChange={setActiveSection}
-        />
+          <LeftSidebarPremium
+            active={activeSection}
+            onChange={setActiveSection}
+            onOpenAI={() => setShowAI(true)}
+            onOpenCreate={() => setShowCreatePost(true)}
+            onOpenProgress={() => setFoodModalOpen(true)}
+          />
       </Box>
     )}
 
