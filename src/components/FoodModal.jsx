@@ -6,6 +6,7 @@ import {
   Button,
   Box,
   CircularProgress,
+  TextField,
 } from "@mui/material";
 import { analyzeFood, createFoodEntry, createFoodEntryWithImage } from "../api/food";
 
@@ -28,6 +29,11 @@ const FoodModal = ({
   const [editableCalories, setEditableCalories] = useState("");
   const [editableProtein, setEditableProtein] = useState("");
   const [editableCarbs, setEditableCarbs] = useState("");
+  const [editableFats, setEditableFats] = useState("");
+  const [editableFiber, setEditableFiber] = useState("");
+  const [editableSodium, setEditableSodium] = useState("");
+  const [manualFoods, setManualFoods] = useState([]);
+  const [addFoodText, setAddFoodText] = useState("");
 
   const resetForm = () => {
     setFoodText("");
@@ -36,6 +42,11 @@ const FoodModal = ({
     setEditableCalories("");
     setEditableProtein("");
     setEditableCarbs("");
+    setEditableFats("");
+    setEditableFiber("");
+    setEditableSodium("");
+    setManualFoods([]);
+    setAddFoodText("");
     setLoadingFood(false);
   };
 
@@ -75,6 +86,9 @@ const FoodModal = ({
           setEditableCalories(totalNutrition.calories || 0);
           setEditableProtein(totalNutrition.proteina || 0);
           setEditableCarbs(totalNutrition.carbohidratos || 0);
+          setEditableFats(totalNutrition.grasas || 0);
+          setEditableFiber(totalNutrition.fibra || 0);
+          setEditableSodium(totalNutrition.sodio || 0);
           
           setSnackbar({ 
             open: true, 
@@ -111,22 +125,107 @@ const FoodModal = ({
     }
   };
 
+  const handleAddFoodByText = async () => {
+    if (!addFoodText.trim()) {
+      setSnackbar({ open: true, message: "Ingresa el nombre del alimento", severity: "error" });
+      return;
+    }
+
+    setFoodAnalyzing(true);
+    try {
+      const response = await analyzeFood({ text: addFoodText.trim() });
+      if (response) {
+        const result = response.data || response;
+        
+        // Crear un alimento manual con datos estimados
+        const newFood = {
+          name: addFoodText.trim(),
+          confidence: 0.8,
+          serving_size: 100,
+          nutrition: {
+            calories: result.nutrition?.calories || result.calories || 100,
+            proteina: result.nutrition?.proteina || result.proteina || 10,
+            carbohidratos: result.nutrition?.carbohidratos || result.carbohidratos || 15,
+            grasas: result.nutrition?.grasas || result.grasas || 5,
+            fibra: result.nutrition?.fibra || result.fibra || 2,
+            sodio: result.nutrition?.sodio || result.sodio || 50
+          },
+          position: manualFoods.length + 1,
+          isManual: true
+        };
+
+        setManualFoods(prev => [...prev, newFood]);
+        setAddFoodText("");
+        
+        // Recalcular totales
+        updateTotalNutrition([...(foodAnalysis?.detected_foods || []), ...manualFoods, newFood]);
+        
+        setSnackbar({ open: true, message: "Alimento agregado", severity: "success" });
+      }
+    } catch (error) {
+      console.error("Error agregando alimento:", error);
+      setSnackbar({ open: true, message: "Error al agregar alimento", severity: "error" });
+    } finally {
+      setFoodAnalyzing(false);
+    }
+  };
+
+  const handleRemoveFood = (index, isManual = false) => {
+    if (isManual) {
+      const newManualFoods = manualFoods.filter((_, i) => i !== index);
+      setManualFoods(newManualFoods);
+      updateTotalNutrition([...(foodAnalysis?.detected_foods || []), ...newManualFoods]);
+    } else {
+      // Para alimentos detectados, crear una copia sin ese alimento
+      const detectedFoods = foodAnalysis?.detected_foods || [];
+      const newDetectedFoods = detectedFoods.filter((_, i) => i !== index);
+      setFoodAnalysis(prev => ({
+        ...prev,
+        detected_foods: newDetectedFoods
+      }));
+      updateTotalNutrition([...newDetectedFoods, ...manualFoods]);
+    }
+  };
+
+  const updateTotalNutrition = (allFoods) => {
+    const totalNutrition = allFoods.reduce((total, food) => {
+      return {
+        calories: total.calories + (food.nutrition.calories || 0),
+        proteina: total.proteina + (food.nutrition.proteina || 0),
+        carbohidratos: total.carbohidratos + (food.nutrition.carbohidratos || 0),
+        grasas: total.grasas + (food.nutrition.grasas || 0),
+        fibra: total.fibra + (food.nutrition.fibra || 0),
+        sodio: total.sodio + (food.nutrition.sodio || 0)
+      };
+    }, { calories: 0, proteina: 0, carbohidratos: 0, grasas: 0, fibra: 0, sodio: 0 });
+
+    setEditableCalories(totalNutrition.calories);
+    setEditableProtein(totalNutrition.proteina);
+    setEditableCarbs(totalNutrition.carbohidratos);
+    setEditableFats(totalNutrition.grasas);
+    setEditableFiber(totalNutrition.fibra);
+    setEditableSodium(totalNutrition.sodio);
+  };
+
   const handleSaveFoodEntry = async () => {
     const calories = Number(editableCalories || 0);
     const proteina = Number(editableProtein || 0);
     const carbohidratos = Number(editableCarbs || 0);
+    const grasas = Number(editableFats || 0);
+    const fibra = Number(editableFiber || 0);
+    const sodio = Number(editableSodium || 0);
 
     if (!foodText.trim() && !foodImageFile) {
       setSnackbar({ open: true, message: "Ingresa una descripción o sube una imagen", severity: "error" });
       return;
     }
 
-    if (!foodAnalysis && calories === 0 && proteina === 0 && carbohidratos === 0) {
+    if (!foodAnalysis && manualFoods.length === 0 && calories === 0 && proteina === 0 && carbohidratos === 0) {
       setSnackbar({ open: true, message: "Ingresa valores nutricionales o analiza primero", severity: "error" });
       return;
     }
 
-    if (calories < 0 || proteina < 0 || carbohidratos < 0) {
+    if (calories < 0 || proteina < 0 || carbohidratos < 0 || grasas < 0 || fibra < 0 || sodio < 0) {
       setSnackbar({ open: true, message: "Los valores no pueden ser negativos", severity: "error" });
       return;
     }
@@ -137,7 +236,10 @@ const FoodModal = ({
       const data = {
         calorias: calories,
         proteina,
-        carbohidratos
+        carbohidratos,
+        grasas,
+        fibra,
+        sodio
       };
 
       const cleanedDescription = foodText.trim();
@@ -145,10 +247,23 @@ const FoodModal = ({
         data.descripcion = cleanedDescription;
       }
 
-      if (foodAnalysis?.aiJson?.items) {
+      // Incluir información de alimentos detectados y manuales
+      const allFoods = [
+        ...(foodAnalysis?.detected_foods || []),
+        ...manualFoods
+      ];
+      
+      if (allFoods.length > 0) {
         data.aiJson = {
-          ...foodAnalysis.aiJson,
-          items: foodAnalysis.aiJson.items
+          detected_foods: allFoods,
+          total_nutrition: {
+            calories,
+            proteina,
+            carbohidratos,
+            grasas,
+            fibra,
+            sodio
+          }
         };
       }
 
@@ -159,6 +274,9 @@ const FoodModal = ({
         formData.append("calorias", calories.toString());
         formData.append("proteina", proteina.toString());
         formData.append("carbohidratos", carbohidratos.toString());
+        formData.append("grasas", grasas.toString());
+        formData.append("fibra", fibra.toString());
+        formData.append("sodio", sodio.toString());
         if (data.aiJson) {
           formData.append("aiJson", JSON.stringify(data.aiJson));
         }
@@ -273,56 +391,188 @@ const FoodModal = ({
           {foodAnalysis && (
             <Box sx={{ mt: 2, border: "1px solid #333", borderRadius: 2, p: 1 }}>
               <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                Resultado IA (editable)
+                Valores Nutricionales Totales (solo lectura)
               </Typography>
-              <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                <input
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mt: 1 }}>
+                <TextField
                   type="number"
-                  placeholder="Calorías"
+                  label="Calorías"
                   value={editableCalories}
-                  onChange={(e) => setEditableCalories(e.target.value)}
-                  style={{ flex: 1, padding: 4, borderRadius: 4 }}
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                  sx={{ 
+                    '& .MuiInputBase-input': { color: '#fff' },
+                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: '#333' },
+                      '&:hover fieldset': { borderColor: '#555' }
+                    }
+                  }}
                 />
-                <input
+                <TextField
                   type="number"
-                  placeholder="Proteína (g)"
+                  label="Proteína (g)"
                   value={editableProtein}
-                  onChange={(e) => setEditableProtein(e.target.value)}
-                  style={{ flex: 1, padding: 4, borderRadius: 4 }}
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                  sx={{ 
+                    '& .MuiInputBase-input': { color: '#fff' },
+                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: '#333' },
+                      '&:hover fieldset': { borderColor: '#555' }
+                    }
+                  }}
                 />
-                <input
+                <TextField
                   type="number"
-                  placeholder="Carbohidratos (g)"
+                  label="Carbohidratos (g)"
                   value={editableCarbs}
-                  onChange={(e) => setEditableCarbs(e.target.value)}
-                  style={{ flex: 1, padding: 4, borderRadius: 4 }}
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                  sx={{ 
+                    '& .MuiInputBase-input': { color: '#fff' },
+                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: '#333' },
+                      '&:hover fieldset': { borderColor: '#555' }
+                    }
+                  }}
+                />
+                <TextField
+                  type="number"
+                  label="Grasas (g)"
+                  value={editableFats}
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                  sx={{ 
+                    '& .MuiInputBase-input': { color: '#fff' },
+                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: '#333' },
+                      '&:hover fieldset': { borderColor: '#555' }
+                    }
+                  }}
+                />
+                <TextField
+                  type="number"
+                  label="Fibra (g)"
+                  value={editableFiber}
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                  sx={{ 
+                    '& .MuiInputBase-input': { color: '#fff' },
+                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: '#333' },
+                      '&:hover fieldset': { borderColor: '#555' }
+                    }
+                  }}
+                />
+                <TextField
+                  type="number"
+                  label="Sodio (mg)"
+                  value={editableSodium}
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                  sx={{ 
+                    '& .MuiInputBase-input': { color: '#fff' },
+                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiOutlinedInput-root': { 
+                      '& fieldset': { borderColor: '#333' },
+                      '&:hover fieldset': { borderColor: '#555' }
+                    }
+                  }}
                 />
               </Box>
 
+              {/* 🔥 Sección para agregar alimentos manualmente */}
+              <Box sx={{ mt: 2, p: 2, bgcolor: "#222", borderRadius: 1 }}>
+                <Typography sx={{ color: "#00ff88", fontWeight: "bold", mb: 1 }}>
+                  ➕ Agregar Alimento por Texto
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <TextField
+                    value={addFoodText}
+                    onChange={(e) => setAddFoodText(e.target.value)}
+                    placeholder="Ej: manzana, pollo, arroz..."
+                    size="small"
+                    sx={{ 
+                      flex: 1,
+                      '& .MuiInputBase-input': { color: '#fff' },
+                      '& .MuiOutlinedInput-root': { 
+                        '& fieldset': { borderColor: '#333' },
+                        '&:hover fieldset': { borderColor: '#555' }
+                      }
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddFoodByText()}
+                  />
+                  <Button
+                    onClick={handleAddFoodByText}
+                    sx={{ bgcolor: "#00ff88", color: "#000" }}
+                    disabled={foodAnalyzing}
+                  >
+                    {foodAnalyzing ? <CircularProgress size={20} /> : "Agregar"}
+                  </Button>
+                </Box>
+              </Box>
+
               {/* 🔥 NUEVO: Mostrar alimentos detectados individualmente */}
-              {foodAnalysis?.detected_foods && foodAnalysis.detected_foods.length > 0 && (
+              {((foodAnalysis?.detected_foods && foodAnalysis.detected_foods.length > 0) || manualFoods.length > 0) && (
                 <Box sx={{ mt: 2, p: 2, bgcolor: "#222", borderRadius: 1 }}>
                   <Typography sx={{ color: "#00ff88", fontWeight: "bold", mb: 1 }}>
-                    🍽️ Alimentos Detectados:
+                    🍽️ Alimentos en la Comida:
                   </Typography>
-                  {foodAnalysis.detected_foods.map((food, index) => (
-                    <Box key={index} sx={{ mb: 1, p: 1, bgcolor: "#333", borderRadius: 1 }}>
-                      <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                        {index + 1}. {food.name}
-                      </Typography>
-                      <Typography sx={{ color: "#ccc", fontSize: "0.9em" }}>
-                        Confianza: {(food.confidence * 100).toFixed(1)}% | 
-                        Porción: {food.serving_size}g
-                      </Typography>
-                      <Typography sx={{ color: "#00ff88", fontSize: "0.9em" }}>
-                        🔥 {food.nutrition.calories} cal | 
-                        🥩 {food.nutrition.proteina}g proteína | 
-                        🌾 {food.nutrition.carbohidratos}g carbohidratos | 
-                        🥑 {food.nutrition.grasas}g grasas
-                      </Typography>
+                  
+                  {/* Alimentos detectados */}
+                  {foodAnalysis?.detected_foods && foodAnalysis.detected_foods.map((food, index) => (
+                    <Box key={`detected-${index}`} sx={{ mb: 1, p: 1, bgcolor: "#333", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+                          {index + 1}. {food.name}
+                        </Typography>
+                        <Typography sx={{ color: "#ccc", fontSize: "0.8em" }}>
+                          Confianza: {(food.confidence * 100).toFixed(1)}% | Porción: {food.serving_size}g
+                        </Typography>
+                        <Typography sx={{ color: "#00ff88", fontSize: "0.8em" }}>
+                          🔥 {food.nutrition.calories} cal | 🥩 {food.nutrition.proteina}g prot | 🌾 {food.nutrition.carbohidratos}g carb | 🥑 {food.nutrition.grasas}g gras | 🥦 {food.nutrition.fibra}g fib | 🧂 {food.nutrition.sodio}mg sod
+                        </Typography>
+                      </Box>
+                      <Button 
+                        onClick={() => handleRemoveFood(index, false)}
+                        sx={{ color: "#ff4444", minWidth: "auto", p: 1 }}
+                        size="small"
+                      >
+                        X
+                      </Button>
                     </Box>
                   ))}
-                  {foodAnalysis.summary && (
+                  
+                  {/* Alimentos manuales */}
+                  {manualFoods.map((food, index) => (
+                    <Box key={`manual-${index}`} sx={{ mb: 1, p: 1, bgcolor: "#444", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+                          {food.name} (manual)
+                        </Typography>
+                        <Typography sx={{ color: "#ccc", fontSize: "0.8em" }}>
+                          Porción: {food.serving_size}g
+                        </Typography>
+                        <Typography sx={{ color: "#00ff88", fontSize: "0.8em" }}>
+                          🔥 {food.nutrition.calories} cal | 🥩 {food.nutrition.proteina}g prot | 🌾 {food.nutrition.carbohidratos}g carb | 🥑 {food.nutrition.grasas}g gras | 🥦 {food.nutrition.fibra}g fib | 🧂 {food.nutrition.sodio}mg sod
+                        </Typography>
+                      </Box>
+                      <Button 
+                        onClick={() => handleRemoveFood(index, true)}
+                        sx={{ color: "#ff4444", minWidth: "auto", p: 1 }}
+                        size="small"
+                      >
+                        X
+                      </Button>
+                    </Box>
+                  ))}
+                  
+                  {foodAnalysis?.summary && (
                     <Typography sx={{ color: "#aaa", fontSize: "0.9em", mt: 1, fontStyle: "italic" }}>
                       📝 {foodAnalysis.summary}
                     </Typography>
