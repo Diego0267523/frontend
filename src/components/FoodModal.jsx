@@ -389,98 +389,104 @@ const FoodModal = ({
           </Box>
 
           {foodAnalysis && (
-            <Box sx={{ mt: 2, border: "1px solid #333", borderRadius: 2, p: 1 }}>
-              <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                Valores Nutricionales Totales (solo lectura)
+            <Box sx={{ mt: 3, border: "2px solid #00ff88", borderRadius: 3, p: 3, bgcolor: "#1a1a1a" }}>
+              <Typography sx={{ color: "#00ff88", fontWeight: "bold", fontSize: "1.2rem", mb: 2, textAlign: "center" }}>
+                📊 Valores Nutricionales Totales
               </Typography>
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mt: 1 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 2 }}>
                 <TextField
                   type="number"
-                  label="Calorías"
+                  label="🔥 Calorías"
                   value={editableCalories}
                   InputProps={{ readOnly: true }}
                   size="small"
                   sx={{ 
-                    '& .MuiInputBase-input': { color: '#fff' },
-                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiInputBase-input': { color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' },
+                    '& .MuiInputLabel-root': { color: '#00ff88', fontWeight: 'bold' },
                     '& .MuiOutlinedInput-root': { 
-                      '& fieldset': { borderColor: '#333' },
-                      '&:hover fieldset': { borderColor: '#555' }
+                      '& fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      bgcolor: '#2a2a2a'
                     }
                   }}
                 />
                 <TextField
                   type="number"
-                  label="Proteína (g)"
+                  label="💪 Proteína (g)"
                   value={editableProtein}
                   InputProps={{ readOnly: true }}
                   size="small"
                   sx={{ 
-                    '& .MuiInputBase-input': { color: '#fff' },
-                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiInputBase-input': { color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' },
+                    '& .MuiInputLabel-root': { color: '#00ff88', fontWeight: 'bold' },
                     '& .MuiOutlinedInput-root': { 
-                      '& fieldset': { borderColor: '#333' },
-                      '&:hover fieldset': { borderColor: '#555' }
+                      '& fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      bgcolor: '#2a2a2a'
                     }
                   }}
                 />
                 <TextField
                   type="number"
-                  label="Carbohidratos (g)"
+                  label="🌾 Carbohidratos (g)"
                   value={editableCarbs}
                   InputProps={{ readOnly: true }}
                   size="small"
                   sx={{ 
-                    '& .MuiInputBase-input': { color: '#fff' },
-                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiInputBase-input': { color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' },
+                    '& .MuiInputLabel-root': { color: '#00ff88', fontWeight: 'bold' },
                     '& .MuiOutlinedInput-root': { 
-                      '& fieldset': { borderColor: '#333' },
-                      '&:hover fieldset': { borderColor: '#555' }
+                      '& fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      bgcolor: '#2a2a2a'
                     }
                   }}
                 />
                 <TextField
                   type="number"
-                  label="Grasas (g)"
+                  label="🥑 Grasas (g)"
                   value={editableFats}
                   InputProps={{ readOnly: true }}
                   size="small"
                   sx={{ 
-                    '& .MuiInputBase-input': { color: '#fff' },
-                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiInputBase-input': { color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' },
+                    '& .MuiInputLabel-root': { color: '#00ff88', fontWeight: 'bold' },
                     '& .MuiOutlinedInput-root': { 
-                      '& fieldset': { borderColor: '#333' },
-                      '&:hover fieldset': { borderColor: '#555' }
+                      '& fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      bgcolor: '#2a2a2a'
                     }
                   }}
                 />
                 <TextField
                   type="number"
-                  label="Fibra (g)"
+                  label="🥦 Fibra (g)"
                   value={editableFiber}
                   InputProps={{ readOnly: true }}
                   size="small"
                   sx={{ 
-                    '& .MuiInputBase-input': { color: '#fff' },
-                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiInputBase-input': { color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' },
+                    '& .MuiInputLabel-root': { color: '#00ff88', fontWeight: 'bold' },
                     '& .MuiOutlinedInput-root': { 
-                      '& fieldset': { borderColor: '#333' },
-                      '&:hover fieldset': { borderColor: '#555' }
+                      '& fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      bgcolor: '#2a2a2a'
                     }
                   }}
                 />
                 <TextField
                   type="number"
-                  label="Sodio (mg)"
+                  label="🧂 Sodio (mg)"
                   value={editableSodium}
                   InputProps={{ readOnly: true }}
                   size="small"
                   sx={{ 
-                    '& .MuiInputBase-input': { color: '#fff' },
-                    '& .MuiInputLabel-root': { color: '#ccc' },
+                    '& .MuiInputBase-input': { color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' },
+                    '& .MuiInputLabel-root': { color: '#00ff88', fontWeight: 'bold' },
                     '& .MuiOutlinedInput-root': { 
-                      '& fieldset': { borderColor: '#333' },
-                      '&:hover fieldset': { borderColor: '#555' }
+                      '& fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: '#00ff88', borderWidth: 2 },
+                      bgcolor: '#2a2a2a'
                     }
                   }}
                 />
@@ -519,61 +525,161 @@ const FoodModal = ({
 
               {/* 🔥 NUEVO: Mostrar alimentos detectados individualmente */}
               {((foodAnalysis?.detected_foods && foodAnalysis.detected_foods.length > 0) || manualFoods.length > 0) && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: "#222", borderRadius: 1 }}>
-                  <Typography sx={{ color: "#00ff88", fontWeight: "bold", mb: 1 }}>
-                    🍽️ Alimentos en la Comida:
+                <Box sx={{ mt: 2, p: 2, bgcolor: "#222", borderRadius: 2, border: "1px solid #333" }}>
+                  <Typography sx={{ color: "#00ff88", fontWeight: "bold", mb: 2, fontSize: "1.1em" }}>
+                    🍽️ Alimentos en la Comida ({(foodAnalysis?.detected_foods?.length || 0) + manualFoods.length})
                   </Typography>
                   
-                  {/* Alimentos detectados */}
-                  {foodAnalysis?.detected_foods && foodAnalysis.detected_foods.map((food, index) => (
-                    <Box key={`detected-${index}`} sx={{ mb: 1, p: 1, bgcolor: "#333", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                          {index + 1}. {food.name}
-                        </Typography>
-                        <Typography sx={{ color: "#ccc", fontSize: "0.8em" }}>
-                          Confianza: {(food.confidence * 100).toFixed(1)}% | Porción: {food.serving_size}g
-                        </Typography>
-                        <Typography sx={{ color: "#00ff88", fontSize: "0.8em" }}>
-                          🔥 {food.nutrition.calories} cal | 🥩 {food.nutrition.proteina}g prot | 🌾 {food.nutrition.carbohidratos}g carb | 🥑 {food.nutrition.grasas}g gras | 🥦 {food.nutrition.fibra}g fib | 🧂 {food.nutrition.sodio}mg sod
-                        </Typography>
+                  {/* Contenedor con scroll para alimentos */}
+                  <Box sx={{ 
+                    maxHeight: 300, 
+                    overflowY: 'auto',
+                    '&::-webkit-scrollbar': {
+                      width: '6px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      background: '#333',
+                      borderRadius: '3px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: '#555',
+                      borderRadius: '3px',
+                      '&:hover': {
+                        background: '#777',
+                      },
+                    },
+                  }}>
+                    {/* Alimentos detectados */}
+                    {foodAnalysis?.detected_foods && foodAnalysis.detected_foods.map((food, index) => (
+                      <Box key={`detected-${index}`} sx={{ 
+                        mb: 1.5, 
+                        p: 1.5, 
+                        bgcolor: "#333", 
+                        borderRadius: 1.5, 
+                        border: "1px solid #444",
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "space-between",
+                        transition: "all 0.2s ease",
+                        '&:hover': {
+                          bgcolor: "#3a3a3a",
+                          borderColor: "#555",
+                        }
+                      }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography sx={{ color: "#fff", fontWeight: "bold", fontSize: "0.95em" }}>
+                            {index + 1}. {food.name}
+                          </Typography>
+                          <Typography sx={{ color: "#ccc", fontSize: "0.75em", mb: 0.5 }}>
+                            Confianza: {(food.confidence * 100).toFixed(1)}% | Porción: {food.serving_size}g
+                          </Typography>
+                          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                            <Typography sx={{ color: "#ff6b6b", fontSize: "0.8em", fontWeight: "bold" }}>
+                              🔥 {food.nutrition.calories} cal
+                            </Typography>
+                            <Typography sx={{ color: "#4ecdc4", fontSize: "0.8em" }}>
+                              🥩 {food.nutrition.proteina}g
+                            </Typography>
+                            <Typography sx={{ color: "#ffe66d", fontSize: "0.8em" }}>
+                              🌾 {food.nutrition.carbohidratos}g
+                            </Typography>
+                            <Typography sx={{ color: "#ff9ff3", fontSize: "0.8em" }}>
+                              🥑 {food.nutrition.grasas}g
+                            </Typography>
+                            <Typography sx={{ color: "#54a0ff", fontSize: "0.8em" }}>
+                              🥦 {food.nutrition.fibra}g
+                            </Typography>
+                            <Typography sx={{ color: "#5f27cd", fontSize: "0.8em" }}>
+                              🧂 {food.nutrition.sodio}mg
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Button 
+                          onClick={() => handleRemoveFood(index, false)}
+                          sx={{ 
+                            color: "#ff4444", 
+                            minWidth: "auto", 
+                            p: 0.5,
+                            borderRadius: 1,
+                            '&:hover': {
+                              bgcolor: "#ff4444",
+                              color: "#fff",
+                            }
+                          }}
+                          size="small"
+                        >
+                          ✕
+                        </Button>
                       </Box>
-                      <Button 
-                        onClick={() => handleRemoveFood(index, false)}
-                        sx={{ color: "#ff4444", minWidth: "auto", p: 1 }}
-                        size="small"
-                      >
-                        X
-                      </Button>
-                    </Box>
-                  ))}
-                  
-                  {/* Alimentos manuales */}
-                  {manualFoods.map((food, index) => (
-                    <Box key={`manual-${index}`} sx={{ mb: 1, p: 1, bgcolor: "#444", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
-                          {food.name} (manual)
-                        </Typography>
-                        <Typography sx={{ color: "#ccc", fontSize: "0.8em" }}>
-                          Porción: {food.serving_size}g
-                        </Typography>
-                        <Typography sx={{ color: "#00ff88", fontSize: "0.8em" }}>
-                          🔥 {food.nutrition.calories} cal | 🥩 {food.nutrition.proteina}g prot | 🌾 {food.nutrition.carbohidratos}g carb | 🥑 {food.nutrition.grasas}g gras | 🥦 {food.nutrition.fibra}g fib | 🧂 {food.nutrition.sodio}mg sod
-                        </Typography>
+                    ))}
+                    
+                    {/* Alimentos manuales */}
+                    {manualFoods.map((food, index) => (
+                      <Box key={`manual-${index}`} sx={{ 
+                        mb: 1.5, 
+                        p: 1.5, 
+                        bgcolor: "#2a4d69", 
+                        borderRadius: 1.5, 
+                        border: "1px solid #3a5f7a",
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "space-between",
+                        transition: "all 0.2s ease",
+                        '&:hover': {
+                          bgcolor: "#3a5f7a",
+                          borderColor: "#4a6f8a",
+                        }
+                      }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography sx={{ color: "#fff", fontWeight: "bold", fontSize: "0.95em" }}>
+                            {food.name} <span style={{ color: "#00ff88", fontSize: "0.8em" }}>(manual)</span>
+                          </Typography>
+                          <Typography sx={{ color: "#ccc", fontSize: "0.75em", mb: 0.5 }}>
+                            Porción: {food.serving_size}g
+                          </Typography>
+                          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                            <Typography sx={{ color: "#ff6b6b", fontSize: "0.8em", fontWeight: "bold" }}>
+                              🔥 {food.nutrition.calories} cal
+                            </Typography>
+                            <Typography sx={{ color: "#4ecdc4", fontSize: "0.8em" }}>
+                              🥩 {food.nutrition.proteina}g
+                            </Typography>
+                            <Typography sx={{ color: "#ffe66d", fontSize: "0.8em" }}>
+                              🌾 {food.nutrition.carbohidratos}g
+                            </Typography>
+                            <Typography sx={{ color: "#ff9ff3", fontSize: "0.8em" }}>
+                              🥑 {food.nutrition.grasas}g
+                            </Typography>
+                            <Typography sx={{ color: "#54a0ff", fontSize: "0.8em" }}>
+                              🥦 {food.nutrition.fibra}g
+                            </Typography>
+                            <Typography sx={{ color: "#5f27cd", fontSize: "0.8em" }}>
+                              🧂 {food.nutrition.sodio}mg
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Button 
+                          onClick={() => handleRemoveFood(index, true)}
+                          sx={{ 
+                            color: "#ff4444", 
+                            minWidth: "auto", 
+                            p: 0.5,
+                            borderRadius: 1,
+                            '&:hover': {
+                              bgcolor: "#ff4444",
+                              color: "#fff",
+                            }
+                          }}
+                          size="small"
+                        >
+                          ✕
+                        </Button>
                       </Box>
-                      <Button 
-                        onClick={() => handleRemoveFood(index, true)}
-                        sx={{ color: "#ff4444", minWidth: "auto", p: 1 }}
-                        size="small"
-                      >
-                        X
-                      </Button>
-                    </Box>
-                  ))}
+                    ))}
+                  </Box>
                   
                   {foodAnalysis?.summary && (
-                    <Typography sx={{ color: "#aaa", fontSize: "0.9em", mt: 1, fontStyle: "italic" }}>
+                    <Typography sx={{ color: "#aaa", fontSize: "0.85em", mt: 1.5, fontStyle: "italic", textAlign: "center", p: 1, bgcolor: "#1a1a1a", borderRadius: 1 }}>
                       📝 {foodAnalysis.summary}
                     </Typography>
                   )}
