@@ -83,12 +83,13 @@ const menuItems = [
             p: 1.5,
             mb: 3,
             borderRadius: 4,
-            background: "rgba(255,255,255,0.04)",
+            background: active === "profile" ? "linear-gradient(90deg, #00ff88, #00c6ff)" : "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.05)",
+            color: active === "profile" ? "#08110d" : "#fff",
             cursor: "pointer",
             transition: "all 0.25s ease",
             "&:hover": {
-              background: "rgba(255,255,255,0.08)",
+              background: active === "profile" ? "linear-gradient(90deg, #00ff88, #00c6ff)" : "rgba(255,255,255,0.08)",
               transform: "translateX(4px)",
             }
           }}
