@@ -562,25 +562,25 @@ const startStoryTimer = () => {
     // =======================
   // 🔹 SCROLL DETECCIÓN
   // =======================
- const scrollTimeout = useRef(null);
+const scrollTimeout = useRef(null);
 
 const handleScroll = useCallback((e) => {
+  const target = e.currentTarget; // 🔥 GUARDAR AQUÍ (ANTES del timeout)
+  if (!target) return;
+
   if (scrollTimeout.current) return;
 
   scrollTimeout.current = setTimeout(() => {
     scrollTimeout.current = null;
 
-const target = e.currentTarget;
-
-const bottom =
-  target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
+    const bottom =
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
 
     if (bottom && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, 200);
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
   const menuItems = useMemo(() => [
     { label: "🏋️ Rutinas", path: "/" },
     { label: "📈 Progreso", action: () => setFoodModalOpen(true) },
@@ -704,7 +704,20 @@ const bottom =
 
         <Card sx={postCard}>
           <CardContent>
-            <Typography sx={titleStyle}> Calorías semana</Typography>
+            <Typography sx={titleStyle}>📌 Hoy</Typography>
+            <Typography sx={{ color: '#aaa', mb: 1 }}>Calorías: {todayTotal}/{targetCalories}</Typography>
+            <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={progressStyle} />
+            <Typography sx={{ color:'#aaa', mt: 1 }}>Proteína: {todayProtein}g</Typography>
+            <Typography sx={{ color:'#aaa' }}>Carbohidratos: {todayCarbs}g</Typography>
+            <Button variant="contained" sx={{ mt: 1, bgcolor: '#00ff88', color:'#000' }} onClick={() => { resetFoodForm(); setFoodModalOpen(true); setOpenRight(false); }}>
+              Registrar comida
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📈 Calorías semana</Typography>
             {weeklyCalories.length > 0 ? (
               weeklyCalories.map((day, i) => {
                 const maxValue = Math.max(
@@ -731,21 +744,11 @@ const bottom =
     <Box onScroll={handleScroll} sx={{
       flex: 1,
       display: "flex",
-      flexDirection: { xs: "column", sm: "row" },
+      justifyContent: "center",
       overflowY: "auto",
       '&::-webkit-scrollbar': { display: 'none' }
     }}>
-      <Box sx={{ 
-        flex: 1,
-        order: { xs: 1, sm: 'auto' }
-      }}>
-        <Box sx={{ 
-          width: "100%", 
-          maxWidth: 500, 
-          py: 2,
-          display: "flex",
-          justifyContent: "center"
-        }}>
+      <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
 
         <Box sx={storiesContainer}>
           {/* Tu historia (solo en móviles) */}
@@ -821,8 +824,6 @@ const bottom =
           </Box>
         )}
 
-        {/* 🔥 DASHBOARD CALORÍAS DIARIAS - REMOVED */}
-
 
         {/* 🔥 POSTS REALES */}
         {isLoading ? (
@@ -867,14 +868,8 @@ const bottom =
       </Box>
     </Box>
 
-    <Box sx={{ 
-      width: { xs: '100%', sm: 300 }, 
-      flexShrink: 0, 
-      p: { xs: 1, sm: 2 }, 
-      overflowY: "auto", 
-      '&::-webkit-scrollbar': { display: 'none' },
-      order: { xs: -1, sm: 'auto' } // En móvil aparece arriba
-    }}>
+    {!isMobile && (
+      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>📊 Calorías semana</Typography>
@@ -886,6 +881,7 @@ const bottom =
           </CardContent>
         </Card>
 
+ 
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>🍽️ Entradas del día</Typography>
@@ -983,7 +979,7 @@ const bottom =
           </CardContent>
         </Card>
       </Box>
-    </Box>
+    )}
 
     {showAI && (
       <Box sx={aiOverlay}>
