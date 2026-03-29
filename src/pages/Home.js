@@ -695,7 +695,29 @@ const handleScroll = useCallback((e) => {
   
 
         
-
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📈 Calorías semana</Typography>
+            {weeklyCalories.length > 0 ? (
+              weeklyCalories.map((day, i) => {
+                const maxValue = Math.max(
+                  ...(weeklyCalories.length ? weeklyCalories.map(item => item.total_calorias) : [0]),
+                  targetCalories
+                );
+                const value = maxValue > 0 ? (day.total_calorias / maxValue) * 100 : 0;
+                const label = new Date(day.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                return (
+                  <Box key={i} sx={{ mb: 1 }}>
+                    <Typography sx={{ color: '#aaa', fontSize: 12 }}>{label}: {day.total_calorias} kcal</Typography>
+                    <LinearProgress variant="determinate" value={Math.min(value, 100)} sx={progressStyle} />
+                  </Box>
+                );
+              })
+            ) : (
+              <Typography sx={{ color: '#777', fontSize: 12 }}>No hay datos semanales aún.</Typography>
+            )}
+          </CardContent>
+        </Card>
       </Box>
     </Drawer>
 
@@ -732,28 +754,21 @@ const handleScroll = useCallback((e) => {
             const ringColor = getStoryRingColor(userName);
             return (
               <motion.div key={i} whileHover={{ scale: 1.1 }}>
-                <Box
-                    sx={{
-                      ...storyCircle,
-                      background: ringColor, // aquí va el color o gradiente
-                      padding: "3px"
-                    }}
-                  >
-                    <Box sx={storyInner}>
-                      <img
-                        src={profileImage}
-                        alt={userName}
-                        loading="lazy"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          display: "block"
-                        }}
-                      />
-                    </Box>
+                <Box sx={storyItem} onClick={() => openUserStories(userName)}>
+                  <Box sx={{ ...storyCircle, border: `3px solid ${ringColor}` }}>
+                    <Box 
+                      sx={{ 
+                        ...storyInner, 
+                        backgroundImage: `url(${profileImage})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center"
+                      }} 
+                    />
                   </Box>
+                  <Typography sx={{ color: "#aaa", fontSize: 12, textAlign: "center" }}>
+                    {userName}
+                  </Typography>
+                </Box>
               </motion.div>
             );
           })}
