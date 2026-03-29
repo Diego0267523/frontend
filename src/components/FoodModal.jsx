@@ -60,23 +60,47 @@ const FoodModal = ({
 
       if (response) {
         const result = response.data || response;
-        const aiJson = result.details?.aiJson || result.details?.imageAiJson;
+        
+        // 🔥 NUEVA LÓGICA: Procesar múltiples alimentos detectados
+        if (result.detected_foods && result.detected_foods.length > 0) {
+          // Múltiples alimentos detectados - usar totales combinados
+          const totalNutrition = result.total_nutrition || {};
+          
+          setFoodAnalysis({
+            ...result,
+            detected_foods: result.detected_foods,
+            summary: result.summary
+          });
+          
+          setEditableCalories(totalNutrition.calories || 0);
+          setEditableProtein(totalNutrition.proteina || 0);
+          setEditableCarbs(totalNutrition.carbohidratos || 0);
+          
+          setSnackbar({ 
+            open: true, 
+            message: `Análisis completado: ${result.detected_foods.length} alimentos detectados`, 
+            severity: "success" 
+          });
+        } else {
+          // 🔥 LÓGICA ANTERIOR: Respuesta antigua (texto o análisis simple)
+          const aiJson = result.details?.aiJson || result.details?.imageAiJson;
 
-        const safeNumber = (value) => {
-          const num = Number(value);
-          return isNaN(num) || num < 0 ? 0 : num;
-        };
+          const safeNumber = (value) => {
+            const num = Number(value);
+            return isNaN(num) || num < 0 ? 0 : num;
+          };
 
-        const calories = aiJson?.total?.calorias ?? result.calories;
-        const protein = aiJson?.total?.proteina ?? result.proteina;
-        const carbs = aiJson?.total?.carbohidratos ?? result.carbohidratos;
+          const calories = aiJson?.total?.calorias ?? result.calories ?? result.nutrition?.calories ?? 0;
+          const protein = aiJson?.total?.proteina ?? result.proteina ?? result.nutrition?.proteina ?? 0;
+          const carbs = aiJson?.total?.carbohidratos ?? result.carbohidratos ?? result.nutrition?.carbohidratos ?? 0;
 
-        setFoodAnalysis({ ...result, aiJson });
-        setEditableCalories(safeNumber(calories));
-        setEditableProtein(safeNumber(protein));
-        setEditableCarbs(safeNumber(carbs));
+          setFoodAnalysis({ ...result, aiJson });
+          setEditableCalories(safeNumber(calories));
+          setEditableProtein(safeNumber(protein));
+          setEditableCarbs(safeNumber(carbs));
 
-        setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
+          setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
+        }
       }
     } catch (error) {
       console.error("Error analizando comida:", error);
@@ -274,6 +298,37 @@ const FoodModal = ({
                   style={{ flex: 1, padding: 4, borderRadius: 4 }}
                 />
               </Box>
+
+              {/* 🔥 NUEVO: Mostrar alimentos detectados individualmente */}
+              {foodAnalysis?.detected_foods && foodAnalysis.detected_foods.length > 0 && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: "#222", borderRadius: 1 }}>
+                  <Typography sx={{ color: "#00ff88", fontWeight: "bold", mb: 1 }}>
+                    🍽️ Alimentos Detectados:
+                  </Typography>
+                  {foodAnalysis.detected_foods.map((food, index) => (
+                    <Box key={index} sx={{ mb: 1, p: 1, bgcolor: "#333", borderRadius: 1 }}>
+                      <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+                        {index + 1}. {food.name}
+                      </Typography>
+                      <Typography sx={{ color: "#ccc", fontSize: "0.9em" }}>
+                        Confianza: {(food.confidence * 100).toFixed(1)}% | 
+                        Porción: {food.serving_size}g
+                      </Typography>
+                      <Typography sx={{ color: "#00ff88", fontSize: "0.9em" }}>
+                        🔥 {food.nutrition.calories} cal | 
+                        🥩 {food.nutrition.proteina}g proteína | 
+                        🌾 {food.nutrition.carbohidratos}g carbohidratos | 
+                        🥑 {food.nutrition.grasas}g grasas
+                      </Typography>
+                    </Box>
+                  ))}
+                  {foodAnalysis.summary && (
+                    <Typography sx={{ color: "#aaa", fontSize: "0.9em", mt: 1, fontStyle: "italic" }}>
+                      📝 {foodAnalysis.summary}
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Box>
           )}
         </Box>
