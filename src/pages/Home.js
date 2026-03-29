@@ -424,7 +424,118 @@ const handleUploadStory = async () => {
     const timeout = scheduleWeeklyRefresh();
     return () => clearTimeout(timeout);
   }, []);
+const RightPanelContent = () => (
+<Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
+            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+              {[40,60,80,50,70,90,65].map((v,i)=>(
+                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
+              ))}
+            </Box>
+          </CardContent>
+        </Card>
 
+ 
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>🍽️ Entradas del día</Typography>
+            {loadingFood ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress size={24} sx={{ color: '#00ff88' }} />
+              </Box>
+            ) : dailyFoodEntries.length === 0 ? (
+              <Typography sx={{ color: '#777', fontSize: 12 }}>Aún no hay comidas registradas.</Typography>
+            ) : (
+              dailyFoodEntries.slice(0, 4).map((entry) => (
+                <Box key={entry.id} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box>
+                    <Typography sx={{ color: '#fff', fontSize: 12 }}>{entry.descripcion || 'Sin descripción'}</Typography>
+                    <Typography sx={{ color: '#aaa', fontSize: 11 }}>C: {entry.calorias} • P: {entry.proteina} • CH: {entry.carbohidratos}</Typography>
+                  </Box>
+                  <IconButton size="small" onClick={() => handleDeleteFoodEntry(entry.id)} sx={{ color: '#ff4444' }} disabled={loadingFood}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 🔥 RESUMEN NUTRICIONAL DEL DÍA */}
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Consumo del Día</Typography>
+
+            {/* Calorías */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ color: '#fff', fontSize: 14 }}>🔥 Calorías</Typography>
+                <Typography sx={{ color: '#00ff88', fontSize: 14, fontWeight: 'bold' }}>
+                  {todayTotal} / {targetCalories} kcal
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min((todayTotal / targetCalories) * 100, 100)}
+                sx={progressStyle}
+              />
+            </Box>
+
+            {/* Proteína */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ color: '#fff', fontSize: 14 }}>💪 Proteína</Typography>
+                <Typography sx={{ color: '#00ff88', fontSize: 14, fontWeight: 'bold' }}>
+                  {todayProtein} / {targetProtein} g
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min((todayProtein / targetProtein) * 100, 100)}
+                sx={progressStyle}
+              />
+            </Box>
+
+            {/* Carbohidratos */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ color: '#fff', fontSize: 14 }}>🌾 Carbohidratos</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 14 }}>
+                  {todayCarbs} g
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Grasas, Fibra, Sodio en fila */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontSize: 12 }}>🥑 Grasas</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todayFats || 0} g</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontSize: 12 }}>🥦 Fibra</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todayFiber || 0} g</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontSize: 12 }}>🧂 Sodio</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todaySodium || 0} mg</Typography>
+              </Box>
+            </Box>
+
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => { resetFoodForm(); setFoodModalOpen(true); }}
+              sx={{ bgcolor: '#00ff88', color: '#000', fontWeight: 'bold', '&:hover': { bgcolor: '#00dd77' } }}
+            >
+              🍽️ Registrar Comida
+            </Button>
+          </CardContent>
+        </Card>
+      </Box>
+);
   // 🔥 HISTORIAS - Eliminar historia propia
   const handleDeleteStory = async (storyId) => {
     try {
@@ -689,35 +800,16 @@ const handleScroll = useCallback((e) => {
       anchor="right"
       open={openRight}
       onClose={() => setOpenRight(false)}
-      PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
+      PaperProps={{
+  sx: {
+    bgcolor: "#0b0b0b",
+    width: 320,
+    overflowY: "auto"
+  }
+}}
     >
       <Box sx={{ p: 2 }}>
-  
-
-        
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>📈 Calorías semana</Typography>
-            {weeklyCalories.length > 0 ? (
-              weeklyCalories.map((day, i) => {
-                const maxValue = Math.max(
-                  ...(weeklyCalories.length ? weeklyCalories.map(item => item.total_calorias) : [0]),
-                  targetCalories
-                );
-                const value = maxValue > 0 ? (day.total_calorias / maxValue) * 100 : 0;
-                const label = new Date(day.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: '2-digit' });
-                return (
-                  <Box key={i} sx={{ mb: 1 }}>
-                    <Typography sx={{ color: '#aaa', fontSize: 12 }}>{label}: {day.total_calorias} kcal</Typography>
-                    <LinearProgress variant="determinate" value={Math.min(value, 100)} sx={progressStyle} />
-                  </Box>
-                );
-              })
-            ) : (
-              <Typography sx={{ color: '#777', fontSize: 12 }}>No hay datos semanales aún.</Typography>
-            )}
-          </CardContent>
-        </Card>
+  <RightPanelContent />
       </Box>
     </Drawer>
 
@@ -853,118 +945,11 @@ const handleScroll = useCallback((e) => {
       </Box>
     </Box>
 
-    {!isMobile && (
-      <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto", '&::-webkit-scrollbar': { display: 'none' } }}>
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-              {[40,60,80,50,70,90,65].map((v,i)=>(
-                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-
- 
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>🍽️ Entradas del día</Typography>
-            {loadingFood ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                <CircularProgress size={24} sx={{ color: '#00ff88' }} />
-              </Box>
-            ) : dailyFoodEntries.length === 0 ? (
-              <Typography sx={{ color: '#777', fontSize: 12 }}>Aún no hay comidas registradas.</Typography>
-            ) : (
-              dailyFoodEntries.slice(0, 4).map((entry) => (
-                <Box key={entry.id} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box>
-                    <Typography sx={{ color: '#fff', fontSize: 12 }}>{entry.descripcion || 'Sin descripción'}</Typography>
-                    <Typography sx={{ color: '#aaa', fontSize: 11 }}>C: {entry.calorias} • P: {entry.proteina} • CH: {entry.carbohidratos}</Typography>
-                  </Box>
-                  <IconButton size="small" onClick={() => handleDeleteFoodEntry(entry.id)} sx={{ color: '#ff4444' }} disabled={loadingFood}>
-                    <CloseIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* 🔥 RESUMEN NUTRICIONAL DEL DÍA */}
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>📊 Consumo del Día</Typography>
-
-            {/* Calorías */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography sx={{ color: '#fff', fontSize: 14 }}>🔥 Calorías</Typography>
-                <Typography sx={{ color: '#00ff88', fontSize: 14, fontWeight: 'bold' }}>
-                  {todayTotal} / {targetCalories} kcal
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={Math.min((todayTotal / targetCalories) * 100, 100)}
-                sx={progressStyle}
-              />
-            </Box>
-
-            {/* Proteína */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography sx={{ color: '#fff', fontSize: 14 }}>💪 Proteína</Typography>
-                <Typography sx={{ color: '#00ff88', fontSize: 14, fontWeight: 'bold' }}>
-                  {todayProtein} / {targetProtein} g
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={Math.min((todayProtein / targetProtein) * 100, 100)}
-                sx={progressStyle}
-              />
-            </Box>
-
-            {/* Carbohidratos */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography sx={{ color: '#fff', fontSize: 14 }}>🌾 Carbohidratos</Typography>
-                <Typography sx={{ color: '#aaa', fontSize: 14 }}>
-                  {todayCarbs} g
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Grasas, Fibra, Sodio en fila */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography sx={{ color: '#fff', fontSize: 12 }}>🥑 Grasas</Typography>
-                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todayFats || 0} g</Typography>
-              </Box>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography sx={{ color: '#fff', fontSize: 12 }}>🥦 Fibra</Typography>
-                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todayFiber || 0} g</Typography>
-              </Box>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography sx={{ color: '#fff', fontSize: 12 }}>🧂 Sodio</Typography>
-                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todaySodium || 0} mg</Typography>
-              </Box>
-            </Box>
-
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={() => { resetFoodForm(); setFoodModalOpen(true); }}
-              sx={{ bgcolor: '#00ff88', color: '#000', fontWeight: 'bold', '&:hover': { bgcolor: '#00dd77' } }}
-            >
-              🍽️ Registrar Comida
-            </Button>
-          </CardContent>
-        </Card>
-      </Box>
-    )}
+   {!isMobile && (
+  <Box sx={{ width: 300, flexShrink: 0, p: 2, overflowY: "auto" }}>
+    <RightPanelContent />
+  </Box>
+)}
 
     {showAI && (
       <Box sx={aiOverlay}>
