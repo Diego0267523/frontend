@@ -320,18 +320,18 @@ const handleSaveFoodEntry = async () => {
     }
 
     let response;
-    if (foodImageFile) {
-      const formData = new FormData();
-      formData.append("descripcion", foodText.trim());
-      formData.append("calorias", calories.toString());
-      formData.append("proteina", proteina.toString());
-      formData.append("carbohidratos", carbohidratos.toString());
-      if (data.aiJson) {
-        formData.append("aiJson", JSON.stringify(data.aiJson));
-      }
-      formData.append("image", foodImageFile);
-      response = await createFoodEntryWithImage(formData);
-    } else {
+if (foodImageFile) {
+  const formData = new FormData();
+  formData.append("text", foodText.trim());          // <- cambiar descripcion a text
+  formData.append("calorias", calories.toString());
+  formData.append("proteina", proteina.toString());
+  formData.append("carbohidratos", carbohidratos.toString());
+  if (data.aiJson) {
+    formData.append("aiJson", JSON.stringify(data.aiJson));
+  }
+  formData.append("image", foodImageFile);          // <- esto ya está correcto
+  response = await createFoodEntryWithImage(formData);
+} else {
       response = await createFoodEntry(data);
     }
 
