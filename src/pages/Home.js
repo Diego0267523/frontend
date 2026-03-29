@@ -90,6 +90,9 @@ function Home() {
   const [todayTotal, setTodayTotal] = useState(0);
   const [todayProtein, setTodayProtein] = useState(0);
   const [todayCarbs, setTodayCarbs] = useState(0);
+  const [todayFats, setTodayFats] = useState(0);
+  const [todayFiber, setTodayFiber] = useState(0);
+  const [todaySodium, setTodaySodium] = useState(0);
   const [todayWater, setTodayWater] = useState(0); // Estado para el agua consumida hoy
   const [loadingFood, setLoadingFood] = useState(false); // 🔥 Agregado: estado de carga para operaciones de comida
   // const [debouncedFoodText, setDebouncedFoodText] = useState("");
@@ -302,11 +305,20 @@ const handleUploadStory = async () => {
         setTodayTotal(totals.total_calorias || 0);
         setTodayProtein(totals.total_proteina || 0);
         setTodayCarbs(totals.total_carbohidratos || 0);
+        setTodayFats(totals.total_grasas || 0);
+        setTodayFiber(totals.total_fibra || 0);
+        setTodaySodium(totals.total_sodio || 0);
       } else {
         console.warn("Error cargando totales:", totalsResponse.data.message);
         setTodayTotal(0);
         setTodayProtein(0);
         setTodayCarbs(0);
+        setTodayFats(0);
+        setTodayFiber(0);
+        setTodaySodium(0);
+        setTodayFats(0);
+        setTodayFiber(0);
+        setTodaySodium(0);
       }
 
       if (weeklyResponse.data.success) {
@@ -328,6 +340,37 @@ const handleUploadStory = async () => {
       setTodayCarbs(0);
     } finally {
       setLoadingFood(false);
+    }
+  };
+
+  // 🔥 Función para refrescar datos de comida (sin loading)
+  const refreshFoodData = async () => {
+    try {
+      const [entriesResponse, totalsResponse, weeklyResponse] = await Promise.all([
+        getFoodEntries(),
+        getDailyTotals(),
+        getWeeklyTotals()
+      ]);
+
+      if (entriesResponse.data.success) {
+        setDailyFoodEntries(entriesResponse.data.entries);
+      }
+
+      if (totalsResponse.data.success) {
+        const totals = totalsResponse.data.totals;
+        setTodayTotal(totals.total_calorias || 0);
+        setTodayProtein(totals.total_proteina || 0);
+        setTodayCarbs(totals.total_carbohidratos || 0);
+        setTodayFats(totals.total_grasas || 0);
+        setTodayFiber(totals.total_fibra || 0);
+        setTodaySodium(totals.total_sodio || 0);
+      }
+
+      if (weeklyResponse.data.success) {
+        setWeeklyCalories(weeklyResponse.data.week || []);
+      }
+    } catch (error) {
+      console.error("Error refrescando datos de comida:", error);
     }
   };
 
@@ -784,13 +827,7 @@ const bottom =
         {/* 🔥 DASHBOARD CALORÍAS DIARIAS */}
         <Card sx={{ ...postCard, mb: 2, p: 2 }}>
           <CardContent>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-              <Typography sx={{ color: "#fff", fontWeight: "bold" }}>🔥 Progreso Calórico del Día</Typography>
-              <Button size="small" variant="contained" onClick={() => { resetFoodForm(); setFoodModalOpen(true); }} sx={{ backgroundColor: "#00ff88", color: "#000" }}>
-                Registrar comida
-              </Button>
-            </Box>
-
+            <Typography sx={{ color: "#fff", fontWeight: "bold" }}>🔥 Progreso Calórico del Día</Typography>
             <Typography sx={{ color: "#aaa", fontSize: 12 }}>Objetivo: {targetCalories} kcal</Typography>
             <Typography sx={{ color: "#fff", mt: 1 }}>
               {todayTotal} kcal / {targetCalories} kcal • Proteína: {todayProtein} g • Carb: {todayCarbs} g
@@ -892,24 +929,77 @@ const bottom =
           </CardContent>
         </Card>
 
-        {[
-          { label: "🔥 Calorías", current: todayTotal, target: targetCalories, unit: "kcal" },
-          { label: "🥩 Proteína", current: todayProtein, target: targetProtein, unit: "g" },
-          { label: "💧 Agua", current: todayWater, target: targetWater, unit: "ml" }
-        ].map((item, i) => {
-          const progress = item.target > 0 ? Math.min((item.current / item.target) * 100, 100) : 0;
-          return (
-            <Card key={i} sx={postCard}>
-              <CardContent>
-                <Typography sx={titleStyle}>{item.label}</Typography>
-                <Typography sx={{ color: '#aaa', fontSize: 12, mb: 1 }}>
-                  {item.current} / {item.target} {item.unit}
+        {/* 🔥 RESUMEN NUTRICIONAL DEL DÍA */}
+        <Card sx={postCard}>
+          <CardContent>
+            <Typography sx={titleStyle}>📊 Consumo del Día</Typography>
+
+            {/* Calorías */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ color: '#fff', fontSize: 14 }}>🔥 Calorías</Typography>
+                <Typography sx={{ color: '#00ff88', fontSize: 14, fontWeight: 'bold' }}>
+                  {todayTotal} / {targetCalories} kcal
                 </Typography>
-                <LinearProgress variant="determinate" value={progress} sx={progressStyle} />
-              </CardContent>
-            </Card>
-          );
-        })}
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min((todayTotal / targetCalories) * 100, 100)}
+                sx={progressStyle}
+              />
+            </Box>
+
+            {/* Proteína */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ color: '#fff', fontSize: 14 }}>💪 Proteína</Typography>
+                <Typography sx={{ color: '#00ff88', fontSize: 14, fontWeight: 'bold' }}>
+                  {todayProtein} / {targetProtein} g
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min((todayProtein / targetProtein) * 100, 100)}
+                sx={progressStyle}
+              />
+            </Box>
+
+            {/* Carbohidratos */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ color: '#fff', fontSize: 14 }}>🌾 Carbohidratos</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 14 }}>
+                  {todayCarbs} g
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Grasas, Fibra, Sodio en fila */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontSize: 12 }}>🥑 Grasas</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todayFats || 0} g</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontSize: 12 }}>🥦 Fibra</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todayFiber || 0} g</Typography>
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography sx={{ color: '#fff', fontSize: 12 }}>🧂 Sodio</Typography>
+                <Typography sx={{ color: '#aaa', fontSize: 12 }}>{todaySodium || 0} mg</Typography>
+              </Box>
+            </Box>
+
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={() => { resetFoodForm(); setFoodModalOpen(true); }}
+              sx={{ bgcolor: '#00ff88', color: '#000', fontWeight: 'bold', '&:hover': { bgcolor: '#00dd77' } }}
+            >
+              🍽️ Registrar Comida
+            </Button>
+          </CardContent>
+        </Card>
       </Box>
     )}
 
@@ -992,15 +1082,16 @@ const bottom =
           <FoodModal
             open={foodModalOpen}
             onClose={() => { setFoodModalOpen(false); resetFoodForm(); }}
-            onSuccess={() => {
-              // Opcional: refrescar datos si es necesario
-            }}
+            onSuccess={refreshFoodData}
             snackbar={snackbar}
             setSnackbar={setSnackbar}
             targetCalories={targetCalories}
             todayTotal={todayTotal}
             todayProtein={todayProtein}
             todayCarbs={todayCarbs}
+            todayFats={todayFats}
+            todayFiber={todayFiber}
+            todaySodium={todaySodium}
           />
 
           {/* 🔥 MODAL PARA SUBIR HISTORIA */}
