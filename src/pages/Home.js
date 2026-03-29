@@ -42,6 +42,10 @@ import axios from 'axios';
 import API_URL from '../utils/config';
 
 function Home() {
+
+
+
+  const [activeSection, setActiveSection] = React.useState("home");
   const { user, logout } = useAuth();
   const { socket, connected } = useSocket();
   const createPostMutation = useCreatePost();
