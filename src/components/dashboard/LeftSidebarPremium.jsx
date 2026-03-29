@@ -34,9 +34,6 @@ const menuItems = [
   { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'action', action: () => onOpenProgress?.() },
   { id: 'community', label: 'Comunidad', icon: <GroupsRoundedIcon />, type: 'page' },
   { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action', action: () => onOpenAI?.() },
-
-  // 🔥 NUEVO PERFIL
-  { id: 'profile', label: 'Perfil', icon: <Avatar sx={{ width: 20, height: 20 }}>D</Avatar>, type: 'page' },
 ];
 
   const handleClick = (item) => {
@@ -77,8 +74,11 @@ const menuItems = [
         </Typography>
 
         {/* USER CARD */}
-        <Box
-          onClick={() => onChange("profile")}
+        <MotionBox
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0 }}
+          onClick={() => onChange?.("profile")}
           sx={{
             p: 1.5,
             mb: 3,
@@ -86,11 +86,10 @@ const menuItems = [
             background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.05)",
             cursor: "pointer",
-            transition: "all 0.3s ease",
+            transition: "all 0.25s ease",
             "&:hover": {
-              background: "rgba(0,255,136,0.1)",
-              border: "1px solid rgba(0,255,136,0.3)",
-              boxShadow: "0 0 15px rgba(0,255,136,0.15)",
+              background: "rgba(255,255,255,0.08)",
+              transform: "translateX(4px)",
             }
           }}
         >
@@ -125,7 +124,7 @@ const menuItems = [
               </Typography>
             </Box>
           </Stack>
-        </Box>
+        </MotionBox>
 
         {/* MENU */}
         <Stack spacing={1}>
