@@ -78,12 +78,20 @@ const menuItems = [
 
         {/* USER CARD */}
         <Box
+          onClick={() => onChange("profile")}
           sx={{
             p: 1.5,
             mb: 3,
             borderRadius: 4,
             background: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.05)",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              background: "rgba(0,255,136,0.1)",
+              border: "1px solid rgba(0,255,136,0.3)",
+              boxShadow: "0 0 15px rgba(0,255,136,0.15)",
+            }
           }}
         >
           <Stack direction="row" spacing={1.5} alignItems="center">
