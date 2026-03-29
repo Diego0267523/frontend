@@ -34,8 +34,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import CloseIcon from "@mui/icons-material/Close";
 
 import FoodModal from "../components/FoodModal"; // 🔥 Agregado: componente separado
-
-// 🔥 NUEVO
+import ChatAssistant from "../components/ChatAssistant"; // 🔥 Agregado: componente de chat IA
 import { createStory, createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -89,8 +88,7 @@ function Home() {
   const [todayTotal, setTodayTotal] = useState(0);
   const [todayProtein, setTodayProtein] = useState(0);
   const [todayCarbs, setTodayCarbs] = useState(0);
-
-  // Debounced food text (removido, ahora en FoodModal)
+  const [loadingFood, setLoadingFood] = useState(false); // 🔥 Agregado: estado de carga para operaciones de comida
   // const [debouncedFoodText, setDebouncedFoodText] = useState("");
 
   // React.useEffect(() => {
