@@ -616,30 +616,73 @@ const handleScroll = useCallback((e) => {
    // 🔹 SIDEBAR
    // =======================
   
- return (
-
+return (
   <Box
     sx={{
       display: "flex",
-      minHeight: "100vh",
+      height: "100vh",
       bgcolor: "#000",
       overflow: "hidden",
     }}
   >
-    {/* LEFT SIDEBAR */}
-    <LeftSidebarPremium
-      active={activeSection}
-      onChange={setActiveSection}
-    />
+    {/* LEFT SIDEBAR DESKTOP */}
+    {!isMobile && (
+      <Box
+        sx={{
+          width: 260,
+          flexShrink: 0,
+          overflowY: "auto",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          background:
+            "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
+        }}
+      >
+        <LeftSidebarPremium
+          active={activeSection}
+          onChange={setActiveSection}
+        />
+      </Box>
+    )}
+
+    {/* MOBILE TOP BAR */}
+    {isMobile && (
+      <Box sx={topBar}>
+        <IconButton onClick={() => setOpen(true)}>
+          <MenuIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
+
+        <IconButton onClick={() => setOpenRight(true)}>
+          <BarChartIcon sx={{ color: "#00ff88" }} />
+        </IconButton>
+      </Box>
+    )}
+
+    {/* MOBILE LEFT DRAWER */}
+    <Drawer
+      open={open}
+      onClose={() => setOpen(false)}
+      PaperProps={{
+        sx: {
+          bgcolor: "#0b0b0b",
+        },
+      }}
+    >
+      <LeftSidebarPremium
+        active={activeSection}
+        onChange={setActiveSection}
+      />
+    </Drawer>
 
     {/* CENTER FEED */}
     <Box
+      onScroll={handleScroll}
       sx={{
         flex: 1,
+        overflowY: "auto",
         display: "flex",
         justifyContent: "center",
-        overflowY: "auto",
         px: { xs: 1, md: 3 },
+        "&::-webkit-scrollbar": { display: "none" },
       }}
     >
       <FeedCenterPremium
@@ -661,298 +704,90 @@ const handleScroll = useCallback((e) => {
       />
     </Box>
 
-    {/* RIGHT PANEL */}
-    <RightPanelContent
-      loadingFood={loadingFood}
-      dailyFoodEntries={dailyFoodEntries}
-      handleDeleteFoodEntry={handleDeleteFoodEntry}
-      todayTotal={todayTotal}
-      targetCalories={targetCalories}
-      todayProtein={todayProtein}
-      targetProtein={targetProtein}
-      todayCarbs={todayCarbs}
-      todayFats={todayFats}
-      todayFiber={todayFiber}
-      todaySodium={todaySodium}
-      resetFoodForm={resetFoodForm}
-      setFoodModalOpen={setFoodModalOpen}
-    />
-  </Box>
+    {/* RIGHT PANEL DESKTOP */}
+    {!isMobile && (
+      <Box
+        sx={{
+          width: 340,
+          flexShrink: 0,
+          p: 2,
+          overflowY: "auto",
+          borderLeft: "1px solid rgba(255,255,255,0.06)",
+          background:
+            "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
+        }}
+      >
+        <RightPanelContent
+          loadingFood={loadingFood}
+          dailyFoodEntries={dailyFoodEntries}
+          handleDeleteFoodEntry={handleDeleteFoodEntry}
+          todayTotal={todayTotal}
+          targetCalories={targetCalories}
+          todayProtein={todayProtein}
+          targetProtein={targetProtein}
+          todayCarbs={todayCarbs}
+          todayFats={todayFats}
+          todayFiber={todayFiber}
+          todaySodium={todaySodium}
+          resetFoodForm={resetFoodForm}
+          setFoodModalOpen={setFoodModalOpen}
+        />
+      </Box>
+    )}
 
-)}
+    {/* MOBILE RIGHT DRAWER */}
+    <Drawer
+      anchor="right"
+      open={openRight}
+      onClose={() => setOpenRight(false)}
+      PaperProps={{
+        sx: {
+          bgcolor: "#0b0b0b",
+          width: 340,
+        },
+      }}
+    >
+      <RightPanelContent
+        loadingFood={loadingFood}
+        dailyFoodEntries={dailyFoodEntries}
+        handleDeleteFoodEntry={handleDeleteFoodEntry}
+        todayTotal={todayTotal}
+        targetCalories={targetCalories}
+        todayProtein={todayProtein}
+        targetProtein={targetProtein}
+        todayCarbs={todayCarbs}
+        todayFats={todayFats}
+        todayFiber={todayFiber}
+        todaySodium={todaySodium}
+        resetFoodForm={resetFoodForm}
+        setFoodModalOpen={setFoodModalOpen}
+      />
+    </Drawer>
 
+    {/* MODALES */}
     {showAI && (
       <Box sx={aiOverlay}>
         <ChatAssistant onClose={() => setShowAI(false)} />
       </Box>
     )}
 
-          {showCreatePost && (
-            <Box sx={overlayPro} onClick={() => setShowCreatePost(false)}>
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
-    
-                  <Typography sx={titlePro}>
-                    Crear Post 🚀
-                  </Typography>
-    
-                  {/* PREVIEW */}
-                  {file && (
-                    <Box
-                      component="img"
-                      src={URL.createObjectURL(file)}
-                      sx={previewImage}
-                      loading="lazy"
-                    />
-                  )}
-    
-                  {/* INPUT FILE */}
-                  <Button
-                    variant="contained"
-                    component="label"
-                    sx={uploadBtn}
-                  >
-                    Subir imagen
-                    <input
-                      type="file"
-                      hidden
-                      onChange={(e) => setFile(e.target.files[0])}
-                    />
-                  </Button>
-    
-                  {/* CAPTION */}
-                  <input
-                    placeholder="¿Qué estás pensando?"
-                    value={postCaption}
-                    onChange={(e) => setPostCaption(e.target.value)}
-                    style={inputPro}
-                  />
-    
-                  {/* BOTONES */}
-                  <Box sx={{ display: "flex", gap: 1.5, mt: 2, width: "100%" }}>
-                    <Button 
-                      onClick={handleCreatePost} 
-                      sx={postBtn}
-                      disabled={isCreatingPost || createPostMutation.isLoading}
-                    >
-                      {isCreatingPost || createPostMutation.isLoading ? "Publicando..." : "Publicar"}
-                    </Button>
-    
-                    <Button 
-                      onClick={() => setShowCreatePost(false)} 
-                      sx={cancelBtn}
-                      disabled={isCreatingPost || createPostMutation.isLoading}
-                    >
-                      Cancelar
-                    </Button>
-                  </Box>
-    
-                </Box>
-              </motion.div>
-            </Box>
-          )}
-
-          {/* 🔥 MODAL PARA REGISTRAR COMIDA - Usando componente separado */}
-          <FoodModal
-            open={foodModalOpen}
-            onClose={() => { setFoodModalOpen(false); resetFoodForm(); }}
-            onSuccess={refreshFoodData}
-            snackbar={snackbar}
-            setSnackbar={setSnackbar}
-            targetCalories={targetCalories}
-            todayTotal={todayTotal}
-            todayProtein={todayProtein}
-            todayCarbs={todayCarbs}
-            todayFats={todayFats}
-            todayFiber={todayFiber}
-            todaySodium={todaySodium}
-          />
-
-          {/* 🔥 MODAL PARA SUBIR HISTORIA */}
-          {showStoryPreview && (
-            <Box sx={overlayPro} onClick={() => setShowStoryPreview(false)}>
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box sx={modalPro} onClick={(e) => e.stopPropagation()}>
-    
-                  <Typography sx={titlePro}>
-                    Nueva Historia 📸
-                  </Typography>
-    
-                  {/* PREVIEW */}
-                  {storyFile && (
-                    <Box
-                      component="img"
-                      src={URL.createObjectURL(storyFile)}
-                      sx={previewImage}
-                      loading="lazy"
-                    />
-                  )}
-    
-                  {/* INPUT FILE */}
-                  <Button
-                    variant="contained"
-                    component="label"
-                    sx={uploadBtn}
-                  >
-                    Subir imagen
-                    <input
-                      type="file"
-                      hidden
-                      onChange={(e) => setStoryFile(e.target.files[0])}
-                    />
-                  </Button>
-    
-                  {/* BOTONES */}
-                  <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                    <Button 
-                      onClick={handleUploadStory} 
-                      sx={postBtn}
-                      disabled={isUploadingStory}
-                    >
-                      {isUploadingStory ? "Subiendo..." : "Compartir Historia"}
-                    </Button>
-    
-                    <Button 
-                      onClick={() => setShowStoryPreview(false)} 
-                      sx={cancelBtn}
-                      disabled={isUploadingStory}
-                    >
-                      Cancelar
-                    </Button>
-                  </Box>
-    
-                </Box>
-              </motion.div>
-            </Box>
-          )}
-
-          {/* 🔥 STORY VIEWER MODAL */}
-          <AnimatePresence>
-            {viewingStory && userStories.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box sx={storyViewerOverlay} onClick={closeStoryViewer}>
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Box sx={storyViewerContainer}>
-                      {/* Top bar (user + time) */}
-                      <Box sx={storyTopBar}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <Box
-                            sx={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: "50%",
-                              backgroundImage: `url(${userStories[currentStoryIndex]?.profile_image || userStories[currentStoryIndex]?.avatar || userStories[currentStoryIndex]?.image_url})`,
-                              backgroundSize: "cover",
-                              backgroundPosition: "center",
-                              border: "2px solid #fff"
-                            }}
-                          />
-                          <Box>
-                            <Typography sx={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-                              {currentUser}
-                            </Typography>
-                            <Typography sx={{ color: "#ccc", fontSize: 12 }}>
-                              22h
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <IconButton onClick={closeStoryViewer} sx={{ color: "#fff" }}>
-                          <CloseIcon />
-                        </IconButton>
-                      </Box>
-
-                      {/* Progress Bars */}
-                      <Box sx={progressContainer}>
-                        {userStories.map((_, i) => (
-                          <LinearProgress
-                            key={i}
-                            variant="determinate"
-                            value={i < currentStoryIndex ? 100 : i === currentStoryIndex ? storyProgress : 0}
-                            sx={progressBar}
-                          />
-                        ))}
-                      </Box>
-
-                      {/* Story Image with Navigation */}
-                      <Box sx={storyImageContainer}>
-                        <AnimatePresence mode="wait">
-                          <motion.img
-                            key={currentStoryIndex}
-                            src={userStories[currentStoryIndex]?.image_url}
-                            alt={currentUser}
-                            style={storyImage}
-                            initial={{ x: 300, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -300, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            onMouseEnter={stopStoryTimer}
-                            onMouseLeave={startStoryTimer}
-                            loading="lazy"
-                          />
-                        </AnimatePresence>
-
-                        {/* Navigation Areas */}
-                        <Box sx={navLeft} onClick={prevStory} />
-                        <Box sx={navRight} onClick={nextStory} />
-
-                        {/* Bottom text overlay */}
-                        <Box sx={storyBottomText}>
-                          {userStories[currentStoryIndex]?.caption || "Escribe algo interesante..."}
-                        </Box>
-
-                        {/* Action bar */}
-                        <Box sx={storyActionBar}>
-                          <Button sx={{ color: "#fff" }} startIcon={<ChatBubbleOutlineIcon />}>
-                            Enviar mensaje
-                          </Button>
-                          <IconButton sx={{ color: "#fff" }}>
-                            <FavoriteIcon />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </motion.div>
-                </Box>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* 🔥 SNACKBAR PARA NOTIFICACIONES */}
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={4000}
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          >
-            <Alert
-              onClose={() => setSnackbar({ ...snackbar, open: false })}
-              severity={snackbar.severity}
-              sx={{ width: "100%" }}
-            >
-              {snackbar.message}
-            </Alert>
-          </Snackbar>
-
+    <FoodModal
+      open={foodModalOpen}
+      onClose={() => {
+        setFoodModalOpen(false);
+        resetFoodForm();
+      }}
+      onSuccess={refreshFoodData}
+      snackbar={snackbar}
+      setSnackbar={setSnackbar}
+      targetCalories={targetCalories}
+      todayTotal={todayTotal}
+      todayProtein={todayProtein}
+      todayCarbs={todayCarbs}
+      todayFats={todayFats}
+      todayFiber={todayFiber}
+      todaySodium={todaySodium}
+    />
   </Box>
 );
 
