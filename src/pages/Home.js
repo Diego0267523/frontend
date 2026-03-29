@@ -7,7 +7,8 @@ import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
 import { useCreatePost, usePosts } from "../hooks/usePosts";
 import { containerVariants, itemVariants, buttonVariants, slideInUpVariants } from "../utils/motion-variants";
-
+// 🔥 NUEVO
+import { analyzeFood } from "../api/food";
 
 import {
   Typography,
@@ -229,39 +230,32 @@ const handleAnalyzeFood = async () => {
   setFoodAnalysis(null);
 
   try {
-    let response;
+    let response = null;
+
     if (foodImageFile) {
-      const formData = new FormData();
-      if (foodText.trim()) formData.append("text", foodText.trim());
-      formData.append("image", foodImageFile);
-      response = await axios.post(`${API_URL}/api/ai/calories`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
+      response = await analyzeFood({ text: foodText.trim(), imageFile: foodImageFile });
     } else {
-      response = await axios.post(`${API_URL}/api/ai/calories`, { text: foodText.trim() }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      });
+      const maybeUrl = foodText.trim().startsWith("http") ? foodText.trim() : undefined;
+      response = await analyzeFood({ text: foodText.trim(), imageUrl: maybeUrl });
     }
 
-    if (response.data) {
-      const aiJson = response.data.details?.aiJson || response.data.details?.imageAiJson;
+    if (response) {
+      const result = response.data || response;
+      const aiJson = result.details?.aiJson || result.details?.imageAiJson;
 
-      setFoodAnalysis({
-        ...response.data,
-        aiJson
-      });
+      const safeNumber = (value) => {
+        const num = Number(value);
+        return isNaN(num) || num < 0 ? 0 : num;
+      };
 
-      if (aiJson?.total) {
-        setEditableCalories(aiJson.total.calorias ?? "");
-        setEditableProtein(aiJson.total.proteina ?? "");
-        setEditableCarbs(aiJson.total.carbohidratos ?? "");
-      } else {
-        setEditableCalories(response.data.calories || "");
-        setEditableProtein(response.data.proteina || "");
-        setEditableCarbs(response.data.carbohidratos || "");
-      }
+      const calories = aiJson?.total?.calorias ?? result.calories;
+      const protein = aiJson?.total?.proteina ?? result.proteina;
+      const carbs = aiJson?.total?.carbohidratos ?? result.carbohidratos;
+
+      setFoodAnalysis({ ...result, aiJson });
+      setEditableCalories(safeNumber(calories));
+      setEditableProtein(safeNumber(protein));
+      setEditableCarbs(safeNumber(carbs));
 
       setSnackbar({ open: true, message: "Análisis completado", severity: "success" });
     }
@@ -273,7 +267,6 @@ const handleAnalyzeFood = async () => {
     setFoodAnalyzing(false);
   }
 };
-
 const handleSaveFoodEntry = async () => {
   const calories = Number(editableCalories || 0);
   const proteina = Number(editableProtein || 0);
