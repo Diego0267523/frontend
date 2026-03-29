@@ -691,30 +691,9 @@ const handleScroll = useCallback((e) => {
       PaperProps={{ sx: { bgcolor: "#0b0b0b", width: 300 } }}
     >
       <Box sx={{ p: 2 }}>
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>📊 Calorías semana</Typography>
-            <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
-              {[40,60,80,50,70,90,65].map((v,i)=>(
-                <Box key={i} sx={{ width: 10, height: v, bgcolor: "#00ff88", borderRadius: 2 }} />
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
+  
 
-        <Card sx={postCard}>
-          <CardContent>
-            <Typography sx={titleStyle}>📌 Hoy</Typography>
-            <Typography sx={{ color: '#aaa', mb: 1 }}>Calorías: {todayTotal}/{targetCalories}</Typography>
-            <LinearProgress variant="determinate" value={Math.min((todayTotal / targetCalories) * 100, 100)} sx={progressStyle} />
-            <Typography sx={{ color:'#aaa', mt: 1 }}>Proteína: {todayProtein}g</Typography>
-            <Typography sx={{ color:'#aaa' }}>Carbohidratos: {todayCarbs}g</Typography>
-            <Button variant="contained" sx={{ mt: 1, bgcolor: '#00ff88', color:'#000' }} onClick={() => { resetFoodForm(); setFoodModalOpen(true); setOpenRight(false); }}>
-              Registrar comida
-            </Button>
-          </CardContent>
-        </Card>
-
+        
         <Card sx={postCard}>
           <CardContent>
             <Typography sx={titleStyle}>📈 Calorías semana</Typography>
