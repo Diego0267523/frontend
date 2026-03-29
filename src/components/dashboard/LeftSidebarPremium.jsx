@@ -27,30 +27,17 @@ export default function LeftSidebarPremium({
   onOpenCreate,
   onOpenProgress,
 }) {
-  const menuItems = [
-    { id: "home", label: "Inicio", icon: <HomeRoundedIcon /> },
-    { id: "workouts", label: "Rutinas", icon: <FitnessCenterRoundedIcon /> },
-    { id: "nutrition", label: "Nutrición", icon: <RestaurantRoundedIcon /> },
-    {
-      id: "progress",
-      label: "Progreso",
-      icon: <TrendingUpRoundedIcon />,
-      action: onOpenProgress,
-    },
-    { id: "community", label: "Comunidad", icon: <GroupsRoundedIcon /> },
-    {
-      id: "coach",
-      label: "AI Coach",
-      icon: <SmartToyRoundedIcon />,
-      action: onOpenAI,
-    },
-    {
-      id: "create",
-      label: "Crear",
-      icon: <AddBoxRoundedIcon />,
-      action: onOpenCreate,
-    },
-  ];
+const menuItems = [
+  { id: 'home', label: 'Inicio', icon: <HomeRoundedIcon />, type: 'page' },
+  { id: 'workouts', label: 'Rutinas', icon: <FitnessCenterRoundedIcon />, type: 'page' },
+  { id: 'nutrition', label: 'Nutrición', icon: <RestaurantRoundedIcon />, type: 'page' },
+  { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'page' },
+  { id: 'community', label: 'Comunidad', icon: <GroupsRoundedIcon />, type: 'page' },
+  { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action' },
+
+  // 🔥 NUEVO PERFIL
+  { id: 'profile', label: 'Perfil', icon: <Avatar sx={{ width: 20, height: 20 }}>D</Avatar>, type: 'page' },
+];
 
   const handleClick = (item) => {
     if (item.action) {

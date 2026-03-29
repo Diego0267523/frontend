@@ -11,7 +11,7 @@ import { useCreatePost, usePosts } from "../hooks/usePosts";
 import { containerVariants, itemVariants, buttonVariants, slideInUpVariants } from "../utils/motion-variants";
 // 🔥 NUEVO
 import { analyzeFood } from "../api/food";
-
+import Profile from "../pages/Profile";
 import {
   Typography,
   Button,
@@ -688,23 +688,41 @@ return (
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
-      <FeedCenterPremium
-        isMobile={isMobile}
-        stories={stories}
-        setShowStoryPreview={setShowStoryPreview}
-        openUserStories={openUserStories}
-        getStoryRingColor={getStoryRingColor}
-        newPostsAvailable={newPostsAvailable}
-        setNewPostsAvailable={setNewPostsAvailable}
-        isLoading={isLoading}
-        hasPosts={hasPosts}
-        showRetry={showRetry}
-        setShowRetry={setShowRetry}
-        queryClient={queryClient}
-        data={data}
-        isFetchingNextPage={isFetchingNextPage}
-        PostCard={PostCard}
-      />
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              overflowY: "auto",
+              px: { xs: 1, md: 3 },
+            }}
+          >
+            {activeSection === "home" && (
+              <FeedCenterPremium
+                isMobile={isMobile}
+                stories={stories}
+                setShowStoryPreview={setShowStoryPreview}
+                openUserStories={openUserStories}
+                getStoryRingColor={getStoryRingColor}
+                newPostsAvailable={newPostsAvailable}
+                setNewPostsAvailable={setNewPostsAvailable}
+                isLoading={isLoading}
+                hasPosts={hasPosts}
+                showRetry={showRetry}
+                setShowRetry={setShowRetry}
+                queryClient={queryClient}
+                data={data}
+                isFetchingNextPage={isFetchingNextPage}
+                PostCard={PostCard}
+              />
+            )}
+
+            {activeSection === "profile" && <Profile />}
+
+            {activeSection === "coach" && (
+              <ChatAssistant onClose={() => setActiveSection("home")} />
+            )}
+          </Box>
     </Box>
 
     {/* RIGHT PANEL DESKTOP */}
