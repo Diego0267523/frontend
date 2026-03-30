@@ -754,7 +754,6 @@ return (
         display: "flex",
         justifyContent: "center",
         px: { xs: 1, md: 3 },
-        pt: { xs: isMobile ? 7 : 0, md: 0 },
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
