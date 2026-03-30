@@ -101,10 +101,12 @@ const PostCard = memo(({ post }) => {
     return null;
   }
 
-  // 📍 Navegar al perfil del usuario cuando se hace clic en el nombre o avatar
+  // 📍 Navegar al perfil público del usuario cuando se hace clic en el nombre o avatar
   const handleNavigateToProfile = () => {
-    const authorName = (post.nombre || post.user || "usuario").toLowerCase().trim();
-    navigate(`/app/u/${authorName}`);
+    // Obtener username: primero intenta createdBy, luego user, luego nombre
+    const username = (post.createdBy || post.user || post.nombre || "usuario").toLowerCase().trim();
+    // Navegar a perfil PÚBLICO (sin requerir login)
+    navigate(`/perfil/${username}`);
   };
 
   const getTimeAgo = (timeString) => {

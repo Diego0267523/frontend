@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import API_URL from "../utils/config";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPublicProfile } from "../utils/publicProfilesDB";
 
 import {
   Container,
@@ -111,6 +112,15 @@ function Register() {
       const data = await res.json();
 
       if (res.ok) {
+        // 🌐 Crear perfil público automáticamente
+        createPublicProfile({
+          nombre: form.nombre,
+          email: form.email,
+          username: form.email.split("@")[0], // username basado en email
+          bio: "Bienvenido a mi perfil",
+          categoria: form.objetivo || "General"
+        });
+
         localStorage.removeItem("registerData");
         setMsg("Cuenta creada correctamente ✅");
         setType("success");

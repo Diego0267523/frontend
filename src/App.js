@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import UserProfilePage from "./pages/UserProfilePage";
+import PublicProfilePage from "./pages/PublicProfilePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -44,8 +45,9 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* 🔥 SIEMPRE DISPONIBLE */}
+        {/* 🌐 RUTAS PÚBLICAS (sin requerir login) */}
         <Route path="/register" element={<Register />} />
+        <Route path="/perfil/:username" element={<PublicProfilePage />} />
 
         {!token ? (
           <>
