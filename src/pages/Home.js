@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../context/SocketContext";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import PostCard from "../components/postCard";
 import Profile from "./Profile";
 import { useCreatePost, usePosts } from "../hooks/usePosts";
@@ -28,8 +28,6 @@ import ChatAssistant from "../components/ChatAssistant"; // 🔥 Agregado: compo
 
 import { createStory, getStories, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import API_URL from '../utils/config';
 
 function Home() {
 
@@ -45,15 +43,13 @@ function Home() {
   const [postCaption, setPostCaption] = useState("");
 
   // 🔥 HISTORIAS
-  const [storyFile, setStoryFile] = useState(null);
-  const [, setIsUploadingStory] = useState(false);
   const [stories, setStories] = useState([]);
 
   // 🔥 STORY VIEWER
   const [viewingStory, setViewingStory] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [storyProgress, setStoryProgress] = useState(0);
-  const [storyTimer, setStoryTimer] = useState(null);
+  const storyTimerRef = useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [userStories, setUserStories] = useState([]);
   const [storyUsers, setStoryUsers] = useState([]);
@@ -97,11 +93,27 @@ function Home() {
   //   }, 300);
   //   return () => clearTimeout(timer);
   // }, [foodText]);
+const postPreviewUrl = useMemo(() => {
+  if (typeof File === "undefined" || !(file instanceof File)) return null;
+  return URL.createObjectURL(file);
+}, [file]);
+
 React.useEffect(() => {
   return () => {
-    if (file) URL.revokeObjectURL(file);
+    if (postPreviewUrl) {
+      URL.revokeObjectURL(postPreviewUrl);
+    }
   };
-}, [file]);
+}, [postPreviewUrl]);
+
+React.useEffect(() => {
+  return () => {
+    if (storyTimerRef.current) {
+      clearInterval(storyTimerRef.current);
+      storyTimerRef.current = null;
+    }
+  };
+}, []);
 React.useEffect(() => {
   setNewPostsAvailable(0);
 }, [location.pathname]);
@@ -198,11 +210,6 @@ const handleCreatePost = async () => {
   }
 };
 
-// 🔥 Wrapper memoizado para publicar desde el modal
-const handlePublication = useCallback(() => {
-  handleCreatePost();
-}, [handleCreatePost]);
-
 // 🔥 Crear historia
 const handleCreateStory = async () => {
   if (!file) {
@@ -238,7 +245,6 @@ const handleCreateStory = async () => {
     setSnackbar({ open: true, message: "¡Historia publicada exitosamente!", severity: "success" });
     setShowCreateStory(false);
     setFile(null);
-    setStoryFile(null);
     setPostCaption("");
   } catch (error) {
     console.error("Error en historia:", error.response?.data || error.message || error);
@@ -248,11 +254,6 @@ const handleCreateStory = async () => {
     setIsCreatingStory(false);
   }
 };
-
-// 🔥 Wrapper memoizado para publicar historia
-const handleStoryPublication = useCallback(() => {
-  handleCreateStory();
-}, [handleCreateStory]);
 
   const resetFoodForm = () => {
     // Función vacía, lógica movida a FoodModal
@@ -302,36 +303,6 @@ const loadStories = useCallback(async () => {
 React.useEffect(() => {
   loadStories();
 }, [loadStories]);
-
-const handleUploadStory = async () => {
-  if (!storyFile) {
-    setSnackbar({ open: true, message: "Selecciona una imagen para la historia", severity: "error" });
-    return;
-  }
-
-  setIsUploadingStory(true);
-  try {
-    const formData = new FormData();
-    formData.append("image", storyFile);
-
-    const response = await createStory(formData);
-
-    if (response.data?.success) {
-      setSnackbar({ open: true, message: "Historia subida exitosamente", severity: "success" });
-      setStoryFile(null);
-      await loadStories();
-    } else {
-      const message = response.data?.message || "No se pudo subir la historia";
-      setSnackbar({ open: true, message, severity: "error" });
-    }
-  } catch (error) {
-    console.error("Error subiendo historia:", error);
-    const message = error.response?.data?.message || "Error al subir historia";
-    setSnackbar({ open: true, message, severity: "error" });
-  } finally {
-    setIsUploadingStory(false);
-  }
-};
 
   const loadDailyFoodData = async () => {
     try {
@@ -475,28 +446,7 @@ const handleUploadStory = async () => {
     return () => clearTimeout(timeout);
   }, []);
 
-  // 🔥 HISTORIAS - Eliminar historia propia
-  const handleDeleteStory = async (storyId) => {
-    try {
-      const response = await axios.delete(`${API_URL}/api/stories/${storyId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
-
-      if (response.data.success) {
-        setStories(stories.filter(s => s.id !== storyId));
-        setSnackbar({ open: true, message: "Historia eliminada", severity: "success" });
-      }
-    } catch (error) {
-      console.error("Error deleting story:", error);
-      setSnackbar({ open: true, message: "Error al eliminar la historia", severity: "error" });
-    }
-  };
-
   // 🔥 STORY VIEWER FUNCTIONS
-  const [seenStoryUsers, setSeenStoryUsers] = useState(new Set());
-
   const getStoryOwnerName = useCallback((story) => {
     return (
       story?.nombre ||
@@ -549,11 +499,6 @@ const getStoryRingColor = (userName) => {
     setCurrentStoryIndex(0);
     setViewingStory(true);
     setStoryProgress(0);
-    setSeenStoryUsers((prev) => {
-      const next = new Set(prev);
-      next.add(userName);
-      return next;
-    });
     startStoryTimer();
   };
 
@@ -578,13 +523,13 @@ const startStoryTimer = () => {
     });
   }, 150);
 
-  setStoryTimer(interval);
+  storyTimerRef.current = interval;
 };
 
   const stopStoryTimer = () => {
-    if (storyTimer) {
-      clearInterval(storyTimer);
-      setStoryTimer(null);
+    if (storyTimerRef.current) {
+      clearInterval(storyTimerRef.current);
+      storyTimerRef.current = null;
     }
   };
 
@@ -631,7 +576,6 @@ const startStoryTimer = () => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error,
   } = usePosts();
 
   // Mostrar retry solo cuando falla carga inicial
@@ -673,23 +617,8 @@ const handleScroll = useCallback((e) => {
   }, 200);
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
   // =======================
-  // 🔹 PREFETCH (optimización)
+  // 🔹 SIDEBAR
   // =======================
-  function prefetchProgreso() {
-    queryClient.prefetchQuery({
-      queryKey: ["progreso"],
-      queryFn: async () => {
-        const { data } = await axios.get("https://jsonplaceholder.typicode.com/posts?_limit=5");
-        return data;
-      }
-    });
-  }
-
-
- 
-   // =======================
-   // 🔹 SIDEBAR
-   // =======================
   
 return (
   <Box
@@ -786,8 +715,8 @@ return (
               flex: 1,
               display: "flex",
               justifyContent: "center",
-              overflowY: "auto",
-              px: { xs: 1, md: 3 },
+              minWidth: 0,
+              px: { xs: 0, md: 1 },
             }}
           >
             {activeSection === "home" && (
@@ -900,10 +829,10 @@ return (
             </Typography>
 
             {/* PREVIEW */}
-            {file && (
+            {postPreviewUrl && (
               <Box
                 component="img"
-                src={URL.createObjectURL(file)}
+                src={postPreviewUrl}
                 sx={previewImage}
               />
             )}
@@ -933,7 +862,7 @@ return (
             {/* BOTONES */}
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               <Button
-                onClick={handlePublication}
+                onClick={handleCreatePost}
                 disabled={isCreatingPost}
                 sx={postBtn}
               >
@@ -964,7 +893,7 @@ return (
       postCaption={postCaption}
       setPostCaption={setPostCaption}
       isCreatingStory={isCreatingStory}
-      handleStoryPublication={handleStoryPublication}
+      handleStoryPublication={handleCreateStory}
       onClose={() => setShowCreateStory(false)}
     />
 
@@ -1158,139 +1087,6 @@ return (
 }
 
 /* 🎨 STYLES */
-
-const sidebarStyle = {
-  width: 250,
-  height: "100vh",
-  position: "fixed",
-  left: 0,
-  top: 0,
-  bgcolor: "#0b0b0b",
-  p: 2,
-  display: "flex",
-  flexDirection: "column"
-};
-
-const centerContent = (isMobile) => ({
-  flex: 1,
-  minWidth: 0,
-  marginLeft: isMobile ? 0 : 250,
-  marginRight: isMobile ? 0 : 280,
-  width: isMobile ? "100%" : "calc(100vw - 530px)",
-  display: "flex",
-  justifyContent: "center",
-  boxSizing: "border-box",
-  paddingTop: isMobile ? 60 : 20,
-  overflowX: "hidden"
-});
-
-const rightPanel = {
-  width: 300,
-  height: "100vh",
-  position: "fixed",
-  right: 0,
-  top: 0,
-  p: 2,
-  bgcolor: "#0b0b0b"
-};
-
-const postCard = { bgcolor: "#111", mb: 2, borderRadius: 4 };
-
-const headerStyle = { display: "flex", alignItems: "center", gap: 10, mb: 1 };
-const username = { color: "#fff", fontWeight: "bold" };
-const time = { color: "#777", fontSize: 12 };
-
-const imageStyle = {
-  width: "100%",
-  height: 300,
-  objectFit: "cover",
-  borderRadius: 10,
-  marginTop: 10
-};
-
-const actionsStyle = { display: "flex", gap: 1, mt: 1 };
-const likes = { color: "#fff", mt: 1 };
-const captionStyle = { color: "#ccc", mt: 1 };
-
-const storiesContainer = {
-  display: "flex",
-  gap: 2,
-  overflowX: "auto",
-  mb: 2,
-  '&::-webkit-scrollbar': { display: 'none' }
-};
-
-const storyCircle = {
-  width: 80,
-  height: 80,
-  borderRadius: "50%",
-  padding: 2,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  transition: "transform 0.2s"
-};
-
-const storyInner = {
-  width: "100%",
-  height: "100%",
-  borderRadius: "50%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  overflow: "hidden",
-  border: "2px solid #00ff88"
-};
-
-const storyItem = {
-  textAlign: "center",
-  width: 90,
-  flexShrink: 0
-};
-
-const titleStyle = { color: "#00ff88" };
-
-const avatarStyle = {
-  width: 40,
-  height: 40,
-  borderRadius: "50%",
-  bgcolor: "#00ff88",
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  border: "2px solid #00ff88"
-};
-
-const profileStyle = {
-  display: "flex",
-  gap: 2,
-  mb: 2,
-  cursor: "pointer"
-};
-
-const menuItemStyle = {
-  mt: 2,
-  p: 1.5,
-  borderRadius: 3,
-  cursor: "pointer",
-  transition: "0.3s",
-  '&:hover': {
-    bgcolor: "#00ff8830",
-    color: "#00ff88"
-  }
-};
-
-const logoutStyle = {
-  mt: "auto",
-  bgcolor: "#00ff88",
-  color: "#000",
-  fontWeight: "bold",
-  '&:hover': {
-    bgcolor: "#00cc6a"
-  }
-};
-
-const progressStyle = { height: 8, mt: 1 };
 
 const topBar = {
   position: "fixed",
@@ -1515,21 +1311,6 @@ const storyBottomText = {
   overflowWrap: "break-word"
 };
 
-const storyActionBar = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: 0,
-  height: 58,
-  padding: "0 16px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  zIndex: 20,
-  backdropFilter: "blur(16px)",
-  background: "rgba(0,0,0,0.25)"
-};
-
 const progressContainer = {
   position: "absolute",
   top: 10,
@@ -1539,44 +1320,6 @@ const progressContainer = {
   gap: 0.75,
   zIndex: 22,
   padding: "0 2px"
-};
-
-const progressBar = {
-  flex: 1,
-  height: 3,
-  bgcolor: "rgba(255,255,255,0.3)",
-  '& .MuiLinearProgress-bar': {
-    bgcolor: "#fff"
-  }
-};
-
-const closeButton = {
-  position: "absolute",
-  top: 20,
-  right: 20,
-  color: "#fff",
-  bgcolor: "rgba(0,0,0,0.5)",
-  zIndex: 10,
-  '&:hover': {
-    bgcolor: "rgba(0,0,0,0.7)"
-  }
-};
-
-const userInfo = {
-  position: "absolute",
-  top: 30,
-  left: 20,
-  display: "flex",
-  alignItems: "center",
-  gap: 1,
-  zIndex: 10
-};
-
-const userName = {
-  color: "#fff",
-  fontWeight: "bold",
-  fontSize: 16,
-  textShadow: "0 0 10px rgba(0,0,0,0.5)"
 };
 
 const storyImage = {

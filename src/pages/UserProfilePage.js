@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUserProfile } from "../hooks/useUserProfile";
 import {
@@ -17,14 +17,11 @@ import {
 import { motion } from "framer-motion";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import GridOnRoundedIcon from "@mui/icons-material/GridOnRounded";
-import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
-import ChatBubbleRoundedIcon from "@mui/icons-material/ChatBubbleRounded";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 function UserProfilePage() {
   const { username } = useParams();
   const navigate = useNavigate();
-  const [hoveredPostId, setHoveredPostId] = useState(null);
 
   const safeUsername = username?.toLowerCase()?.trim() || "";
 

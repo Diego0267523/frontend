@@ -1,0 +1,48 @@
+
+> frontend@0.1.0 build
+> react-scripts build
+
+(node:17344) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src\components\DirectMessages.js
+  Line 3:27:   'TextField' is defined but never used       no-unused-vars
+  Line 3:38:   'IconButton' is defined but never used      no-unused-vars
+  Line 3:56:   'ListItem' is defined but never used        no-unused-vars
+  Line 3:113:  'Divider' is defined but never used         no-unused-vars
+  Line 4:8:    'CloseIcon' is defined but never used       no-unused-vars
+  Line 19:17:  'token' is assigned a value but never used  no-unused-vars
+
+src\pages\UserProfilePage.js
+  Line 20:8:   'FavoriteRoundedIcon' is defined but never used        no-unused-vars
+  Line 21:8:   'ChatBubbleRoundedIcon' is defined but never used      no-unused-vars
+  Line 27:10:  'hoveredPostId' is assigned a value but never used     no-unused-vars
+  Line 27:25:  'setHoveredPostId' is assigned a value but never used  no-unused-vars
+
+src\utils\publicProfilesDB.js
+  Line 390:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  329.65 kB  build\static\js\main.74b5f9ba.js
+  138 B      build\static\css\main.a834f51a.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

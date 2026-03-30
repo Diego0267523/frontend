@@ -84,6 +84,171 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "build-frontend",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-targeted",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/pages/Home.js",
+				"src/components/DirectMessages.js",
+				"src/components/feed/FeedCenterPremium.jsx"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-json",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/pages/Home.js",
+				"src/components/DirectMessages.js",
+				"src/components/feed/FeedCenterPremium.jsx",
+				"-f",
+				"json",
+				"-o",
+				"lint-report.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-json-after-cleanup",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/pages/Home.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-report-home.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-home-final",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/pages/Home.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-report-home-final.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build-frontend-final",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-rest",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/components/DirectMessages.js",
+				"src/pages/PublicProfilePage.js",
+				"src/pages/UserProfilePage.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-rest.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-final-clean",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/pages/Home.js",
+				"src/pages/PublicProfilePage.js",
+				"src/pages/UserProfilePage.js",
+				"src/components/DirectMessages.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-final-clean.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build-frontend-clean",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build-to-file",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"npm run build > build-output.txt 2>&1"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-public-profiles",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/utils/publicProfilesDB.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-public-profiles.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build-clean-cache",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"if exist node_modules\\.cache rmdir /s /q node_modules\\.cache & npm run build > build-output-final.txt 2>&1"
+			],
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

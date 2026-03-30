@@ -27,7 +27,6 @@ import {
   Button,
   Container,
   Divider,
-  Badge,
   Avatar as MuiAvatar,
 } from "@mui/material";
 import { motion } from "framer-motion";

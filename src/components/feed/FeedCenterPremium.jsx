@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 
-export default function FeedCenterPremium({
+function FeedCenterPremium({
   isMobile,
   stories,
   currentUserName,
@@ -58,16 +58,31 @@ export default function FeedCenterPremium({
     );
   };
 
-  const safeStories = Array.isArray(stories) ? stories : [];
-  const safePages = Array.isArray(data?.pages) ? data.pages : [];
-  const normalizedCurrentUser = String(currentUserName || "").trim().toLowerCase();
-  const uniqueUsers = [...new Set(safeStories.map(getStoryUserName).filter(Boolean))];
-  const ownStory = safeStories.find(
-    (story) => String(getStoryUserName(story) || "").trim().toLowerCase() === normalizedCurrentUser
-  );
-  const otherUsers = uniqueUsers.filter(
-    (userName) => String(userName || "").trim().toLowerCase() !== normalizedCurrentUser
-  );
+  const safePages = useMemo(() => (Array.isArray(data?.pages) ? data.pages : []), [data]);
+
+  const { ownStory, otherUsers, storyByUser } = useMemo(() => {
+    const normalizedUser = String(currentUserName || "").trim().toLowerCase();
+    const nextStories = Array.isArray(stories) ? stories : [];
+    const nextStoryByUser = {};
+
+    nextStories.forEach((story) => {
+      const owner = String(getStoryUserName(story) || "").trim();
+      if (owner && !nextStoryByUser[owner]) {
+        nextStoryByUser[owner] = story;
+      }
+    });
+
+    const uniqueUsers = Object.keys(nextStoryByUser);
+    const nextOwnStory =
+      uniqueUsers.find((userName) => userName.toLowerCase() === normalizedUser) || null;
+
+    return {
+      safeStories: nextStories,
+      storyByUser: nextStoryByUser,
+      ownStory: nextOwnStory ? nextStoryByUser[nextOwnStory] : null,
+      otherUsers: uniqueUsers.filter((userName) => userName.toLowerCase() !== normalizedUser),
+    };
+  }, [stories, currentUserName]);
 
   const storyPanelSx = {
     ...glassCard,
@@ -186,13 +201,13 @@ export default function FeedCenterPremium({
               Aún no hay historias de otros usuarios.
             </Box>
           ) : (
-            otherUsers.map((userName, i) => {
-              const userStory = safeStories.find((s) => getStoryUserName(s) === userName);
+            otherUsers.map((userName) => {
+              const userStory = storyByUser[userName];
               const profileImage = getProfileImage(userStory || {});
               const ringColor = getStoryRingColor(userName);
 
               return (
-                <motion.div key={i} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
+                <motion.div key={userName} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
                   <Box
                     onClick={() => openUserStories(userName)}
                     sx={{ width: 78, flexShrink: 0, cursor: "pointer", textAlign: "center" }}
@@ -204,7 +219,7 @@ export default function FeedCenterPremium({
                         mx: "auto",
                         p: "2.5px",
                         borderRadius: "50%",
-                        background: "linear-gradient(90deg, #00ff88, #00c6ff)",
+                        background: ringColor || "linear-gradient(90deg, #00ff88, #00c6ff)",
                         boxShadow: "0 0 20px rgba(0,255,136,0.18)",
                       }}
                     >
@@ -318,3 +333,5 @@ export default function FeedCenterPremium({
     </Box>
   );
 }
+
+export default memo(FeedCenterPremium);

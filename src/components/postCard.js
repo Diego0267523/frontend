@@ -334,7 +334,9 @@ const PostCard = memo(({ post }) => {
         mb: 2,
         borderRadius: 4,
         border: "1px solid #1a1a1a",
-        background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"
+        background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
+        contentVisibility: "auto",
+        containIntrinsicSize: "420px"
       }}>
         <CardContent>
 
@@ -346,6 +348,11 @@ const PostCard = memo(({ post }) => {
               data-testid="post-avatar"
               src={post.avatar || post.userAvatar || '/default-avatar.png'}
               alt={`Perfil de ${post.nombre || post.user}`}
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/default-avatar.png';
+              }}
               onClick={handleNavigateToProfile}
               sx={{ 
                 width: 40, 
@@ -405,13 +412,23 @@ const PostCard = memo(({ post }) => {
           </Box>
 
           {/* Imagen */}
-          <Box component="img" src={post.image_url || post.image} sx={{
-            width: "100%",
-            height: 300,
-            objectFit: "cover",
-            borderRadius: 2,
-            mt: 1
-          }} />
+          <Box
+            component="img"
+            src={post.image_url || post.image || 'https://via.placeholder.com/800x600?text=Post'}
+            alt={post.caption || 'Post image'}
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://via.placeholder.com/800x600?text=Post';
+            }}
+            sx={{
+              width: "100%",
+              height: 300,
+              objectFit: "cover",
+              borderRadius: 2,
+              mt: 1
+            }}
+          />
 
           {/* Pie de foto (caption) */}
           <Typography sx={{ color: "#ccc", mt: 1 }}>

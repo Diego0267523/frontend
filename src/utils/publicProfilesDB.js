@@ -395,7 +395,7 @@ export function clearDatabase() {
   console.log("🔄 Base de datos reseteada");
 }
 
-export default {
+const publicProfilesApi = {
   publicProfilesDB,
   createPublicProfile,
   getPublicProfile,
@@ -407,5 +407,7 @@ export default {
   likePost,
   unlikePost,
   isUsernameAvailable,
-  clearDatabase
+  clearDatabase,
 };
+
+export default publicProfilesApi;
