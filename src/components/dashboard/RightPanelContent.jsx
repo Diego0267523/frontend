@@ -7,8 +7,8 @@ import {
   LinearProgress,
   Button,
   IconButton,
-  CircularProgress,
   Stack,
+  Skeleton,
 } from "@mui/material";
 import { motion } from "framer-motion";
 
@@ -54,42 +54,38 @@ function RightPanelContent({
     overflow: "hidden",
   };
 
+  // 🔥 ANIMACIÓN STAGGER GLOBAL
+  const containerVariants = {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0 },
+  };
+
   const StatProgress = ({ label, value, target, icon, gradient, unit = "" }) => {
     const percent = target ? Math.min((value / target) * 100, 100) : 0;
 
     return (
       <Box sx={{ mb: 2.5 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 1,
-          }}
-        >
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             {icon}
-            <Typography
-              sx={{
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 700,
-              }}
-            >
+            <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>
               {label}
             </Typography>
           </Stack>
 
-          <Typography
-            sx={{
-              color: "#8bffcf",
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
+          <Typography sx={{ color: "#8bffcf", fontSize: 13, fontWeight: 700 }}>
             {value} / {target} {unit}
           </Typography>
-        </Box>
+        </Stack>
 
         <LinearProgress
           variant="determinate"
@@ -109,305 +105,159 @@ function RightPanelContent({
   };
 
   return (
-    <Box
-      sx={{
-        width: { xs: "100%", md: 340 },
-        maxWidth: "100%",
-        minHeight: "100dvh",
-        flexShrink: 0,
-        p: { xs: 1.5, md: 2 },
-        pb: { xs: 10, md: 2 }, // FIX espacio gris abajo en móvil
-        overflowY: "auto",
-        overflowX: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        background:
-          "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
-        borderLeft: { md: "1px solid rgba(255,255,255,0.06)" },
-        backdropFilter: "blur(18px)",
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
-        "&::-webkit-scrollbar": { display: "none" },
-      }}
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
     >
-      {/* WEEKLY */}
-      <MotionCard sx={premiumCardStyle}>
-        <CardContent>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-            <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
-            <Typography
-              sx={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Calorías semana
-            </Typography>
-          </Stack>
+      <Box
+        sx={{
+          width: { xs: "100%", md: 340 },
+          minHeight: "100dvh",
+          pb: { xs: 10, md: 2 },
+          p: { xs: 1.5, md: 2 },
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          background:
+            "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
+          borderLeft: { md: "1px solid rgba(255,255,255,0.06)" },
+          "&::-webkit-scrollbar": { display: "none" },
+        }}
+      >
 
-          <Box
-            sx={{
-              display: "flex",
-              gap: 1,
-              alignItems: "flex-end",
-              height: 120,
-            }}
-          >
-            {weekly.map((v, i) => (
-              <Box key={i} sx={{ flex: 1, textAlign: "center" }}>
+        {/* WEEK */}
+        <MotionCard variants={itemVariants} sx={premiumCardStyle}>
+          <CardContent>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+              <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
+              <Typography sx={{ color: "#fff", fontWeight: 800 }}>
+                Calorías semana
+              </Typography>
+            </Stack>
+
+            <Box sx={{ display: "flex", gap: 1, height: 120, alignItems: "flex-end" }}>
+              {weekly.map((v, i) => (
                 <motion.div
+                  key={i}
                   initial={{ height: 0 }}
                   animate={{ height: v }}
-                  transition={{ duration: 0.35, delay: i * 0.03 }}
+                  transition={{ delay: i * 0.05 }}
                   style={{
-                    width: 16,
-                    margin: "0 auto",
+                    flex: 1,
                     borderRadius: 10,
                     background: "linear-gradient(180deg, #00ff88, #00c6ff)",
-                    boxShadow: "0 0 20px rgba(0,255,136,0.18)",
                   }}
                 />
-                <Typography
-                  sx={{
-                    color: "#8b949e",
-                    fontSize: 10,
-                    mt: 0.6,
-                    fontWeight: 600,
-                  }}
-                >
-                  {days[i]}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </CardContent>
-      </MotionCard>
-
-      {/* FOOD ENTRIES */}
-      <MotionCard sx={premiumCardStyle}>
-        <CardContent>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-            <RestaurantRoundedIcon sx={{ color: "#00ff88" }} />
-            <Typography
-              sx={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-              }}
-            >
-              Entradas del día
-            </Typography>
-          </Stack>
-
-          {loadingFood ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              <CircularProgress size={22} sx={{ color: "#00ff88" }} />
+              ))}
             </Box>
-          ) : safeDailyFoodEntries.length === 0 ? (
-            <Typography sx={{ color: "#8b949e", fontSize: 12 }}>
-              Aún no hay comidas registradas.
-            </Typography>
-          ) : (
-            safeDailyFoodEntries.slice(0, 4).map((entry) => (
-              <Box
-                key={entry.id}
-                sx={{
-                  mb: 1,
-                  p: 1.2,
-                  borderRadius: 3,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  transition: "all 0.25s ease",
-                  "&:hover": {
-                    background: "rgba(255,255,255,0.08)",
-                    transform: "translateX(4px)",
-                  },
-                }}
-              >
-                <Box>
-                  <Typography
-                    sx={{
-                      color: "#fff",
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {entry.descripcion || "Sin descripción"}
-                  </Typography>
+          </CardContent>
+        </MotionCard>
 
-                  <Typography
-                    sx={{
-                      color: "#8b949e",
-                      fontSize: 11,
-                    }}
-                  >
-                    C: {entry.calorias} • P: {entry.proteina} • CH:{" "}
-                    {entry.carbohidratos}
-                  </Typography>
-                </Box>
+        {/* FOOD */}
+        <MotionCard variants={itemVariants} sx={premiumCardStyle}>
+          <CardContent>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+              <RestaurantRoundedIcon sx={{ color: "#00ff88" }} />
+              <Typography sx={{ color: "#fff", fontWeight: 800 }}>
+                Entradas del día
+              </Typography>
+            </Stack>
 
-                <IconButton
-                  onClick={() => handleDeleteFoodEntry(entry.id)}
-                  size="small"
+            {loadingFood ? (
+              <Stack spacing={1}>
+                {[1,2,3].map(i => (
+                  <Skeleton
+                    key={i}
+                    variant="rounded"
+                    height={50}
+                    sx={{
+                      borderRadius: 3,
+                      background: "rgba(255,255,255,0.06)",
+                    }}
+                  />
+                ))}
+              </Stack>
+            ) : safeDailyFoodEntries.length === 0 ? (
+              <Typography sx={{ color: "#8b949e", fontSize: 12 }}>
+                Aún no hay comidas registradas.
+              </Typography>
+            ) : (
+              safeDailyFoodEntries.slice(0, 4).map((entry) => (
+                <Box
+                  key={entry.id}
                   sx={{
-                    color: "#ff6b6b",
+                    mb: 1,
+                    p: 1.2,
+                    borderRadius: 3,
+                    display: "flex",
+                    justifyContent: "space-between",
                     background: "rgba(255,255,255,0.04)",
                     "&:hover": {
-                      background: "rgba(255,255,255,0.08)",
+                      transform: "translateX(4px)",
                     },
                   }}
                 >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            ))
-          )}
-        </CardContent>
-      </MotionCard>
+                  <Box>
+                    <Typography sx={{ color: "#fff", fontSize: 12 }}>
+                      {entry.descripcion}
+                    </Typography>
+                  </Box>
 
-      {/* DAILY CONSUMPTION */}
-      <MotionCard sx={premiumCardStyle}>
-        <CardContent>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-            <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
-            <Typography
-              sx={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-              }}
-            >
+                  <IconButton onClick={() => handleDeleteFoodEntry(entry.id)}>
+                    <CloseRoundedIcon />
+                  </IconButton>
+                </Box>
+              ))
+            )}
+          </CardContent>
+        </MotionCard>
+
+        {/* DAILY */}
+        <MotionCard variants={itemVariants} sx={premiumCardStyle}>
+          <CardContent>
+            <Typography sx={{ color: "#fff", fontWeight: 800, mb: 2 }}>
               Consumo del Día
             </Typography>
-          </Stack>
 
-          <StatProgress
-            label="Calorías"
-            value={todayTotal}
-            target={targetCalories}
-            unit="kcal"
-            icon={<LocalFireDepartmentRoundedIcon sx={{ color: "#00ff88" }} />}
-            gradient="linear-gradient(90deg, #00ff88, #00c6ff)"
-          />
+            <StatProgress
+              label="Calorías"
+              value={todayTotal}
+              target={targetCalories}
+              icon={<LocalFireDepartmentRoundedIcon sx={{ color: "#00ff88" }} />}
+              gradient="linear-gradient(90deg, #00ff88, #00c6ff)"
+            />
 
-          <StatProgress
-            label="Proteína"
-            value={todayProtein}
-            target={targetProtein}
-            unit="g"
-            icon={<FitnessCenterRoundedIcon sx={{ color: "#00c6ff" }} />}
-            gradient="linear-gradient(90deg, #00c6ff, #7b61ff)"
-          />
+            <StatProgress
+              label="Proteína"
+              value={todayProtein}
+              target={targetProtein}
+              icon={<FitnessCenterRoundedIcon sx={{ color: "#00c6ff" }} />}
+              gradient="linear-gradient(90deg, #00c6ff, #7b61ff)"
+            />
 
-          <Box sx={{ mb: 2 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <GrainRoundedIcon sx={{ color: "#ffd166" }} />
-              <Typography
-                sx={{
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
-                Carbohidratos:{" "}
-                <span style={{ color: "#ffd166" }}>{todayCarbs} g</span>
-              </Typography>
-            </Stack>
-          </Box>
-
-          <Stack direction="row" justifyContent="space-between" sx={{ mb: 2.5 }}>
-            {[
-              [
-                <WaterDropRoundedIcon sx={{ color: "#00c6ff" }} />,
-                "Grasas",
-                todayFats || 0,
-                "g",
-              ],
-              [
-                <SpaRoundedIcon sx={{ color: "#00ff88" }} />,
-                "Fibra",
-                todayFiber || 0,
-                "g",
-              ],
-              [
-                <WaterDropRoundedIcon sx={{ color: "#c084fc" }} />,
-                "Sodio",
-                todaySodium || 0,
-                "mg",
-              ],
-            ].map(([icon, label, val, unit]) => (
-              <Box
-                key={label}
-                sx={{
-                  flex: 1,
-                  mx: 0.4,
-                  p: 1,
-                  borderRadius: 3,
-                  textAlign: "center",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  transition: "all 0.25s ease",
-                  "&:hover": {
-                    background: "rgba(255,255,255,0.06)",
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 0.5 }}>
-                  {icon}
-                </Box>
-
-                <Typography sx={{ color: "#fff", fontSize: 12 }}>
-                  {label}
-                </Typography>
-
-                <Typography
-                  sx={{
-                    color: "#8b949e",
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  {val} {unit}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => {
-              resetFoodForm();
-              setFoodModalOpen(true);
-            }}
-            sx={{
-              py: 1.3,
-              borderRadius: 3,
-              fontWeight: 800,
-              fontSize: 14,
-              color: "#08110d",
-              background: "linear-gradient(90deg, #00ff88, #00c6ff)",
-              boxShadow: "0 0 20px rgba(0,255,136,0.18)",
-              transition: "all 0.25s ease",
-              "&:hover": {
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => {
+                resetFoodForm();
+                setFoodModalOpen(true);
+              }}
+              sx={{
+                mt: 2,
+                borderRadius: 3,
+                fontWeight: 800,
                 background: "linear-gradient(90deg, #00ff88, #00c6ff)",
-                transform: "translateY(-1px)",
-                boxShadow: "0 0 28px rgba(0,255,136,0.25)",
-              },
-            }}
-          >
-            Registrar Comida
-          </Button>
-        </CardContent>
-      </MotionCard>
-    </Box>
+              }}
+            >
+              Registrar Comida
+            </Button>
+          </CardContent>
+        </MotionCard>
+
+      </Box>
+    </motion.div>
   );
 }
 
