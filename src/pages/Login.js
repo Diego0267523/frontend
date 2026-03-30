@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import API_URL from "../utils/config";
+import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -51,38 +51,23 @@ function Login() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await api.post(
+        "/api/auth/login",
+        { email, password },
+        { withCredentials: true }
+      );
 
-      const data = await res.json();
+      const data = response.data;
 
-      console.log("LOGIN RESPONSE:", data);
-
-      if (res.ok && data.token) {
-        // ✅ guardar token
-        localStorage.setItem("token", data.token);
-
-        // ✅ guardar usuario completo
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-
-        // ✅ actualizar contexto auth
-        login(data.token, data.user);
-
+      if (data?.token) {
+        login(data.token, data.user || null);
         navigate("/");
       } else {
-        setError(data.message || "Credenciales incorrectas ❌");
+        setError(data?.message || "Credenciales incorrectas ❌");
       }
     } catch (err) {
-      console.error("Error login:", err);
-      setError(err.message || "Error de conexión 🚨");
+      console.error("Error login:", err.response?.data || err.message || err);
+      setError(err.response?.data?.message || err.message || "Error de conexión 🚨");
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Box, Typography, TextField, IconButton, List, ListItem, ListItemButton, ListItemAvatar, Avatar, Badge, Divider } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Box, Typography, List, ListItemButton, ListItemAvatar, Avatar, Badge } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { slideInDownVariants, chatBubbleVariants } from "../utils/motion-variants";
 import { useSocket } from "../context/SocketContext";
@@ -16,7 +15,7 @@ import { useAuth } from "../hooks/useAuth";
  * - Indicador de escritura
  */
 function DirectMessages({ onClose }) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const { socket, connected } = useSocket();
   
   const [conversations, setConversations] = useState([]);

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import API_URL from '../utils/config';
 
 const ProfileAvatar = ({ size = 100, editable = true }) => {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -56,7 +57,7 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <img
-        src={avatarUrl || '/default-avatar.png'} // fallback image
+        src={avatarUrl || 'https://ui-avatars.com/api/?name=Usuario&background=111827&color=00ff88'}
         alt="Avatar"
         style={{
           width: size,
@@ -66,7 +67,11 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
           border: '2px solid #00ff88',
           cursor: editable ? 'pointer' : 'default'
         }}
-        onClick={() => editable && document.getElementById('avatar-input').click()}
+        onClick={() => editable && fileInputRef.current?.click()}
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = '/default-avatar.png';
+        }}
       />
       {loading && (
         <div style={{
@@ -87,7 +92,7 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
       )}
       {editable && (
         <input
-          id="avatar-input"
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           style={{ display: 'none' }}

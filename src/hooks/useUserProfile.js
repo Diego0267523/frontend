@@ -34,13 +34,15 @@ export const useUserProfile = (username) => {
         );
 
         const userData =
-          getUserByUsername(cleanUsername) ||
-          getPublicProfile(cleanUsername) ||
           (cachedUser && cachedUserSlug === cleanUsername
             ? {
                 ...cachedUser,
                 posts: Array.isArray(cachedUser.posts) ? cachedUser.posts : [],
               }
+            : null) ||
+          getPublicProfile(cleanUsername) ||
+          (process.env.NODE_ENV !== "production"
+            ? getUserByUsername(cleanUsername)
             : null);
 
         if (!userData) {

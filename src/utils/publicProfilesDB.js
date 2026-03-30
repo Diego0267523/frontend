@@ -118,8 +118,10 @@ const SAMPLE_PROFILES = {
   }
 };
 
-// Inicializar con datos de ejemplo
-Object.assign(publicProfilesDB, SAMPLE_PROFILES);
+// Inicializar con datos de ejemplo solo en desarrollo
+if (process.env.NODE_ENV !== "production") {
+  Object.assign(publicProfilesDB, SAMPLE_PROFILES);
+}
 
 // ============================================================
 // FUNCIONES PÚBLICAS DEL SISTEMA
@@ -265,16 +267,17 @@ export function addPostToProfile(username, postData) {
  */
 export function getAllPublicPosts() {
   return Object.values(publicProfilesDB)
-    .flatMap(profile => 
-      profile.posts.map(post => ({
+    .flatMap((profile) => {
+      const posts = Array.isArray(profile?.posts) ? profile.posts : [];
+      return posts.map((post) => ({
         ...post,
         author: {
-          username: profile.username,
-          nombre: profile.nombre,
-          avatar: profile.avatar
-        }
-      }))
-    )
+          username: profile?.username,
+          nombre: profile?.nombre,
+          avatar: profile?.avatar,
+        },
+      }));
+    })
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
@@ -294,11 +297,11 @@ export function getAllPublicProfiles() {
  * @returns {array}
  */
 export function searchProfiles(searchTerm) {
-  const term = searchTerm.toLowerCase();
-  return Object.values(publicProfilesDB).filter(profile =>
-    profile.username.includes(term) ||
-    profile.nombre.toLowerCase().includes(term) ||
-    profile.bio.toLowerCase().includes(term)
+  const term = String(searchTerm || "").toLowerCase();
+  return Object.values(publicProfilesDB).filter((profile) =>
+    String(profile?.username || "").includes(term) ||
+    String(profile?.nombre || "").toLowerCase().includes(term) ||
+    String(profile?.bio || "").toLowerCase().includes(term)
   );
 }
 
@@ -376,15 +379,19 @@ function generateDefaultPortada(categoria) {
  * @returns {boolean}
  */
 export function isUsernameAvailable(username) {
-  return !publicProfilesDB[username.toLowerCase().trim()];
+  const normalizedUsername = normalizeUsername(username);
+  if (!normalizedUsername) return false;
+  return !publicProfilesDB[normalizedUsername];
 }
 
 /**
  * Limpiar base de datos (solo para testing)
  */
 export function clearDatabase() {
-  Object.keys(publicProfilesDB).forEach(key => delete publicProfilesDB[key]);
-  Object.assign(publicProfilesDB, SAMPLE_PROFILES);
+  Object.keys(publicProfilesDB).forEach((key) => delete publicProfilesDB[key]);
+  if (process.env.NODE_ENV !== "production") {
+    Object.assign(publicProfilesDB, SAMPLE_PROFILES);
+  }
   console.log("🔄 Base de datos reseteada");
 }
 

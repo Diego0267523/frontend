@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Button,
   Container,
+  Avatar,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -19,7 +20,6 @@ import GridOnRoundedIcon from "@mui/icons-material/GridOnRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import ChatBubbleRoundedIcon from "@mui/icons-material/ChatBubbleRounded";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import ProfileAvatar from "../components/ProfileAvatar";
 
 function UserProfilePage() {
   const { username } = useParams();
@@ -35,7 +35,7 @@ function UserProfilePage() {
     error = null,
   } = profileResult;
 
-  const userPosts = useMemo(() => user?.posts || [], [user]);
+  const userPosts = useMemo(() => (Array.isArray(user?.posts) ? user.posts : []), [user]);
 
   const stats = useMemo(
     () => [
@@ -172,7 +172,13 @@ function UserProfilePage() {
               background: "linear-gradient(135deg, #00ff88, #00c6ff)",
             }}
           >
-            <ProfileAvatar size={110} />
+            <Avatar
+              src={user?.avatar || user?.image || ""}
+              alt={user?.nombre || safeUsername}
+              sx={{ width: 110, height: 110, bgcolor: "#111", color: "#00ff88", fontWeight: 800 }}
+            >
+              {(user?.nombre || safeUsername || "U").charAt(0).toUpperCase()}
+            </Avatar>
           </Box>
 
           <Box sx={{ flex: 1, width: "100%" }}>
@@ -238,7 +244,7 @@ function UserProfilePage() {
 
       <Grid container spacing={2}>
         {userPosts.map((post, idx) => (
-          <Grid item xs={12} sm={6} md={4} key={post.id}>
+          <Grid item xs={12} sm={6} md={4} key={post.id || idx}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -254,8 +260,8 @@ function UserProfilePage() {
               >
                 <CardMedia
                   component="img"
-                  image={post.image}
-                  alt="post"
+                  image={post.image || "https://via.placeholder.com/500x500?text=Post"}
+                  alt={post.caption || "post"}
                   sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               </Card>

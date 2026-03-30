@@ -47,11 +47,11 @@ root.render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ErrorBoundary>
-          <SocketProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <SocketProvider>
               <App />
-            </AuthProvider>
-          </SocketProvider>
+            </SocketProvider>
+          </AuthProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>

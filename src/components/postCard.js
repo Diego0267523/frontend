@@ -1,13 +1,12 @@
 import { memo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert } from "@mui/material";
+import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../hooks/useAuth";
 import { useDeletePost } from "../hooks/usePosts";
-import { cardVariants, buttonVariants, hoverScaleVariants } from "../utils/motion-variants";
+import { cardVariants } from "../utils/motion-variants";
 
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
@@ -19,7 +18,6 @@ const PostCard = memo(({ post }) => {
   const navigate = useNavigate();
   const { token, user } = useAuth();
   const { socket, connected } = useSocket();
-  const queryClient = useQueryClient();
   const deletePostMutation = useDeletePost();
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);

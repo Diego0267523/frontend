@@ -4,42 +4,29 @@ import LeftSidebarPremium from "../components/dashboard/LeftSidebarPremium";
 import RightPanelContent from "../components/dashboard/RightPanelContent";
 import { useAuth } from "../hooks/useAuth";
 import { useSocket } from "../context/SocketContext";
-import { useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import React, { useState, useCallback, useRef } from "react";
 import PostCard from "../components/postCard";
 import Profile from "./Profile";
 import { useCreatePost, usePosts } from "../hooks/usePosts";
-import { containerVariants, itemVariants, buttonVariants, slideInUpVariants } from "../utils/motion-variants";
-// 🔥 NUEVO
-import { analyzeFood } from "../api/food";
 import {
   Typography,
   Button,
-  Card,
-  CardContent,
   Box,
-  LinearProgress,
   IconButton,
   Drawer,
   useTheme,
   useMediaQuery,
-  Skeleton,
-  Snackbar,
-  Alert,
-  CircularProgress
 } from "@mui/material";
 
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MenuIcon from "@mui/icons-material/Menu";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import CloseIcon from "@mui/icons-material/Close";
 
 import FoodModal from "../components/FoodModal"; // 🔥 Agregado: componente separado
 import ChatAssistant from "../components/ChatAssistant"; // 🔥 Agregado: componente de chat IA
 
-import { createStory, createFoodEntry, createFoodEntryWithImage, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
+import { createStory, getStories, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import API_URL from '../utils/config';
@@ -49,7 +36,7 @@ function Home() {
 
 
   const [activeSection, setActiveSection] = React.useState("home");
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { socket, connected } = useSocket();
   const createPostMutation = useCreatePost();
 
@@ -59,7 +46,7 @@ function Home() {
 
   // 🔥 HISTORIAS
   const [storyFile, setStoryFile] = useState(null);
-  const [isUploadingStory, setIsUploadingStory] = useState(false);
+  const [, setIsUploadingStory] = useState(false);
   const [stories, setStories] = useState([]);
 
   // 🔥 STORY VIEWER
@@ -71,7 +58,6 @@ function Home() {
   const [userStories, setUserStories] = useState([]);
   const [storyUsers, setStoryUsers] = useState([]);
 
-  const navigate = useNavigate();
   const location = useLocation();
 
   const theme = useTheme();
@@ -92,18 +78,16 @@ function Home() {
   const creatingStoryRef = useRef(false);
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
-  const [weeklyCalories, setWeeklyCalories] = useState([]);
+  const [, setWeeklyCalories] = useState([]);
   const [foodModalOpen, setFoodModalOpen] = useState(false); // 🔥 Agregado de vuelta para el modal
-  const [targetCalories, setTargetCalories] = useState(2000);
-  const [targetProtein, setTargetProtein] = useState(150); // Objetivo de proteína en gramos
-  const [targetWater, setTargetWater] = useState(2000); // Objetivo de agua en ml
+  const [targetCalories] = useState(2000);
+  const [targetProtein] = useState(150); // Objetivo de proteína en gramos
   const [todayTotal, setTodayTotal] = useState(0);
   const [todayProtein, setTodayProtein] = useState(0);
   const [todayCarbs, setTodayCarbs] = useState(0);
   const [todayFats, setTodayFats] = useState(0);
   const [todayFiber, setTodayFiber] = useState(0);
   const [todaySodium, setTodaySodium] = useState(0);
-  const [todayWater, setTodayWater] = useState(0); // Estado para el agua consumida hoy
   const [loadingFood, setLoadingFood] = useState(false); // 🔥 Agregado: estado de carga para operaciones de comida
   // const [debouncedFoodText, setDebouncedFoodText] = useState("");
 
@@ -163,7 +147,7 @@ React.useEffect(() => {
     return () => {
       socket.off('new_post', handleNewPost);
     };
- }, [socket?.id, connected]);
+ }, [socket, connected, queryClient]);
 
   // 🔥 NOTIFICACIONES
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
@@ -221,13 +205,11 @@ const handlePublication = useCallback(() => {
 
 // 🔥 Crear historia
 const handleCreateStory = async () => {
-  // ✅ VALIDACIÓN
   if (!file) {
     setSnackbar({ open: true, message: "Selecciona una imagen", severity: "error" });
     return;
   }
 
-  // 🔹 Evitar múltiples envíos concurrentes
   if (creatingStoryRef.current || isCreatingStory) return;
 
   creatingStoryRef.current = true;
@@ -236,29 +218,31 @@ const handleCreateStory = async () => {
   try {
     const formData = new FormData();
     formData.append("image", file);
-    // Historias pueden tener caption opcional
+
     if (postCaption.trim()) {
-      formData.append("caption", postCaption);
+      formData.append("caption", postCaption.trim());
     }
 
-    // Aquí iría la llamada a API para crear historia
-    // const result = await createStoryMutation.mutateAsync(formData);
+    const response = await createStory(formData);
 
-    // Simulación de éxito mientras la API se prepara
-    await new Promise(resolve => setTimeout(resolve, 800));
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "No se pudo publicar la historia");
+    }
 
-    // ✅ NOTIFICACIÓN DE ÉXITO
+    if (response.data?.story) {
+      setStories((prev) => [response.data.story, ...(Array.isArray(prev) ? prev : [])]);
+    }
+
+    await loadStories();
+
     setSnackbar({ open: true, message: "¡Historia publicada exitosamente!", severity: "success" });
-
-    // 🔹 Cerrar modal y limpiar después de 800ms
-    setTimeout(() => {
-      setShowCreateStory(false);
-      setFile(null);
-      setPostCaption("");
-    }, 800);
+    setShowCreateStory(false);
+    setFile(null);
+    setStoryFile(null);
+    setPostCaption("");
   } catch (error) {
     console.error("Error en historia:", error.response?.data || error.message || error);
-    setSnackbar({ open: true, message: "Error al publicar la historia. Inténtalo de nuevo.", severity: "error" });
+    setSnackbar({ open: true, message: error.response?.data?.message || "Error al publicar la historia. Inténtalo de nuevo.", severity: "error" });
   } finally {
     creatingStoryRef.current = false;
     setIsCreatingStory(false);
@@ -304,20 +288,20 @@ const handleDeleteFoodEntry = async (id) => {
 };
 
 // 🔥 HISTORIAS - Cargar historias al montar
-const loadStories = async () => {
+const loadStories = useCallback(async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/stories`);
-    if (response.data.success) {
-      setStories(response.data.stories || []);
-    }
+    const response = await getStories();
+    const safeStories = Array.isArray(response.data?.stories) ? response.data.stories : [];
+    setStories(safeStories);
   } catch (error) {
-    console.error("Error loading stories:", error);
+    console.error("Error loading stories:", error.response?.data || error.message || error);
+    setStories([]);
   }
-};
+}, []);
 
 React.useEffect(() => {
   loadStories();
-}, []);
+}, [loadStories]);
 
 const handleUploadStory = async () => {
   if (!storyFile) {
@@ -512,10 +496,41 @@ const handleUploadStory = async () => {
 
   // 🔥 STORY VIEWER FUNCTIONS
   const [seenStoryUsers, setSeenStoryUsers] = useState(new Set());
+
+  const getStoryOwnerName = useCallback((story) => {
+    return (
+      story?.nombre ||
+      story?.username ||
+      story?.user?.nombre ||
+      story?.user?.name ||
+      story?.user?.username ||
+      story?.author?.nombre ||
+      story?.author?.username ||
+      "Usuario"
+    );
+  }, []);
+
+  const getStoryMediaUrl = useCallback((story) => {
+    return (
+      story?.image_url ||
+      story?.image ||
+      story?.media_url ||
+      story?.mediaUrl ||
+      story?.photo ||
+      story?.story_url ||
+      story?.url ||
+      ""
+    );
+  }, []);
+
+  const getStoryCaption = useCallback((story) => {
+    return story?.caption || story?.texto || story?.description || story?.content || "";
+  }, []);
+
 const getStoryRingColor = (userName) => {
   const safeStories = Array.isArray(stories) ? stories : [];
-  const userStories = safeStories.filter((s) => s?.nombre === userName);
-  const isSeen = userStories.length > 0 && userStories.every((s) => s?.visto);
+  const userStoriesByName = safeStories.filter((s) => getStoryOwnerName(s) === userName);
+  const isSeen = userStoriesByName.length > 0 && userStoriesByName.every((s) => Boolean(s?.visto || s?.seen));
 
   return isSeen
     ? "#555"
@@ -524,17 +539,21 @@ const getStoryRingColor = (userName) => {
 
   const openUserStories = (userName) => {
     const safeStories = Array.isArray(stories) ? stories : [];
-    const userStoriesFiltered = safeStories.filter((s) => s?.nombre === userName);
+    const userStoriesFiltered = safeStories.filter((s) => getStoryOwnerName(s) === userName);
     if (!userStoriesFiltered.length) return;
 
-    const uniqueUsers = [...new Set(safeStories.map((s) => s?.nombre).filter(Boolean))];
+    const uniqueUsers = [...new Set(safeStories.map(getStoryOwnerName).filter(Boolean))];
     setStoryUsers(uniqueUsers);
     setCurrentUser(userName);
     setUserStories(userStoriesFiltered);
     setCurrentStoryIndex(0);
     setViewingStory(true);
     setStoryProgress(0);
-    setSeenStoryUsers((prev) => new Set(prev).add(userName));
+    setSeenStoryUsers((prev) => {
+      const next = new Set(prev);
+      next.add(userName);
+      return next;
+    });
     startStoryTimer();
   };
 
@@ -629,6 +648,7 @@ const startStoryTimer = () => {
   }, [isLoading, data]);
 
   const hasPosts = data?.pages?.some(page => page.posts && page.posts.length > 0);
+  const currentViewedStory = userStories[currentStoryIndex] || null;
 
     // =======================
   // 🔹 SCROLL DETECCIÓN
@@ -774,6 +794,7 @@ return (
               <FeedCenterPremium
                 isMobile={isMobile}
                 stories={stories}
+                currentUserName={user?.nombre || user?.username || user?.email?.split("@")[0] || ""}
                 onCreateStory={() => setShowCreateStory(true)}
                 openUserStories={openUserStories}
                 getStoryRingColor={getStoryRingColor}
@@ -936,16 +957,183 @@ return (
     )}
 
     {/* MODAL CREAR HISTORIA */}
-  <CreateStoryModalPremium
-  open={showCreateStory}
-  file={file}
-  setFile={setFile}
-  postCaption={postCaption}
-  setPostCaption={setPostCaption}
-  isCreatingStory={isCreatingStory}
-  handleStoryPublication={handleStoryPublication}
-  onClose={() => setShowCreateStory(false)}
-/>
+    <CreateStoryModalPremium
+      open={showCreateStory}
+      file={file}
+      setFile={setFile}
+      postCaption={postCaption}
+      setPostCaption={setPostCaption}
+      isCreatingStory={isCreatingStory}
+      handleStoryPublication={handleStoryPublication}
+      onClose={() => setShowCreateStory(false)}
+    />
+
+    {viewingStory && currentViewedStory && (
+      <Box sx={storyViewerOverlay}>
+        <Box sx={storyViewerContainer}>
+          <Box sx={progressContainer}>
+            {userStories.map((story, index) => {
+              const progress = index < currentStoryIndex ? 100 : index === currentStoryIndex ? storyProgress : 0;
+              return (
+                <Box
+                  key={story?.id || `${currentUser}-${index}`}
+                  sx={{
+                    flex: 1,
+                    height: 4,
+                    bgcolor: "rgba(255,255,255,0.18)",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04)",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: `${progress}%`,
+                      height: "100%",
+                      background: "linear-gradient(90deg, #ffffff 0%, #c4ffe8 100%)",
+                      transition: "width 150ms linear",
+                    }}
+                  />
+                </Box>
+              );
+            })}
+          </Box>
+
+          <Box sx={storyTopBar}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                component="img"
+                src={
+                  currentViewedStory?.avatar ||
+                  currentViewedStory?.user?.avatar ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser || "Usuario")}&background=111827&color=00ff88`
+                }
+                alt={currentUser || "Usuario"}
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "2px solid rgba(255,255,255,0.82)",
+                  boxShadow: "0 0 18px rgba(0,255,136,0.14)",
+                }}
+              />
+              <Box>
+                <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>
+                  {currentUser || getStoryOwnerName(currentViewedStory)}
+                </Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.72)", fontSize: 11.5 }}>
+                  Historia activa
+                </Typography>
+              </Box>
+            </Box>
+
+            <IconButton
+              onClick={closeStoryViewer}
+              sx={{
+                color: "#fff",
+                bgcolor: "rgba(0,0,0,0.38)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                '&:hover': { bgcolor: "rgba(0,0,0,0.52)" },
+              }}
+            >
+              <Typography sx={{ color: "#fff", fontWeight: 700 }}>✕</Typography>
+            </IconButton>
+          </Box>
+
+          <Box sx={storyImageContainer}>
+            <Box sx={navLeft} onClick={prevStory} />
+            <Box sx={navRight} onClick={nextStory} />
+
+            <Box
+              sx={{
+                position: "absolute",
+                left: 14,
+                top: "50%",
+                transform: "translateY(-50%)",
+                zIndex: 26,
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                display: { xs: "none", sm: "flex" },
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                bgcolor: "rgba(0,0,0,0.28)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                backdropFilter: "blur(10px)",
+                pointerEvents: "none",
+              }}
+            >
+              ‹
+            </Box>
+
+            <Box
+              sx={{
+                position: "absolute",
+                right: 14,
+                top: "50%",
+                transform: "translateY(-50%)",
+                zIndex: 26,
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                display: { xs: "none", sm: "flex" },
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                bgcolor: "rgba(0,0,0,0.28)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                backdropFilter: "blur(10px)",
+                pointerEvents: "none",
+              }}
+            >
+              ›
+            </Box>
+
+            <Box
+              component="img"
+              src={getStoryMediaUrl(currentViewedStory) || "https://via.placeholder.com/900x1600?text=Historia"}
+              alt={getStoryCaption(currentViewedStory) || "Historia"}
+              sx={storyImage}
+            />
+
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.36) 0%, rgba(0,0,0,0.04) 28%, rgba(0,0,0,0.08) 58%, rgba(0,0,0,0.66) 100%)",
+                pointerEvents: "none",
+              }}
+            />
+
+            {getStoryCaption(currentViewedStory) && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  left: 16,
+                  right: 16,
+                  bottom: 20,
+                  zIndex: 20,
+                  px: 1.6,
+                  py: 1.15,
+                  borderRadius: "16px",
+                  background: "rgba(0,0,0,0.34)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(14px)",
+                  boxShadow: "0 12px 32px rgba(0,0,0,0.24)",
+                }}
+              >
+                <Typography sx={storyBottomText}>
+                  {getStoryCaption(currentViewedStory)}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    )}
 
     <FoodModal
       open={foodModalOpen}
@@ -1278,22 +1466,28 @@ const cancelBtn = {
 const storyViewerOverlay = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.9)",
+  background:
+    "radial-gradient(circle at top, rgba(0,255,136,0.08) 0%, rgba(0,0,0,0.96) 48%, rgba(0,0,0,0.99) 100%)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  zIndex: 1000
+  zIndex: 1400,
+  p: { xs: 0, sm: 2 }
 };
 
 const storyViewerContainer = {
   position: "relative",
-  width: "100vw",
-  height: "100vh",
+  width: { xs: "100vw", sm: "min(430px, 92vw)" },
+  height: { xs: "100vh", sm: "88vh" },
   display: "flex",
   flexDirection: "column",
   alignItems: "stretch",
   justifyContent: "stretch",
-  overflow: "hidden"
+  overflow: "hidden",
+  borderRadius: { xs: 0, sm: "28px" },
+  border: { xs: "none", sm: "1px solid rgba(255,255,255,0.08)" },
+  boxShadow: "0 30px 80px rgba(0,0,0,0.45), 0 0 40px rgba(0,255,136,0.06)",
+  background: "#040404"
 };
 
 const storyTopBar = {
@@ -1307,20 +1501,16 @@ const storyTopBar = {
   alignItems: "center",
   justifyContent: "space-between",
   color: "#fff",
-  backdropFilter: "blur(16px)",
-  background: "rgba(0,0,0,0.24)"
+  backdropFilter: "blur(18px)",
+  background: "linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.14) 100%)"
 };
 
 const storyBottomText = {
-  position: "absolute",
-  left: 16,
-  right: 16,
-  bottom: 40,
-  zIndex: 20,
+  position: "relative",
   color: "#fff",
-  fontSize: 20,
-  fontWeight: 500,
-  lineHeight: 1.3,
+  fontSize: 15,
+  fontWeight: 600,
+  lineHeight: 1.45,
   textShadow: "0 0 14px rgba(0,0,0,0.8)",
   overflowWrap: "break-word"
 };
@@ -1346,8 +1536,9 @@ const progressContainer = {
   left: 10,
   right: 10,
   display: "flex",
-  gap: 2,
-  zIndex: 10
+  gap: 0.75,
+  zIndex: 22,
+  padding: "0 2px"
 };
 
 const progressBar = {
@@ -1391,7 +1582,8 @@ const userName = {
 const storyImage = {
   width: "100%",
   height: "100%",
-  objectFit: "cover"
+  objectFit: "cover",
+  filter: "saturate(1.04) contrast(1.02)"
 };
 
 const storyImageContainer = {
@@ -1401,7 +1593,8 @@ const storyImageContainer = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  overflow: "hidden"
+  overflow: "hidden",
+  background: "#050505"
 };
 
 const navLeft = {
@@ -1410,7 +1603,8 @@ const navLeft = {
   top: 0,
   width: "50%",
   height: "100%",
-  cursor: "pointer"
+  cursor: "pointer",
+  zIndex: 25
 };
 
 const navRight = {
@@ -1419,7 +1613,8 @@ const navRight = {
   top: 0,
   width: "50%",
   height: "100%",
-  cursor: "pointer"
+  cursor: "pointer",
+  zIndex: 25
 };
 
 export default Home;

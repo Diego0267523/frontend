@@ -7,9 +7,10 @@ export function usePosts() {
     queryKey: ["posts"],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await api.get(`/api/posts?page=${pageParam}`);
+      const posts = Array.isArray(response.data?.posts) ? response.data.posts : [];
       return {
-        posts: response.data.posts || [],
-        nextPage: response.data.posts?.length > 0 ? pageParam + 1 : undefined,
+        posts,
+        nextPage: posts.length > 0 ? pageParam + 1 : undefined,
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,

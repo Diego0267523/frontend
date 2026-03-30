@@ -58,24 +58,42 @@ class ErrorBoundary extends React.Component {
             Recargar página
           </button>
 
-          <details style={{ marginTop: '20px', textAlign: 'left', color: '#ddd', width: '90%', maxWidth: '900px' }}>
-            <summary style={{ cursor: 'pointer', color: '#00ff88', fontWeight: 700 }}>
-              Detalles del error (para depuración)
-            </summary>
-            <pre style={{
-              backgroundColor: '#111',
-              padding: '10px',
-              borderRadius: '5px',
-              overflow: 'auto',
-              fontSize: '12px',
+          <button
+            onClick={() => { window.location.href = '/'; }}
+            style={{
               marginTop: '10px',
-              whiteSpace: 'pre-wrap'
-            }}>
-              {errorMessage}
-              {'\n'}
-              {errorStack}
-            </pre>
-          </details>
+              padding: '10px 20px',
+              backgroundColor: 'transparent',
+              color: '#00ff88',
+              border: '1px solid #00ff88',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Ir al inicio
+          </button>
+
+          {process.env.NODE_ENV !== 'production' && (
+            <details style={{ marginTop: '20px', textAlign: 'left', color: '#ddd', width: '90%', maxWidth: '900px' }}>
+              <summary style={{ cursor: 'pointer', color: '#00ff88', fontWeight: 700 }}>
+                Detalles del error (para depuración)
+              </summary>
+              <pre style={{
+                backgroundColor: '#111',
+                padding: '10px',
+                borderRadius: '5px',
+                overflow: 'auto',
+                fontSize: '12px',
+                marginTop: '10px',
+                whiteSpace: 'pre-wrap'
+              }}>
+                {errorMessage}
+                {'\n'}
+                {errorStack}
+              </pre>
+            </details>
+          )}
         </div>
       );
     }
