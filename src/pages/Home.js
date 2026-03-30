@@ -1,3 +1,4 @@
+import CreateStoryModalPremium from "../components/modals/CreateStoryModalPremium";
 import FeedCenterPremium from "../components/feed/FeedCenterPremium";
 import LeftSidebarPremium from "../components/dashboard/LeftSidebarPremium";
 import RightPanelContent from "../components/dashboard/RightPanelContent";
@@ -933,74 +934,16 @@ return (
     )}
 
     {/* MODAL CREAR HISTORIA */}
-    {showCreateStory && (
-      <Box sx={overlayPro}>
-        <motion.div
-          initial={{ scale: 0.7, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Box sx={modalPro}>
-            <Typography sx={titlePro}>
-              Crear Historia 📸
-            </Typography>
-
-            {/* PREVIEW */}
-            {file && (
-              <Box
-                component="img"
-                src={URL.createObjectURL(file)}
-                sx={previewImage}
-              />
-            )}
-
-            {/* INPUT FILE */}
-            <Button
-              variant="contained"
-              component="label"
-              sx={uploadBtn}
-            >
-              Subir imagen
-              <input
-                type="file"
-                hidden
-                onChange={(e) => setFile(e.target.files?.[0])}
-              />
-            </Button>
-
-            {/* CAPTION (OPCIONAL PARA HISTORIAS) */}
-            <input
-              placeholder="Texto opcional (visible en la historia)"
-              value={postCaption}
-              onChange={(e) => setPostCaption(e.target.value)}
-              style={inputPro}
-            />
-
-            {/* BOTONES */}
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <Button
-                onClick={handleStoryPublication}
-                disabled={isCreatingStory}
-                sx={postBtn}
-              >
-                {isCreatingStory ? "Publicando..." : "Publicar"}
-              </Button>
-
-              <Button
-                onClick={() => {
-                  setShowCreateStory(false);
-                  setFile(null);
-                  setPostCaption("");
-                }}
-                sx={cancelBtn}
-              >
-                Cancelar
-              </Button>
-            </Box>
-          </Box>
-        </motion.div>
-      </Box>
-    )}
+  <CreateStoryModalPremium
+  open={showCreateStory}
+  file={file}
+  setFile={setFile}
+  postCaption={postCaption}
+  setPostCaption={setPostCaption}
+  isCreatingStory={isCreatingStory}
+  handleStoryPublication={handleStoryPublication}
+  onClose={() => setShowCreateStory(false)}
+/>
 
     <FoodModal
       open={foodModalOpen}
