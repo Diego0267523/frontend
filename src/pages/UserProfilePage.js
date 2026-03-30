@@ -1,102 +1,174 @@
+/**
+ * 📱 PÁGINA DE PERFIL DE USUARIO - ESTILO INSTAGRAM
+ * 
+ * Características:
+ * - URL dinámica: /app/u/:username
+ * - Carga de datos simulada desde mockUsers
+ * - Manejo profesional de estados (cargando, error, 404)
+ * - Grid responsive de posts con hover overlays
+ * - Animaciones fluidas con Framer Motion
+ * - SPA sin recargas de página
+ * 
+ * En producción:
+ * - Reemplazar useUserProfile con llamadas HTTP a API
+ * - Implementar caché y paginación
+ * - Agregar funcionalidades: seguir/dejar de seguir, mensaje directo, etc.
+ */
+
 import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useUserProfile } from "../hooks/useUserProfile";
 import {
   Box,
   Typography,
-  Avatar,
   IconButton,
   Grid,
   Card,
   CardMedia,
   Tooltip,
+  CircularProgress,
+  Button,
+  Container,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import GridOnRoundedIcon from "@mui/icons-material/GridOnRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import ChatBubbleRoundedIcon from "@mui/icons-material/ChatBubbleRounded";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ProfileAvatar from "../components/ProfileAvatar";
 
+/**
+ * Componente principal de perfil de usuario
+ * Renderiza el perfil Instagram-style con posts y estadísticas
+ */
 function UserProfilePage() {
+  // 📍 Obtener nombre de usuario de la URL
   const { username } = useParams();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [hoveredPostId, setHoveredPostId] = useState(null);
 
-  // 🔥 Mock data - reemplazar con API cuando esté lista
-  const userPosts = useMemo(
-    () =>
-      user?.posts || [
-        {
-          id: 1,
-          image:
-            "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=500&h=500&fit=crop",
-          likes: 120,
-          comments: 14,
-        },
-        {
-          id: 2,
-          image:
-            "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=500&h=500&fit=crop",
-          likes: 98,
-          comments: 8,
-        },
-        {
-          id: 3,
-          image:
-            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&h=500&fit=crop",
-          likes: 156,
-          comments: 22,
-        },
-        {
-          id: 4,
-          image:
-            "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=500&fit=crop",
-          likes: 200,
-          comments: 31,
-        },
-        {
-          id: 5,
-          image:
-            "https://images.unsplash.com/photo-1470114716159-e389f8712fda?w=500&h=500&fit=crop",
-          likes: 178,
-          comments: 19,
-        },
-        {
-          id: 6,
-          image:
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop",
-          likes: 234,
-          comments: 45,
-        },
-      ],
-    [user],
+  // 🎣 Hook personalizado para cargar perfil del usuario
+  const { user, loading, error } = useUserProfile(username);
+
+  // 📊 Datos procesados del usuario (memoized para rendimiento)
+  const userPosts = useMemo(() => {
+    return user?.posts || [];
+  }, [user]);
+
+  const stats = useMemo(
+    () => [
+      { label: "Publicaciones", value: userPosts.length },
+      { label: "Racha", value: `${user?.racha || 0} días` },
+      { label: "Nivel", value: user?.nivelActividad || "0" },
+    ],
+    [user, userPosts.length]
   );
 
-  if (!user) {
+  // ⏳ ESTADO: CARGANDO
+  if (loading) {
     return (
       <Box
         sx={{
-          color: "#fff",
-          p: 3,
+          width: "100%",
           minHeight: "100vh",
           bgcolor: "#0b0b0b",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          color: "#fff",
         }}
       >
-        <Typography>Perfil no encontrado</Typography>
+        <Box sx={{ textAlign: "center" }}>
+          <CircularProgress sx={{ color: "#00ff88", mb: 2 }} />
+          <Typography sx={{ color: "#8b949e", fontSize: 14 }}>
+            Cargando perfil...
+          </Typography>
+        </Box>
       </Box>
     );
   }
 
-  const stats = [
-    { label: "Publicaciones", value: userPosts.length },
-    { label: "Racha", value: `${user.racha || 0} días` },
-    { label: "Nivel", value: user.nivelActividad || "Pro" },
-  ];
+  // ❌ ESTADO: ERROR O USUARIO NO ENCONTRADO (404)
+  if (error || !user) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: "100vh",
+          bgcolor: "#0b0b0b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Box sx={{ textAlign: "center" }}>
+            {/* Ícono de error */}
+            <ErrorOutlineIcon
+              sx={{
+                fontSize: 64,
+                color: "#ff3333",
+                mb: 2,
+                opacity: 0.8,
+              }}
+            />
+
+            {/* Título del error */}
+            <Typography
+              sx={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: "#fff",
+                mb: 1,
+              }}
+            >
+              Perfil no encontrado
+            </Typography>
+
+            {/* Descripción del error */}
+            <Typography
+              sx={{
+                color: "#8b949e",
+                fontSize: 14,
+                mb: 3,
+                lineHeight: 1.6,
+              }}
+            >
+              {error
+                ? error
+                : `No pudimos encontrar el usuario "@${username}". Verifica que el nombre sea correcto.`}
+            </Typography>
+
+            {/* Botón para volver */}
+            <Button
+              onClick={() => navigate(-1)}
+              variant="outlined"
+              sx={{
+                borderColor: "#00ff88",
+                color: "#00ff88",
+                fontWeight: 700,
+                textTransform: "none",
+                px: 3,
+                py: 1.2,
+                borderRadius: 2,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  bgcolor: "rgba(0,255,136,0.08)",
+                  borderColor: "#00ff88",
+                },
+              }}
+            >
+              ← Volver atrás
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  // ✅ ESTADO: PERFIL CARGADO EXITOSAMENTE
 
   return (
     <Box
@@ -106,10 +178,11 @@ function UserProfilePage() {
         color: "#fff",
         p: { xs: 2, md: 4 },
         pb: 4,
+        minHeight: "100vh",
       }}
     >
-      {/* 🔙 BACK BUTTON */}
-      <Tooltip title="Volver">
+      {/* 🔙 BACK BUTTON - Volver a página anterior */}
+      <Tooltip title="Volver atrás" arrow>
         <IconButton
           onClick={() => navigate(-1)}
           sx={{
@@ -120,14 +193,15 @@ function UserProfilePage() {
             "&:hover": {
               bgcolor: "rgba(0,255,136,0.08)",
               boxShadow: "0 0 12px rgba(0,255,136,0.2)",
+              transform: "translateX(-2px)",
             },
           }}
         >
-          <ArrowBackIcon />
+          <ArrowBackIcon sx={{ fontSize: 20 }} />
         </IconButton>
       </Tooltip>
 
-      {/* 👤 HEADER INSTAGRAM STYLE */}
+      {/* 👤 HEADER SECTION - Información del usuario estilo Instagram */}
       <motion.div
         initial={{ opacity: 0, y: -25 }}
         animate={{ opacity: 1, y: 0 }}
@@ -142,13 +216,28 @@ function UserProfilePage() {
             alignItems: { xs: "center", sm: "flex-start" },
           }}
         >
-          {/* AVATAR */}
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
-            <ProfileAvatar size={110} />
+          {/* AVATAR - Foto de perfil del usuario */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #00ff88, #00c6ff)",
+              }}
+            >
+              <ProfileAvatar size={110} />
+            </Box>
           </Box>
 
-          {/* INFO SECTION */}
-          <Box sx={{ flex: 1 }}>
+          {/* INFO SECTION - Nombre, email, estadísticas y biografía */}
+          <Box sx={{ flex: 1, width: "100%" }}>
+            {/* NOMBRE DEL USUARIO */}
             <Typography
               sx={{
                 fontSize: { xs: 20, md: 28 },
@@ -165,41 +254,50 @@ function UserProfilePage() {
             <Typography
               sx={{
                 color: "#8b949e",
-                fontSize: 14,
+                fontSize: 13,
                 mb: 2,
               }}
             >
-              {user.email}
+              📧 {user.email}
             </Typography>
 
-            {/* STATS */}
+            {/* ESTADÍSTICAS - Publicaciones, racha y nivel */}
             <Box
               sx={{
                 display: "flex",
-                gap: { xs: 2, md: 4 },
+                gap: { xs: 2.5, md: 5 },
                 flexWrap: "wrap",
                 mb: 3,
+                pb: 2,
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
               }}
             >
               {stats.map((stat, idx) => (
-                <Box key={idx} sx={{ textAlign: "center" }}>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 16, md: 20 },
-                      fontWeight: 800,
-                      color: "#00ff88",
-                    }}
-                  >
-                    {stat.value}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, color: "#8b949e" }}>
-                    {stat.label}
-                  </Typography>
-                </Box>
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography
+                      sx={{
+                        fontSize: { xs: 18, md: 24 },
+                        fontWeight: 800,
+                        color: "#00ff88",
+                      }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: "#8b949e" }}>
+                      {stat.label}
+                    </Typography>
+                  </Box>
+                </motion.div>
               ))}
             </Box>
 
-            {/* BIO */}
+            {/* BIOGRAFÍA - Descripción del usuario */}
             <Typography
               sx={{
                 color: "#c9d1d9",
@@ -208,13 +306,13 @@ function UserProfilePage() {
                 lineHeight: 1.6,
               }}
             >
-              🎯 {user.objetivo || "Transformando mi físico cada día 💪"}
+              {user.bio || "Sin biografía"}
             </Typography>
           </Box>
         </Box>
       </motion.div>
 
-      {/* POSTS HEADER */}
+      {/* 📰 POSTS HEADER - Título de la sección de publicaciones */}
       <Box
         sx={{
           display: "flex",
@@ -227,129 +325,149 @@ function UserProfilePage() {
           color: "#8b949e",
         }}
       >
-        <GridOnRoundedIcon />
-        <Typography fontWeight={700} sx={{ fontSize: 14 }}>
+        <GridOnRoundedIcon sx={{ fontSize: 20 }} />
+        <Typography fontWeight={700} sx={{ fontSize: 13, letterSpacing: 0.5 }}>
           PUBLICACIONES
         </Typography>
       </Box>
 
-      {/* GRID POSTS */}
-      <Grid container spacing={2}>
-        {userPosts.map((post, idx) => (
-          <Grid item xs={12} sm={6} md={4} key={post.id}>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05, duration: 0.4 }}
-              onMouseEnter={() => setHoveredPostId(post.id)}
-              onMouseLeave={() => setHoveredPostId(null)}
-              style={{ height: "100%" }}
-            >
-              <Card
-                sx={{
-                  position: "relative",
-                  overflow: "hidden",
-                  borderRadius: 2,
-                  aspectRatio: "1/1",
-                  cursor: "pointer",
-                  transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  border: "1px solid rgba(0,255,136,0.1)",
-                  bgcolor: "transparent",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    borderColor: "rgba(0,255,136,0.3)",
-                    boxShadow: "0 0 20px rgba(0,255,136,0.15)",
-                  },
-                }}
+      {/* 🖼️ GRID DE POSTS - Galería de imágenes con hover overlay */}
+      {userPosts.length === 0 ? (
+        // Estado vacío: usuario sin posts
+        <Box
+          sx={{
+            textAlign: "center",
+            py: 6,
+            color: "#8b949e",
+          }}
+        >
+          <Typography sx={{ fontSize: 14 }}>
+            Este usuario aún no ha publicado nada
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={2}>
+          {userPosts.map((post, idx) => (
+            <Grid item xs={12} sm={6} md={4} key={post.id}>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05, duration: 0.4 }}
+                onMouseEnter={() => setHoveredPostId(post.id)}
+                onMouseLeave={() => setHoveredPostId(null)}
+                style={{ height: "100%" }}
               >
-                {/* POST IMAGE */}
-                <CardMedia
-                  component="img"
-                  image={post.image}
-                  alt={`Post ${post.id}`}
+                <Card
                   sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-
-                {/* OVERLAY */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: hoveredPostId === post.id ? 1 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(0,255,136,0.1) 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 2,
-                    pointerEvents: hoveredPostId === post.id ? "auto" : "none",
+                    position: "relative",
+                    overflow: "hidden",
+                    borderRadius: 2,
+                    aspectRatio: "1/1",
+                    bgcolor: "transparent",
+                    backgroundImage: "none",
+                    boxShadow: "none",
+                    cursor: "pointer",
+                    transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    border: "1px solid rgba(0,255,136,0.1)",
+                    "&:hover": {
+                      transform: "scale(1.02)",
+                      borderColor: "rgba(0,255,136,0.3)",
+                      boxShadow: "0 0 20px rgba(0,255,136,0.15)",
+                    },
                   }}
                 >
-                  {/* LIKES */}
-                  <Box
+                  {/* IMAGEN DEL POST */}
+                  <CardMedia
+                    component="img"
+                    image={post.image}
+                    alt={`Post de ${user.nombre}`}
                     sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 0.5,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
                     }}
-                  >
-                    <FavoriteRoundedIcon
-                      sx={{
-                        fontSize: 28,
-                        color: "#ff3333",
-                        filter: "drop-shadow(0 0 4px rgba(255,51,51,0.6))",
-                      }}
-                    />
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: 14,
-                      }}
-                    >
-                      {post.likes}
-                    </Typography>
-                  </Box>
+                  />
 
-                  {/* COMMENTS */}
-                  <Box
-                    sx={{
+                  {/* OVERLAY CON ESTADÍSTICAS (Aparece al hover) */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: hoveredPostId === post.id ? 1 : 0,
+                    }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(0,255,136,0.1) 100%)",
                       display: "flex",
-                      flexDirection: "column",
                       alignItems: "center",
-                      gap: 0.5,
+                      justifyContent: "center",
+                      gap: 3,
+                      pointerEvents:
+                        hoveredPostId === post.id ? "auto" : "none",
                     }}
                   >
-                    <ChatBubbleRoundedIcon
+                    {/* LIKES - Contador de likes */}
+                    <Box
                       sx={{
-                        fontSize: 28,
-                        color: "#00ff88",
-                        filter: "drop-shadow(0 0 4px rgba(0,255,136,0.6))",
-                      }}
-                    />
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 0.5,
                       }}
                     >
-                      {post.comments}
-                    </Typography>
-                  </Box>
-                </motion.div>
-              </Card>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
+                      <FavoriteRoundedIcon
+                        sx={{
+                          fontSize: 32,
+                          color: "#ff3333",
+                          filter: "drop-shadow(0 0 6px rgba(255,51,51,0.7))",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: 16,
+                        }}
+                      >
+                        {post.likes}
+                      </Typography>
+                    </Box>
+
+                    {/* COMMENTS - Contador de comentarios */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 0.5,
+                      }}
+                    >
+                      <ChatBubbleRoundedIcon
+                        sx={{
+                          fontSize: 32,
+                          color: "#00ff88",
+                          filter: "drop-shadow(0 0 6px rgba(0,255,136,0.7))",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: 16,
+                        }}
+                      >
+                        {post.comments}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                </Card>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {/* EMPTY STATE */}
       {userPosts.length === 0 && (

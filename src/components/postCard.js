@@ -1,4 +1,5 @@
 import { memo, useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, Box, Typography, IconButton, TextField, Button, Collapse, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Snackbar, Alert } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +16,7 @@ import API_URL from "../utils/config";
 
 const PostCard = memo(({ post }) => {
   // 🔥 CRITICAL: All hooks MUST be declared before any conditionals
+  const navigate = useNavigate();
   const { token, user } = useAuth();
   const { socket, connected } = useSocket();
   const queryClient = useQueryClient();
@@ -98,6 +100,12 @@ const PostCard = memo(({ post }) => {
   if (!visible) {
     return null;
   }
+
+  // 📍 Navegar al perfil del usuario cuando se hace clic en el nombre o avatar
+  const handleNavigateToProfile = () => {
+    const authorName = (post.nombre || post.user || "usuario").toLowerCase().trim();
+    navigate(`/app/u/${authorName}`);
+  };
 
   const getTimeAgo = (timeString) => {
     if (!timeString) return "Hace poco";
@@ -305,13 +313,37 @@ const PostCard = memo(({ post }) => {
 
           {/* Header - Usuario y Tiempo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, position: 'relative' }}>
-            <Box component="img"
+            {/* 👤 Avatar - Clickeable para ir al perfil del autor */}
+            <Box 
+              component="img"
               src={post.avatar || post.userAvatar || '/default-avatar.png'}
-              alt="User avatar"
-              sx={{ width: 40, height: 40, borderRadius: "50%", objectFit: 'cover', border: '2px solid #00ff88' }}
+              alt={`Perfil de ${post.nombre || post.user}`}
+              onClick={handleNavigateToProfile}
+              sx={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: "50%", 
+                objectFit: 'cover', 
+                border: '2px solid #00ff88',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.08)',
+                  boxShadow: '0 0 8px rgba(0,255,136,0.5)',
+                }
+              }}
             />
-            <Box sx={{ flex: 1 }}>
-              <Typography sx={{ color: "#fff", fontWeight: "bold" }}>
+            <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={handleNavigateToProfile}>
+              <Typography 
+                sx={{ 
+                  color: "#fff", 
+                  fontWeight: "bold",
+                  transition: 'color 0.2s ease',
+                  '&:hover': {
+                    color: '#00ff88',
+                  }
+                }}
+              >
                 {post.nombre || post.user || "Usuario"}
               </Typography>
               <Typography sx={{ color: "#777", fontSize: 12 }}>
