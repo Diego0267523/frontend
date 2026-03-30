@@ -8,7 +8,9 @@ import { floatingBubbleVariants } from "../utils/motion-variants";
  * - Efecto hover mejorado
  * - Pulse indicador cuando hay mensajes nuevos
  */
-const FloatingChatBubble = ({ onClick, isOpen }) => {
+const FloatingChatBubble = ({ onClick, isOpen, hidden = false }) => {
+  if (hidden) return null;
+
   return (
     <motion.button
       aria-label={isOpen ? "Cerrar chat" : "Abrir chat"}

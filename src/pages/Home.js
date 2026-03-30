@@ -118,6 +118,41 @@ React.useEffect(() => {
   setNewPostsAvailable(0);
 }, [location.pathname]);
 
+React.useEffect(() => {
+  const shouldHideFloatingChat =
+    activeSection !== "home" ||
+    open ||
+    openRight ||
+    showAI ||
+    showCreatePost ||
+    showCreateStory ||
+    viewingStory ||
+    foodModalOpen;
+
+  window.dispatchEvent(
+    new CustomEvent("app:chat-visibility", {
+      detail: { hidden: shouldHideFloatingChat },
+    })
+  );
+
+  return () => {
+    window.dispatchEvent(
+      new CustomEvent("app:chat-visibility", {
+        detail: { hidden: true },
+      })
+    );
+  };
+}, [
+  activeSection,
+  open,
+  openRight,
+  showAI,
+  showCreatePost,
+  showCreateStory,
+  viewingStory,
+  foodModalOpen,
+]);
+
   // 🔥 Escuchar nuevas publicaciones en tiempo real (realtime)
   React.useEffect(() => {
     if (!socket || !connected) return;
@@ -649,6 +684,9 @@ return (
           width: 260,
           flexShrink: 0,
           overflowY: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          "&::-webkit-scrollbar": { display: "none" },
           borderRight: "1px solid rgba(255,255,255,0.06)",
           background:
             "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
@@ -769,6 +807,9 @@ return (
           flexShrink: 0,
           p: 2,
           overflowY: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          "&::-webkit-scrollbar": { display: "none" },
           borderLeft: "1px solid rgba(255,255,255,0.06)",
           background:
             "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",

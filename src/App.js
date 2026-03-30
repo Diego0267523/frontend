@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import UserProfilePage from "./pages/UserProfilePage";
@@ -17,11 +17,94 @@ import ProfessionalLoader from "./components/ProfessionalLoader";
 import { useAuth } from "./hooks/useAuth";
 import { pageTransitionVariants } from "./utils/motion-variants";
 
+function AppRoutes({ token }) {
+  const location = useLocation();
+  const [dmsOpen, setDmsOpen] = useState(false);
+  const [chatHidden, setChatHidden] = useState(false);
+
+  useEffect(() => {
+    const handleChatVisibility = (event) => {
+      setChatHidden(Boolean(event?.detail?.hidden));
+    };
+
+    window.addEventListener("app:chat-visibility", handleChatVisibility);
+    return () => {
+      window.removeEventListener("app:chat-visibility", handleChatVisibility);
+    };
+  }, []);
+
+  const shouldHideFloatingChat = !token || location.pathname !== "/" || chatHidden;
+
+  useEffect(() => {
+    if (shouldHideFloatingChat && dmsOpen) {
+      setDmsOpen(false);
+    }
+  }, [dmsOpen, shouldHideFloatingChat]);
+
+  return (
+    <>
+      <Routes>
+        {/* RUTAS PÚBLICAS */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/perfil/:username" element={<PublicProfilePage />} />
+
+        {!token ? (
+          <>
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </>
+        ) : (
+          <>
+            {/* RUTAS PRIVADAS */}
+            <Route path="/" element={<Home />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/app/u/:username" element={<UserProfilePage />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </>
+        )}
+      </Routes>
+
+      {token && (
+        <>
+          <FloatingChatBubble
+            hidden={shouldHideFloatingChat}
+            isOpen={dmsOpen}
+            onClick={() => setDmsOpen((prev) => !prev)}
+          />
+          <AnimatePresence mode="wait">
+            {dmsOpen && !shouldHideFloatingChat && (
+              <motion.div
+                key="direct-messages"
+                style={{
+                  position: "fixed",
+                  right: 16,
+                  bottom: 90,
+                  zIndex: 1900,
+                  width: 350,
+                  maxWidth: "calc(100vw - 32px)",
+                  pointerEvents: "auto",
+                }}
+                variants={pageTransitionVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <DirectMessages onClose={() => setDmsOpen(false)} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+    </>
+  );
+}
+
 function App() {
   const { token, profileLoading } = useAuth();
-  const [dmsOpen, setDmsOpen] = useState(false);
 
-  // Detectar desconexión de red
   useEffect(() => {
     const handleOffline = () => console.warn("⚠️ Sin conexión a internet");
     const handleOnline = () => console.log("✅ Conexión restaurada");
@@ -37,65 +120,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-
-        {/* RUTAS PÚBLICAS */}
-        <Route path="/register" element={<Register />} />
-        <Route path="/perfil/:username" element={<PublicProfilePage />} />
-
-        {!token ? (
-          <>
-            <Route path="/" element={<Login />} />
-            <Route path="/login" element={<Login />} />
-            {/* Redirige cualquier otra ruta al login */}
-            <Route path="*" element={<Navigate to="/login" />} />
-          </>
-        ) : (
-          <>
-            {/* RUTAS PRIVADAS */}
-            <Route path="/" element={<Home />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/feed" element={<Feed />} />
-            <Route path="/stories" element={<Stories />} />
-            <Route path="/app/u/:username" element={<UserProfilePage />} />
-
-            {/* Fallback para rutas no encontradas */}
-            <Route path="*" element={<Navigate to="/" />} />
-          </>
-        )}
-      </Routes>
-
-      {/* Chat flotante */}
-      {token && (
-        <>
-          <FloatingChatBubble
-            isOpen={dmsOpen}
-            onClick={() => setDmsOpen((prev) => !prev)}
-          />
-          <AnimatePresence mode="wait">
-            {dmsOpen && (
-              <motion.div
-                key="direct-messages"
-                style={{
-                  position: "fixed",
-                  right: 16,
-                  bottom: 90,
-                  zIndex: 1900,
-                  width: 350,
-                  maxWidth: "calc(100vw - 32px)",
-                  pointerEvents: "auto"
-                }}
-                variants={pageTransitionVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <DirectMessages onClose={() => setDmsOpen(false)} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
-      )}
+      <AppRoutes token={token} />
     </BrowserRouter>
   );
 }

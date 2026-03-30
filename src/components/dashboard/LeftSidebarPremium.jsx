@@ -72,7 +72,12 @@ const menuItems = [
     <Box
       sx={{
         width: 260,
-        minHeight: "100vh",
+        height: "100vh",
+        boxSizing: "border-box",
+        overflowY: "auto",
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+        "&::-webkit-scrollbar": { display: "none" },
         p: 2,
         display: "flex",
         flexDirection: "column",
