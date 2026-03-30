@@ -665,6 +665,18 @@ return (
       <LeftSidebarPremium
         active={activeSection}
         onChange={setActiveSection}
+        onOpenAI={() => {
+          setShowAI(true);
+          setOpen(false);
+        }}
+        onOpenCreate={() => {
+          setShowCreatePost(true);
+          setOpen(false);
+        }}
+        onOpenProgress={() => {
+          setFoodModalOpen(true);
+          setOpen(false);
+        }}
       />
     </Drawer>
 
@@ -781,6 +793,76 @@ return (
     {showAI && (
       <Box sx={aiOverlay}>
         <ChatAssistant onClose={() => setShowAI(false)} />
+      </Box>
+    )}
+
+    {/* MODAL CREAR POST */}
+    {showCreatePost && (
+      <Box sx={overlayPro}>
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Box sx={modalPro}>
+            <Typography sx={titlePro}>
+              Crear Post 🚀
+            </Typography>
+
+            {/* PREVIEW */}
+            {file && (
+              <Box
+                component="img"
+                src={URL.createObjectURL(file)}
+                sx={previewImage}
+              />
+            )}
+
+            {/* INPUT FILE */}
+            <Button
+              variant="contained"
+              component="label"
+              sx={uploadBtn}
+            >
+              Subir imagen
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setFile(e.target.files?.[0])}
+              />
+            </Button>
+
+            {/* CAPTION */}
+            <input
+              placeholder="¿Qué estás pensando?"
+              value={postCaption}
+              onChange={(e) => setPostCaption(e.target.value)}
+              style={inputPro}
+            />
+
+            {/* BOTONES */}
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button
+                onClick={handlePublication}
+                disabled={isCreatingPost}
+                sx={postBtn}
+              >
+                {isCreatingPost ? "Publicando..." : "Publicar"}
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setShowCreatePost(false);
+                  setFile(null);
+                  setPostCaption("");
+                }}
+                sx={cancelBtn}
+              >
+                Cancelar
+              </Button>
+            </Box>
+          </Box>
+        </motion.div>
       </Box>
     )}
 
