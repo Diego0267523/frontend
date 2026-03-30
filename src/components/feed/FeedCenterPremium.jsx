@@ -34,8 +34,34 @@ export default function FeedCenterPremium({
     boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
   };
 
+  const getStoryUserName = (story) => {
+    return (
+      story.nombre ||
+      story.username ||
+      story.user?.nombre ||
+      story.user?.name ||
+      story.user?.username ||
+      "Usuario"
+    );
+  };
+
+  const getProfileImage = (story) => {
+    return (
+      story.avatar ||
+      story.avatarUrl ||
+      story.image_url ||
+      story.image ||
+      story.user?.avatar ||
+      story.user?.image ||
+      "https://via.placeholder.com/64?text=🙂"
+    );
+  };
+
+  const safeStories = Array.isArray(stories) ? stories : [];
+  const uniqueUsers = [...new Set(safeStories.map(getStoryUserName).filter(Boolean))];
+
   return (
-    <Box sx={{ width: "100%", maxWidth: 500, py: 2 }}>
+    <Box sx={{ width: "100%", maxWidth: 500, py: 2, mt: { xs: 8, md: 0 } }}>
       {/* STORIES */}
       <Box
         sx={{
@@ -44,6 +70,7 @@ export default function FeedCenterPremium({
           overflowX: "auto",
           mb: 2,
           pb: 1,
+          '&::-webkit-scrollbar': { display: 'none' }
         }}
       >
         <motion.div whileHover={{ scale: 1.05 }}>
@@ -59,7 +86,7 @@ export default function FeedCenterPremium({
                 justifyContent: "center",
               }}
             >
-              <Typography sx={{ color: "#000", fontSize: 28 }}>+</Typography>
+              <Typography sx={{ color: "#000", fontSize: 28, fontWeight: 800 }}>+</Typography>
             </Box>
             <Typography sx={{ color: "#8b949e", fontSize: 12, textAlign: "center" }}>
               Tu historia
@@ -67,11 +94,14 @@ export default function FeedCenterPremium({
           </Box>
         </motion.div>
 
-        {stories &&
-          [...new Set(stories.map((s) => s.nombre))].map((userName, i) => {
-            const userStory = stories.find((s) => s.nombre === userName);
-            const profileImage =
-              userStory?.avatar || userStory?.avatarUrl || userStory?.image_url;
+        {uniqueUsers.length === 0 ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', color: '#8b949e' }}>
+            Aún no hay historias de otros usuarios.
+          </Box>
+        ) : (
+          uniqueUsers.map((userName, i) => {
+            const userStory = safeStories.find((s) => getStoryUserName(s) === userName);
+            const profileImage = getProfileImage(userStory || {});
             const ringColor = getStoryRingColor(userName);
 
             return (
@@ -89,6 +119,10 @@ export default function FeedCenterPremium({
                     <img
                       src={profileImage}
                       alt={userName}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/64?text=🙂";
+                      }}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -105,7 +139,8 @@ export default function FeedCenterPremium({
                 </Box>
               </motion.div>
             );
-          })}
+          })
+        )}
       </Box>
 
       {/* NUEVAS PUBLICACIONES */}

@@ -59,7 +59,6 @@ function Home() {
 
   // 🔥 HISTORIAS
   const [storyFile, setStoryFile] = useState(null);
-  const [showStoryPreview, setShowStoryPreview] = useState(false);
   const [isUploadingStory, setIsUploadingStory] = useState(false);
   const [stories, setStories] = useState([]);
 
@@ -335,7 +334,6 @@ const handleUploadStory = async () => {
 
     if (response.data?.success) {
       setSnackbar({ open: true, message: "Historia subida exitosamente", severity: "success" });
-      setShowStoryPreview(false);
       setStoryFile(null);
       await loadStories();
     } else {
@@ -525,6 +523,8 @@ const getStoryRingColor = (userName) => {
 
   const openUserStories = (userName) => {
     const userStoriesFiltered = stories.filter(s => s.nombre === userName);
+    if (!userStoriesFiltered.length) return;
+
     const uniqueUsers = [...new Set(stories.map(s => s.nombre))];
     setStoryUsers(uniqueUsers);
     setCurrentUser(userName);
