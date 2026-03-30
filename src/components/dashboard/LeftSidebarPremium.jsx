@@ -100,8 +100,19 @@ const menuItems = [
           transition={{ delay: 0 }}
           onClick={() => {
             if (user?.nombre) {
-              const username = user.nombre.toLowerCase();
-              navigate(`/app/u/${username}`);
+              const raw = user.nombre || user.username || "";
+              const normalized = raw
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/[^a-z0-9._-]/g, "")
+                .replace(/[._-]{2,}/g, "-")
+                .replace(/^[-._]+|[-._]+$/g, "");
+
+              if (!normalized) return;
+              navigate(`/perfil/${normalized}`);
               onChange?.("profile");
             }
           }}

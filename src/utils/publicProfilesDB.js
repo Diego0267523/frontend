@@ -186,10 +186,10 @@ export function createPublicProfile(userData) {
     isVerified: false
   };
 
-  // Guardar en la "base de datos"
-  publicProfilesDB[username] = publicProfile;
+  // Guardar en la "base de datos" usando el nombre normalizado
+  publicProfilesDB[normalizedUsername] = publicProfile;
   
-  console.log(`✅ Perfil público creado: ${username}`);
+  console.log(`✅ Perfil público creado: ${normalizedUsername}`);
   return publicProfile;
 }
 
