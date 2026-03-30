@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -8,6 +8,13 @@ import {
   Stack,
   IconButton,
   Badge,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import { motion } from "framer-motion";
 
@@ -19,6 +26,7 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
 const MotionBox = motion(Box);
 
@@ -30,7 +38,8 @@ export default function LeftSidebarPremium({
   onOpenProgress,
 }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   
 const menuItems = [
   { id: 'home', label: 'Inicio', icon: <HomeRoundedIcon />, type: 'page' },
@@ -48,6 +57,12 @@ const menuItems = [
     }
 
     onChange?.(item.id);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setSettingsOpen(false);
+    navigate("/login");
   };
 
   return (
@@ -228,6 +243,7 @@ const menuItems = [
           </Box>
 
           <IconButton
+            onClick={() => setSettingsOpen(true)}
             sx={{
               color: "#c9d1d9",
               background: "rgba(255,255,255,0.04)",
@@ -240,6 +256,54 @@ const menuItems = [
           </IconButton>
         </Stack>
       </Box>
+
+      {/* SETTINGS DRAWER */}
+      <Drawer
+        anchor="left"
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            background: 'linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            backdropFilter: 'blur(18px)',
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography
+            sx={{
+              color: "#fff",
+              fontSize: 20,
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              mb: 3,
+            }}
+          >
+            Configuración
+          </Typography>
+
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogoutRoundedIcon sx={{ color: "#ff4757" }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Cerrar Sesión"
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                      color: "#fff",
+                      fontWeight: 600,
+                    },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
     </Box>
   );
 }
