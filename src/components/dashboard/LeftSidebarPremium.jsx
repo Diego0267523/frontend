@@ -49,6 +49,7 @@ const menuItems = [
   { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'action', action: () => onOpenProgress?.() },
   { id: 'community', label: 'Comunidad', icon: <GroupsRoundedIcon />, type: 'page' },
   { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action', action: () => onOpenAI?.() },
+    { id: 'create', label: 'Crear Post', icon: <AddBoxRoundedIcon />, type: 'action', action: () => onOpenCreate?.() },
 ];
 
   const handleClick = (item) => {
