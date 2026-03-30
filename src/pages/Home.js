@@ -210,6 +210,12 @@ const handleCreatePost = async () => {
     setIsCreatingPost(false);
   }
 };
+
+// 🔥 Wrapper memoizado para publicar desde el modal
+const handlePublication = useCallback(() => {
+  handleCreatePost();
+}, [handleCreatePost]);
+
   const resetFoodForm = () => {
     // Función vacía, lógica movida a FoodModal
   };
