@@ -10,8 +10,16 @@ import {
   CircularProgress,
   Stack,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import { motion } from "framer-motion";
+
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import RestaurantRoundedIcon from "@mui/icons-material/RestaurantRounded";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import LocalFireDepartmentRoundedIcon from "@mui/icons-material/LocalFireDepartmentRounded";
+import FitnessCenterRoundedIcon from "@mui/icons-material/FitnessCenterRounded";
+import GrainRoundedIcon from "@mui/icons-material/GrainRounded";
+import WaterDropRoundedIcon from "@mui/icons-material/WaterDropRounded";
+import SpaRoundedIcon from "@mui/icons-material/SpaRounded";
 
 const MotionCard = motion(Card);
 
@@ -30,7 +38,10 @@ function RightPanelContent({
   resetFoodForm,
   setFoodModalOpen,
 }) {
-  const safeDailyFoodEntries = Array.isArray(dailyFoodEntries) ? dailyFoodEntries : [];
+  const safeDailyFoodEntries = Array.isArray(dailyFoodEntries)
+    ? dailyFoodEntries
+    : [];
+
   const weekly = useMemo(() => [40, 60, 80, 50, 70, 90, 65], []);
   const days = useMemo(() => ["L", "M", "X", "J", "V", "S", "D"], []);
 
@@ -38,8 +49,9 @@ function RightPanelContent({
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.05)",
     borderRadius: 4,
-    backdropFilter: "blur(12px)",
+    backdropFilter: "blur(18px)",
     boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+    overflow: "hidden",
   };
 
   const StatProgress = ({ label, value, target, icon, gradient, unit = "" }) => {
@@ -47,11 +59,34 @@ function RightPanelContent({
 
     return (
       <Box sx={{ mb: 2.5 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-          <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>
-            {icon} {label}
-          </Typography>
-          <Typography sx={{ color: "#8bffcf", fontSize: 13, fontWeight: 700 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            {icon}
+            <Typography
+              sx={{
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              {label}
+            </Typography>
+          </Stack>
+
+          <Typography
+            sx={{
+              color: "#8bffcf",
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
             {value} / {target} {unit}
           </Typography>
         </Box>
@@ -78,8 +113,10 @@ function RightPanelContent({
       sx={{
         width: { xs: "100%", md: 340 },
         maxWidth: "100%",
+        minHeight: "100dvh",
         flexShrink: 0,
-        p: { xs: 1, md: 2 },
+        p: { xs: 1.5, md: 2 },
+        pb: { xs: 10, md: 2 }, // FIX espacio gris abajo en móvil
         overflowY: "auto",
         overflowX: "hidden",
         display: "flex",
@@ -87,31 +124,60 @@ function RightPanelContent({
         gap: 2,
         background:
           "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
-        borderLeft: "1px solid rgba(255,255,255,0.06)",
+        borderLeft: { md: "1px solid rgba(255,255,255,0.06)" },
+        backdropFilter: "blur(18px)",
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+        "&::-webkit-scrollbar": { display: "none" },
       }}
     >
-      {/* Weekly */}
+      {/* WEEKLY */}
       <MotionCard sx={premiumCardStyle}>
         <CardContent>
-          <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>
-            📊 Calorías semana
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
+            <Typography
+              sx={{
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: 16,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Calorías semana
+            </Typography>
+          </Stack>
 
-          <Box sx={{ display: "flex", gap: 1, mt: 2, alignItems: "flex-end", height: 120 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              alignItems: "flex-end",
+              height: 120,
+            }}
+          >
             {weekly.map((v, i) => (
-              <Box key={i} sx={{ textAlign: "center" }}>
+              <Box key={i} sx={{ flex: 1, textAlign: "center" }}>
                 <motion.div
                   initial={{ height: 0 }}
                   animate={{ height: v }}
                   transition={{ duration: 0.35, delay: i * 0.03 }}
                   style={{
                     width: 16,
+                    margin: "0 auto",
                     borderRadius: 10,
                     background: "linear-gradient(180deg, #00ff88, #00c6ff)",
-                    boxShadow: "0 0 12px rgba(0,255,136,0.15)",
+                    boxShadow: "0 0 20px rgba(0,255,136,0.18)",
                   }}
                 />
-                <Typography sx={{ color: "#8b949e", fontSize: 10, mt: 0.5 }}>
+                <Typography
+                  sx={{
+                    color: "#8b949e",
+                    fontSize: 10,
+                    mt: 0.6,
+                    fontWeight: 600,
+                  }}
+                >
                   {days[i]}
                 </Typography>
               </Box>
@@ -120,12 +186,21 @@ function RightPanelContent({
         </CardContent>
       </MotionCard>
 
-      {/* Food entries */}
+      {/* FOOD ENTRIES */}
       <MotionCard sx={premiumCardStyle}>
         <CardContent>
-          <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 16, mb: 1.5 }}>
-            🍽️ Entradas del día
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+            <RestaurantRoundedIcon sx={{ color: "#00ff88" }} />
+            <Typography
+              sx={{
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: 16,
+              }}
+            >
+              Entradas del día
+            </Typography>
+          </Stack>
 
           {loadingFood ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
@@ -148,26 +223,47 @@ function RightPanelContent({
                   alignItems: "center",
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.05)",
+                  transition: "all 0.25s ease",
                   "&:hover": {
-                    background: "rgba(255,255,255,0.06)",
+                    background: "rgba(255,255,255,0.08)",
+                    transform: "translateX(4px)",
                   },
                 }}
               >
                 <Box>
-                  <Typography sx={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
                     {entry.descripcion || "Sin descripción"}
                   </Typography>
-                  <Typography sx={{ color: "#8b949e", fontSize: 11 }}>
-                    C: {entry.calorias} • P: {entry.proteina} • CH: {entry.carbohidratos}
+
+                  <Typography
+                    sx={{
+                      color: "#8b949e",
+                      fontSize: 11,
+                    }}
+                  >
+                    C: {entry.calorias} • P: {entry.proteina} • CH:{" "}
+                    {entry.carbohidratos}
                   </Typography>
                 </Box>
 
                 <IconButton
                   onClick={() => handleDeleteFoodEntry(entry.id)}
                   size="small"
-                  sx={{ color: "#ff6b6b" }}
+                  sx={{
+                    color: "#ff6b6b",
+                    background: "rgba(255,255,255,0.04)",
+                    "&:hover": {
+                      background: "rgba(255,255,255,0.08)",
+                    },
+                  }}
                 >
-                  <CloseIcon fontSize="small" />
+                  <CloseRoundedIcon fontSize="small" />
                 </IconButton>
               </Box>
             ))
@@ -175,19 +271,28 @@ function RightPanelContent({
         </CardContent>
       </MotionCard>
 
-      {/* Daily consumption */}
+      {/* DAILY CONSUMPTION */}
       <MotionCard sx={premiumCardStyle}>
         <CardContent>
-          <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 16, mb: 2 }}>
-            📊 Consumo del Día
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
+            <Typography
+              sx={{
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: 16,
+              }}
+            >
+              Consumo del Día
+            </Typography>
+          </Stack>
 
           <StatProgress
             label="Calorías"
             value={todayTotal}
             target={targetCalories}
             unit="kcal"
-            icon="🔥"
+            icon={<LocalFireDepartmentRoundedIcon sx={{ color: "#00ff88" }} />}
             gradient="linear-gradient(90deg, #00ff88, #00c6ff)"
           />
 
@@ -196,21 +301,46 @@ function RightPanelContent({
             value={todayProtein}
             target={targetProtein}
             unit="g"
-            icon="💪"
+            icon={<FitnessCenterRoundedIcon sx={{ color: "#00c6ff" }} />}
             gradient="linear-gradient(90deg, #00c6ff, #7b61ff)"
           />
 
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>
-              🌾 Carbohidratos: <span style={{ color: "#ffd166" }}>{todayCarbs} g</span>
-            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <GrainRoundedIcon sx={{ color: "#ffd166" }} />
+              <Typography
+                sx={{
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              >
+                Carbohidratos:{" "}
+                <span style={{ color: "#ffd166" }}>{todayCarbs} g</span>
+              </Typography>
+            </Stack>
           </Box>
 
           <Stack direction="row" justifyContent="space-between" sx={{ mb: 2.5 }}>
             {[
-              ["🥑", "Grasas", todayFats || 0, "g"],
-              ["🥦", "Fibra", todayFiber || 0, "g"],
-              ["🧂", "Sodio", todaySodium || 0, "mg"],
+              [
+                <WaterDropRoundedIcon sx={{ color: "#00c6ff" }} />,
+                "Grasas",
+                todayFats || 0,
+                "g",
+              ],
+              [
+                <SpaRoundedIcon sx={{ color: "#00ff88" }} />,
+                "Fibra",
+                todayFiber || 0,
+                "g",
+              ],
+              [
+                <WaterDropRoundedIcon sx={{ color: "#c084fc" }} />,
+                "Sodio",
+                todaySodium || 0,
+                "mg",
+              ],
             ].map(([icon, label, val, unit]) => (
               <Box
                 key={label}
@@ -222,12 +352,28 @@ function RightPanelContent({
                   textAlign: "center",
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.05)",
+                  transition: "all 0.25s ease",
+                  "&:hover": {
+                    background: "rgba(255,255,255,0.06)",
+                    transform: "translateY(-2px)",
+                  },
                 }}
               >
+                <Box sx={{ display: "flex", justifyContent: "center", mb: 0.5 }}>
+                  {icon}
+                </Box>
+
                 <Typography sx={{ color: "#fff", fontSize: 12 }}>
-                  {icon} {label}
+                  {label}
                 </Typography>
-                <Typography sx={{ color: "#8b949e", fontSize: 12, fontWeight: 700 }}>
+
+                <Typography
+                  sx={{
+                    color: "#8b949e",
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
                   {val} {unit}
                 </Typography>
               </Box>
@@ -249,12 +395,15 @@ function RightPanelContent({
               color: "#08110d",
               background: "linear-gradient(90deg, #00ff88, #00c6ff)",
               boxShadow: "0 0 20px rgba(0,255,136,0.18)",
+              transition: "all 0.25s ease",
               "&:hover": {
+                background: "linear-gradient(90deg, #00ff88, #00c6ff)",
                 transform: "translateY(-1px)",
+                boxShadow: "0 0 28px rgba(0,255,136,0.25)",
               },
             }}
           >
-            🍽️ Registrar Comida
+            Registrar Comida
           </Button>
         </CardContent>
       </MotionCard>
