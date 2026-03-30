@@ -1,204 +1,394 @@
-// 🔥 STORY EDITOR V5 ULTRA PRO (Instagram-level)
-// Features:
-// - Pinch zoom (mobile)
-// - Drag / rotate / scale
-// - GIF picker (Giphy API placeholder)
-// - Music layer (audio preview + timeline)
-// - Multi-layer system
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Alert,
+  Avatar,
+  Backdrop,
+  Box,
+  Button,
+  Chip,
+  Fade,
+  IconButton,
+  LinearProgress,
+  Snackbar,
+  Stack,
+  Typography,
+} from "@mui/material";
 
-import React, { useRef, useState, useEffect } from "react";
-import { Box, Button } from "@mui/material";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CameraAltRoundedIcon from "@mui/icons-material/CameraAltRounded";
+import PhotoLibraryRoundedIcon from "@mui/icons-material/PhotoLibraryRounded";
+import VideocamRoundedIcon from "@mui/icons-material/VideocamRounded";
+import FlipCameraAndroidRoundedIcon from "@mui/icons-material/FlipCameraAndroidRounded";
+import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 
-export default function StoryEditorV5() {
-  const containerRef = useRef(null);
-  const [layers, setLayers] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [scale, setScale] = useState(1);
-  const [audio, setAudio] = useState(null);
+import StoryCameraFullscreen from "./StoryCameraFullscreen";
+import useStoryUpload from "../../hooks/useStoryUpload";
+import { STORY_ACCEPT } from "../../services/storyService";
 
-  // ======================
-  // ✋ PINCH ZOOM
-  // ======================
+const MotionBox = motion(Box);
+
+const glassBtn = {
+  borderRadius: "18px",
+  py: 1.2,
+  textTransform: "none",
+  fontWeight: 700,
+  backdropFilter: "blur(20px)",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.08)",
+};
+
+const StoryUploader = forwardRef(function StoryUploader(
+  {
+    open,
+    user,
+    onClose,
+    preferredCamera = "environment",
+    onOptimisticStory,
+    onStoryUploaded,
+    onStoryUploadError,
+    onRefreshStories,
+  },
+  ref
+) {
+  const autoLaunchRef = useRef(false);
+
+  const {
+    inputRef,
+    selectedFile,
+    previewUrl,
+    caption,
+    setCaption,
+    captureMode,
+    mediaKind,
+    isPreparing,
+    isUploading,
+    uploadProgress,
+    cameraOpen,
+    toast,
+    setToast,
+    canUseFullscreenCamera,
+    shouldPreferNativeCamera,
+    resetDraft,
+    openNativeCapture,
+    openFilePicker,
+    openProCamera,
+    closeProCamera,
+    handleInputChange,
+    handleCameraCapture,
+    uploadSelectedStory,
+  } = useStoryUpload({
+    user,
+    preferredCamera,
+    onOptimisticStory,
+    onUploadSuccess: onStoryUploaded,
+    onUploadError: onStoryUploadError,
+    onRefreshStories,
+  });
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openNativeCapture: (facingMode) => {
+        autoLaunchRef.current = true;
+        openNativeCapture(facingMode);
+      },
+      openFilePicker: () => {
+        autoLaunchRef.current = true;
+        openFilePicker();
+      },
+      openProCamera: (facingMode) => {
+        autoLaunchRef.current = true;
+        openProCamera(facingMode);
+      },
+    }),
+    [openFilePicker, openNativeCapture, openProCamera]
+  );
+
+  const closeAndReset = useCallback(() => {
+    if (isUploading || isPreparing) return;
+    resetDraft({ keepToast: true });
+    onClose?.();
+  }, [isPreparing, isUploading, onClose, resetDraft]);
+
   useEffect(() => {
-    let initialDistance = null;
+    if (!open) {
+      autoLaunchRef.current = false;
+      return;
+    }
 
-    const getDistance = (touches) => {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
+    if (selectedFile || autoLaunchRef.current) return;
 
-    const handleTouchMove = (e) => {
-      if (e.touches.length === 2) {
-        const dist = getDistance(e.touches);
-        if (!initialDistance) {
-          initialDistance = dist;
-        } else {
-          const zoom = dist / initialDistance;
-          setScale((prev) => Math.max(0.5, Math.min(prev * zoom, 3)));
-          initialDistance = dist;
-        }
-      }
-    };
+    if (shouldPreferNativeCamera) {
+      autoLaunchRef.current = true;
+      openNativeCapture(preferredCamera);
+    }
+  }, [
+    open,
+    openNativeCapture,
+    preferredCamera,
+    selectedFile,
+    shouldPreferNativeCamera,
+  ]);
 
-    const reset = () => (initialDistance = null);
+  const handleUpload = useCallback(async () => {
+    const result = await uploadSelectedStory();
+    if (result?.success) {
+      setTimeout(() => closeAndReset(), 700);
+    }
+  }, [uploadSelectedStory, closeAndReset]);
 
-    const el = containerRef.current;
-    el.addEventListener("touchmove", handleTouchMove);
-    el.addEventListener("touchend", reset);
-
-    return () => {
-      el.removeEventListener("touchmove", handleTouchMove);
-      el.removeEventListener("touchend", reset);
-    };
-  }, []);
-
-  // ======================
-  // 🧩 ADD TEXT
-  // ======================
-  const addText = () => {
-    setLayers((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: "text",
-        content: "Nuevo texto",
-        x: 100,
-        y: 100,
-        scale: 1,
-        rotate: 0,
-      },
-    ]);
-  };
-
-  // ======================
-  // 😂 ADD GIF (GIPHY)
-  // ======================
-  const addGif = async () => {
-    const res = await fetch(
-      `https://api.giphy.com/v1/gifs/trending?api_key=YOUR_API_KEY&limit=1`
-    );
-    const data = await res.json();
-
-    const gifUrl = data.data[0].images.original.url;
-
-    setLayers((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: "gif",
-        content: gifUrl,
-        x: 120,
-        y: 120,
-        scale: 1,
-        rotate: 0,
-      },
-    ]);
-  };
-
-  // ======================
-  // 🎵 MUSIC
-  // ======================
-  const handleMusic = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const url = URL.createObjectURL(file);
-    const audioObj = new Audio(url);
-    audioObj.play();
-    setAudio(audioObj);
-  };
-
-  // ======================
-  // 🎯 DRAG
-  // ======================
-  const startDrag = (e, id) => {
-    const startX = e.clientX;
-    const startY = e.clientY;
-
-    const layer = layers.find((l) => l.id === id);
-
-    const move = (ev) => {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
-
-      setLayers((prev) =>
-        prev.map((l) =>
-          l.id === id
-            ? { ...l, x: layer.x + dx, y: layer.y + dy }
-            : l
-        )
-      );
-    };
-
-    const up = () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-  };
+  const isVideo = mediaKind === "video";
 
   return (
-    <Box>
-      {/* CANVAS */}
-      <Box
-        ref={containerRef}
-        sx={{
-          width: "100%",
-          height: "80vh",
-          background: "black",
-          position: "relative",
-          overflow: "hidden",
-          touchAction: "none",
-        }}
-      >
-        <Box
-          sx={{
-            transform: `scale(${scale})`,
-            transformOrigin: "center",
-            width: "100%",
-            height: "100%",
-            position: "relative",
-          }}
-        >
-          {layers.map((layer) => (
-            <Box
-              key={layer.id}
-              onMouseDown={(e) => startDrag(e, layer.id)}
-              onClick={() => setSelectedId(layer.id)}
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        hidden
+        accept={STORY_ACCEPT}
+        capture={captureMode || undefined}
+        onChange={handleInputChange}
+      />
+
+      <StoryCameraFullscreen
+        open={cameraOpen}
+        facingMode={captureMode}
+        onClose={closeProCamera}
+        onCapture={handleCameraCapture}
+      />
+
+      <AnimatePresence>
+        {open && (
+          <Backdrop
+            open
+            sx={{
+              zIndex: 3000,
+              backdropFilter: "blur(25px)",
+              background:
+                "radial-gradient(circle at top, rgba(0,255,136,0.08), rgba(0,0,0,0.92))",
+            }}
+            onClick={closeAndReset}
+          >
+            <MotionBox
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.96, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.25 }}
               sx={{
-                position: "absolute",
-                top: layer.y,
-                left: layer.x,
-                transform: `scale(${layer.scale}) rotate(${layer.rotate}deg)`,
-                color: "white",
-                cursor: "grab",
-                border:
-                  selectedId === layer.id
-                    ? "1px solid #00ff88"
-                    : "none",
+                width: "100%",
+                maxWidth: 520,
+                mx: 2,
+                borderRadius: "30px",
+                overflow: "hidden",
+                bgcolor: "rgba(15,15,15,0.92)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 30px 90px rgba(0,0,0,0.5)",
               }}
             >
-              {layer.type === "text" && layer.content}
-              {layer.type === "gif" && (
-                <img src={layer.content} width={120} />
-              )}
-            </Box>
-          ))}
-        </Box>
-      </Box>
+              {/* HEADER */}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Avatar src={user?.avatar} />
+                  <Box>
+                    <Typography sx={{ color: "#fff", fontWeight: 800 }}>
+                      Nueva historia
+                    </Typography>
+                    <Typography sx={{ color: "#aaa", fontSize: 12 }}>
+                      comparte tu momento ✨
+                    </Typography>
+                  </Box>
+                </Stack>
 
-      {/* CONTROLS */}
-      <Box sx={{ display: "flex", gap: 1, p: 2 }}>
-        <Button onClick={addText}>Texto</Button>
-        <Button onClick={addGif}>GIF</Button>
-        <Button component="label">
-          Música
-          <input hidden type="file" accept="audio/*" onChange={handleMusic} />
-        </Button>
-      </Box>
-    </Box>
+                <IconButton onClick={closeAndReset} sx={{ color: "#fff" }}>
+                  <CloseRoundedIcon />
+                </IconButton>
+              </Box>
+
+              {/* PROGRESS */}
+              {(isUploading || isPreparing) && (
+                <LinearProgress
+                  variant={isUploading ? "determinate" : "indeterminate"}
+                  value={uploadProgress}
+                  sx={{
+                    height: 4,
+                    "& .MuiLinearProgress-bar": {
+                      background:
+                        "linear-gradient(90deg, #00ff88, #00c6ff)",
+                    },
+                  }}
+                />
+              )}
+
+              {/* PREVIEW */}
+              <Box sx={{ p: 2 }}>
+                <Box
+                  sx={{
+                    height: 460,
+                    borderRadius: "24px",
+                    overflow: "hidden",
+                    bgcolor: "#050505",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mb: 2,
+                    position: "relative",
+                  }}
+                >
+                  {selectedFile ? (
+                    isVideo ? (
+                      <video
+                        src={previewUrl}
+                        controls
+                        playsInline
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={previewUrl}
+                        alt="preview"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    )
+                  ) : (
+                    <Box textAlign="center">
+                      <Typography fontSize={50}>📸</Typography>
+                      <Typography color="#fff" fontWeight={800}>
+                        Captura instantánea
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* ACTIONS */}
+                <Stack direction="row" spacing={1} mb={2}>
+                  <Button
+                    fullWidth
+                    startIcon={<CameraAltRoundedIcon />}
+                    onClick={() => openNativeCapture("environment")}
+                    sx={glassBtn}
+                  >
+                    Cámara
+                  </Button>
+
+                  <Button
+                    fullWidth
+                    startIcon={<FlipCameraAndroidRoundedIcon />}
+                    onClick={() => openNativeCapture("user")}
+                    sx={glassBtn}
+                  >
+                    Selfie
+                  </Button>
+
+                  <Button
+                    fullWidth
+                    startIcon={<PhotoLibraryRoundedIcon />}
+                    onClick={openFilePicker}
+                    sx={glassBtn}
+                  >
+                    Galería
+                  </Button>
+                </Stack>
+
+                {canUseFullscreenCamera && (
+                  <Button
+                    fullWidth
+                    onClick={() => openProCamera(preferredCamera)}
+                    sx={{
+                      ...glassBtn,
+                      mb: 2,
+                      color: "#00ff88",
+                    }}
+                  >
+                    Cámara Pro Fullscreen
+                  </Button>
+                )}
+
+                {/* CAPTION */}
+                <Box
+                  component="input"
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Escribe algo..."
+                  sx={{
+                    width: "100%",
+                    px: 2,
+                    py: 1.6,
+                    borderRadius: "18px",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    bgcolor: "rgba(255,255,255,0.04)",
+                    color: "#fff",
+                    outline: "none",
+                    mb: 2,
+                  }}
+                />
+
+                {/* UPLOAD */}
+                <Button
+                  fullWidth
+                  startIcon={<CloudUploadRoundedIcon />}
+                  onClick={handleUpload}
+                  disabled={!selectedFile || isUploading}
+                  sx={{
+                    py: 1.4,
+                    borderRadius: "18px",
+                    textTransform: "none",
+                    fontWeight: 800,
+                    fontSize: 15,
+                    color: "#000",
+                    background:
+                      "linear-gradient(90deg, #00ff88, #00c6ff)",
+                  }}
+                >
+                  {isUploading ? "Subiendo..." : "Publicar historia"}
+                </Button>
+              </Box>
+            </MotionBox>
+          </Backdrop>
+        )}
+      </AnimatePresence>
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={() =>
+          setToast((prev) => ({ ...prev, open: false }))
+        }
+      >
+        <Alert
+          severity={toast.severity}
+          variant="filled"
+          sx={{ borderRadius: 2 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
-}
+});
+
+export default StoryUploader;
