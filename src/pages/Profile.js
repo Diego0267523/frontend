@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
+import Grid from "@mui/material/Grid2";
 import {
   Box,
   Typography,
   Avatar,
   IconButton,
-  Grid,
   Card,
 } from "@mui/material";
 import { motion } from "framer-motion";
@@ -174,7 +174,7 @@ function Profile() {
       {/* GRID POSTS */}
       <Grid container spacing={2}>
         {userPosts.map((post, i) => (
-          <Grid item xs={12} sm={6} md={4} key={post.id}>
+          <Grid xs={12} sm={6} md={4} key={post.id}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}

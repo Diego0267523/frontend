@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, CircularProgress } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -39,7 +39,21 @@ export default function CreateStoryModalPremium({
   handleStoryPublication,
   onClose,
 }) {
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    if (!file || !(file instanceof File)) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
 
   const resetAndClose = () => {
     setFile(null);
@@ -56,15 +70,29 @@ export default function CreateStoryModalPremium({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
+          onClick={resetAndClose}
         >
           <MotionBox
             sx={modalPro}
+            onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, y: 30, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.8 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 18,
+              mass: 0.8,
+            }}
           >
-            <Typography sx={{ fontSize: 24, fontWeight: 800, mb: 2, letterSpacing: "-0.03em" }}>
+            <Typography
+              sx={{
+                fontSize: 24,
+                fontWeight: 800,
+                mb: 2,
+                letterSpacing: "-0.03em",
+              }}
+            >
               Crear Historia 📸
             </Typography>
 
@@ -103,7 +131,7 @@ export default function CreateStoryModalPremium({
                 color: "#08110d",
                 background: "linear-gradient(90deg, #00ff88, #00c6ff)",
                 boxShadow: "0 0 24px rgba(0,255,136,0.22)",
-                '&:hover': {
+                "&:hover": {
                   transform: "translateY(-2px)",
                   boxShadow: "0 10px 30px rgba(0,255,136,0.28)",
                 },
@@ -120,7 +148,7 @@ export default function CreateStoryModalPremium({
 
             <Box
               component="input"
-              placeholder="¿Qué estás pensando?"
+              placeholder="Texto opcional para la historia"
               value={postCaption}
               onChange={(e) => setPostCaption(e.target.value)}
               sx={{
@@ -135,7 +163,7 @@ export default function CreateStoryModalPremium({
                 fontSize: 14,
                 outline: "none",
                 transition: "all 0.25s ease",
-                '&:focus': {
+                "&:focus": {
                   border: "1px solid rgba(0,198,255,0.45)",
                   boxShadow: "0 0 0 4px rgba(0,198,255,0.08)",
                 },
@@ -161,7 +189,14 @@ export default function CreateStoryModalPremium({
                   background: "linear-gradient(90deg, #00ff88, #00c6ff)",
                 }}
               >
-                {isCreatingStory ? <CircularProgress size={20} sx={{ color: "#08110d" }} /> : "Publicar Historia"}
+                {isCreatingStory ? (
+                  <CircularProgress
+                    size={20}
+                    sx={{ color: "#08110d" }}
+                  />
+                ) : (
+                  "Publicar Historia"
+                )}
               </Button>
 
               <Button
@@ -175,7 +210,9 @@ export default function CreateStoryModalPremium({
                   color: "#fff",
                   background: "rgba(255,255,255,0.05)",
                   border: "1px solid rgba(255,255,255,0.06)",
-                  '&:hover': { background: "rgba(255,255,255,0.08)" },
+                  "&:hover": {
+                    background: "rgba(255,255,255,0.08)",
+                  },
                 }}
               >
                 Cancelar

@@ -22,7 +22,9 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      // UI de fallback
+      const errorMessage = this.state.error ? this.state.error.toString() : "Error desconocido";
+      const errorStack = this.state.errorInfo?.componentStack || "Sin stack trace disponible";
+
       return (
         <div style={{
           display: 'flex',
@@ -55,25 +57,25 @@ class ErrorBoundary extends React.Component {
           >
             Recargar página
           </button>
-          {process.env.NODE_ENV === 'development' && (
-            <details style={{ marginTop: '20px', textAlign: 'left', color: '#777' }}>
-              <summary style={{ cursor: 'pointer', color: '#00ff88' }}>
-                Detalles del error (desarrollo)
-              </summary>
-              <pre style={{
-                backgroundColor: '#111',
-                padding: '10px',
-                borderRadius: '5px',
-                overflow: 'auto',
-                fontSize: '12px',
-                marginTop: '10px'
-              }}>
-                {this.state.error && this.state.error.toString()}
-                <br />
-                {this.state.errorInfo.componentStack}
-              </pre>
-            </details>
-          )}
+
+          <details style={{ marginTop: '20px', textAlign: 'left', color: '#ddd', width: '90%', maxWidth: '900px' }}>
+            <summary style={{ cursor: 'pointer', color: '#00ff88', fontWeight: 700 }}>
+              Detalles del error (para depuración)
+            </summary>
+            <pre style={{
+              backgroundColor: '#111',
+              padding: '10px',
+              borderRadius: '5px',
+              overflow: 'auto',
+              fontSize: '12px',
+              marginTop: '10px',
+              whiteSpace: 'pre-wrap'
+            }}>
+              {errorMessage}
+              {'\n'}
+              {errorStack}
+            </pre>
+          </details>
         </div>
       );
     }
