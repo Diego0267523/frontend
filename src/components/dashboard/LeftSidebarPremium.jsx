@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import {
   Box,
   Typography,
@@ -27,6 +29,9 @@ export default function LeftSidebarPremium({
   onOpenCreate,
   onOpenProgress,
 }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
 const menuItems = [
   { id: 'home', label: 'Inicio', icon: <HomeRoundedIcon />, type: 'page' },
   { id: 'workouts', label: 'Rutinas', icon: <FitnessCenterRoundedIcon />, type: 'page' },
@@ -78,7 +83,13 @@ const menuItems = [
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0 }}
-          onClick={() => onChange?.("profile")}
+          onClick={() => {
+            if (user?.nombre) {
+              const username = user.nombre.toLowerCase();
+              navigate(`/app/u/${username}`);
+              onChange?.("profile");
+            }
+          }}
           sx={{
             p: 1.5,
             mb: 3,
@@ -101,7 +112,7 @@ const menuItems = [
               variant="dot"
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             >
-              <Avatar sx={{ width: 46, height: 46 }}>D</Avatar>
+              <Avatar sx={{ width: 46, height: 46 }}>{user?.nombre?.[0]?.toUpperCase() || "U"}</Avatar>
             </Badge>
 
             <Box>
@@ -112,7 +123,7 @@ const menuItems = [
                   fontSize: 14,
                 }}
               >
-                Diego
+                {user?.nombre || "Usuario"}
               </Typography>
 
               <Typography
@@ -121,7 +132,7 @@ const menuItems = [
                   fontSize: 12,
                 }}
               >
-                5 días seguidos 🔥
+                {user?.racha || 0} días seguidos 🔥
               </Typography>
             </Box>
           </Stack>

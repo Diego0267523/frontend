@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
+import UserProfilePage from "./pages/UserProfilePage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -58,6 +58,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/stories" element={<Stories />} />
+            <Route path="/app/u/:username" element={<UserProfilePage />} />
           </>
         )}
 
