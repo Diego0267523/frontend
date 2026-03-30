@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+
 import UserProfilePage from "./pages/UserProfilePage";
 import PublicProfilePage from "./pages/PublicProfilePage";
 import Login from "./pages/Login";
@@ -22,13 +23,8 @@ function App() {
 
   // Detectar desconexión de red
   useEffect(() => {
-    const handleOffline = () => {
-      console.warn("⚠️ Sin conexión a internet");
-    };
-    const handleOnline = () => {
-      console.log("✅ Conexión restaurada");
-    };
-
+    const handleOffline = () => console.warn("⚠️ Sin conexión a internet");
+    const handleOnline = () => console.log("✅ Conexión restaurada");
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     return () => {
@@ -37,15 +33,13 @@ function App() {
     };
   }, []);
 
-  if (profileLoading) {
-    return <ProfessionalLoader message="Iniciando sesión..." />;
-  }
+  if (profileLoading) return <ProfessionalLoader message="Iniciando sesión..." />;
 
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* 🌐 RUTAS PÚBLICAS (sin requerir login) */}
+        {/* RUTAS PÚBLICAS */}
         <Route path="/register" element={<Register />} />
         <Route path="/perfil/:username" element={<PublicProfilePage />} />
 
@@ -53,22 +47,25 @@ function App() {
           <>
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
+            {/* Redirige cualquier otra ruta al login */}
+            <Route path="*" element={<Navigate to="/login" />} />
           </>
         ) : (
           <>
+            {/* RUTAS PRIVADAS */}
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/stories" element={<Stories />} />
             <Route path="/app/u/:username" element={<UserProfilePage />} />
+
+            {/* Fallback para rutas no encontradas */}
+            <Route path="*" element={<Navigate to="/" />} />
           </>
         )}
-
-        {/* 🔥 fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
-
       </Routes>
 
+      {/* Chat flotante */}
       {token && (
         <>
           <FloatingChatBubble
@@ -99,7 +96,6 @@ function App() {
           </AnimatePresence>
         </>
       )}
-
     </BrowserRouter>
   );
 }
