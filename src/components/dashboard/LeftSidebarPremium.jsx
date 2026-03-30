@@ -1,240 +1,234 @@
-import React, { useEffect } from "react";
-import { useAuth } from "../hooks/useAuth";
+import React from "react";
 import {
   Box,
   Typography,
   Avatar,
+  Stack,
   IconButton,
-  Grid,
-  Card,
+  Badge,
 } from "@mui/material";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import GridOnRoundedIcon from "@mui/icons-material/GridOnRounded";
-import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
-import ChatBubbleRoundedIcon from "@mui/icons-material/ChatBubbleRounded";
-import ProfileAvatar from "../components/ProfileAvatar";
 
-function Profile() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import FitnessCenterRoundedIcon from "@mui/icons-material/FitnessCenterRounded";
+import RestaurantRoundedIcon from "@mui/icons-material/RestaurantRounded";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
+import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 
-  useEffect(() => {
-    const handleEscapeKey = (e) => {
-      if (e.key === "Escape") navigate(-1);
-    };
+const MotionBox = motion(Box);
 
-    window.addEventListener("keydown", handleEscapeKey);
-    return () => window.removeEventListener("keydown", handleEscapeKey);
-  }, [navigate]);
+export default function LeftSidebarPremium({
+  active = "home",
+  onChange,
+  onOpenAI,
+  onOpenCreate,
+  onOpenProgress,
+}) {
+const menuItems = [
+  { id: 'home', label: 'Inicio', icon: <HomeRoundedIcon />, type: 'page' },
+  { id: 'workouts', label: 'Rutinas', icon: <FitnessCenterRoundedIcon />, type: 'page' },
+  { id: 'nutrition', label: 'Nutrición', icon: <RestaurantRoundedIcon />, type: 'page' },
+  { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'action', action: () => onOpenProgress?.() },
+  { id: 'community', label: 'Comunidad', icon: <GroupsRoundedIcon />, type: 'page' },
+  { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action', action: () => onOpenAI?.() },
+];
 
-  if (!user) {
-    return (
-      <Box sx={{ color: "#fff", p: 3, minHeight: "100vh", bgcolor: "#0f0f0f" }}>
-        <Typography>Cargando perfil...</Typography>
-      </Box>
-    );
-  }
+  const handleClick = (item) => {
+    if (item.action) {
+      item.action?.();
+      return;
+    }
 
-  // 🔥 MOCK TEMPORAL POSTS DEL USUARIO
-  const userPosts = user.posts || [
-    {
-      id: 1,
-      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438",
-      likes: 120,
-      comments: 14,
-    },
-    {
-      id: 2,
-      image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48",
-      likes: 98,
-      comments: 8,
-    },
-    {
-      id: 3,
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
-      likes: 156,
-      comments: 22,
-    },
-  ];
+    onChange?.(item.id);
+  };
 
   return (
     <Box
       sx={{
+        width: 260,
         minHeight: "100vh",
-        bgcolor: "#0b0b0b",
-        color: "#fff",
-        p: { xs: 2, md: 4 },
+        p: 2,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        background:
+          "linear-gradient(180deg, rgba(14,14,14,0.98) 0%, rgba(20,20,20,0.95) 100%)",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+        backdropFilter: "blur(18px)",
       }}
     >
-      {/* 🔙 BACK */}
-      <IconButton
-        onClick={() => navigate(-1)}
-        sx={{
-          color: "#00ff88",
-          mb: 3,
-          border: "1px solid rgba(0,255,136,0.3)",
-          "&:hover": {
-            bgcolor: "rgba(0,255,136,0.08)",
-          },
-        }}
-      >
-        <ArrowBackIcon />
-      </IconButton>
-
-      {/* 👤 HEADER INSTAGRAM STYLE */}
-      <motion.div
-        initial={{ opacity: 0, y: -25 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Box
+      <Box>
+        <Typography
           sx={{
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 4,
-            alignItems: "center",
-            mb: 5,
-            pb: 4,
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            color: "#fff",
+            fontSize: 24,
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            mb: 3,
           }}
         >
-          <ProfileAvatar size={110} />
+          Fit<span style={{ color: "#00ff88" }}>Sync</span>
+        </Typography>
 
-          <Box sx={{ flex: 1 }}>
+        {/* USER CARD */}
+        <MotionBox
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0 }}
+          onClick={() => onChange?.("profile")}
+          sx={{
+            p: 1.5,
+            mb: 3,
+            borderRadius: 4,
+            background: active === "profile" ? "linear-gradient(90deg, #00ff88, #00c6ff)" : "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            color: active === "profile" ? "#08110d" : "#fff",
+            cursor: "pointer",
+            transition: "all 0.25s ease",
+            "&:hover": {
+              background: active === "profile" ? "linear-gradient(90deg, #00ff88, #00c6ff)" : "rgba(255,255,255,0.08)",
+              transform: "translateX(4px)",
+            }
+          }}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Badge
+              overlap="circular"
+              color="success"
+              variant="dot"
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            >
+              <Avatar sx={{ width: 46, height: 46 }}>D</Avatar>
+            </Badge>
+
+            <Box>
+              <Typography
+                sx={{
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}
+              >
+                Diego
+              </Typography>
+
+              <Typography
+                sx={{
+                  color: "#8b949e",
+                  fontSize: 12,
+                }}
+              >
+                5 días seguidos 🔥
+              </Typography>
+            </Box>
+          </Stack>
+        </MotionBox>
+
+        {/* MENU */}
+        <Stack spacing={1}>
+          {menuItems.map((item, index) => {
+            const isActive = active === item.id && !item.action;
+
+            return (
+              <MotionBox
+                key={item.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={() => handleClick(item)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1.3,
+                  borderRadius: 3,
+                  cursor: "pointer",
+                  color: isActive ? "#08110d" : "#c9d1d9",
+                  background: isActive
+                    ? "linear-gradient(90deg, #00ff88, #00c6ff)"
+                    : "transparent",
+                  boxShadow: isActive
+                    ? "0 0 20px rgba(0,255,136,0.18)"
+                    : "none",
+                  transition: "all 0.25s ease",
+                  "&:hover": {
+                    background: isActive
+                      ? "linear-gradient(90deg, #00ff88, #00c6ff)"
+                      : "rgba(255,255,255,0.05)",
+                    transform: "translateX(4px)",
+                  },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  {item.icon}
+                </Box>
+
+                <Typography
+                  sx={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </MotionBox>
+            );
+          })}
+        </Stack>
+      </Box>
+
+      {/* FOOTER */}
+      <Box
+        sx={{
+          p: 1.2,
+          borderRadius: 4,
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Box>
             <Typography
               sx={{
-                fontSize: 28,
-                fontWeight: 800,
-                letterSpacing: "-0.03em",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
               }}
             >
-              {user.nombre}
+              Meta diaria
             </Typography>
 
             <Typography
               sx={{
                 color: "#8b949e",
-                mt: 0.5,
-                mb: 2,
+                fontSize: 12,
               }}
             >
-              {user.email}
-            </Typography>
-
-            {/* STATS */}
-            <Box
-              sx={{
-                display: "flex",
-                gap: 4,
-                flexWrap: "wrap",
-              }}
-            >
-              <Typography>
-                <b>{userPosts.length}</b> publicaciones
-              </Typography>
-
-              <Typography>
-                <b>{user.racha || 0}</b> días
-              </Typography>
-
-              <Typography>
-                <b>{user.nivelActividad || "Pro"}</b>
-              </Typography>
-            </Box>
-
-            {/* BIO */}
-            <Typography
-              sx={{
-                mt: 2,
-                color: "#c9d1d9",
-                maxWidth: 600,
-              }}
-            >
-              🎯 {user.objetivo || "Transformando mi físico cada día 💪"}
+              82% completado
             </Typography>
           </Box>
-        </Box>
-      </motion.div>
 
-      {/* POSTS HEADER */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          mb: 3,
-          color: "#8b949e",
-        }}
-      >
-        <GridOnRoundedIcon />
-        <Typography fontWeight={700}>Publicaciones</Typography>
+          <IconButton
+            sx={{
+              color: "#c9d1d9",
+              background: "rgba(255,255,255,0.04)",
+              "&:hover": {
+                background: "rgba(255,255,255,0.08)",
+              },
+            }}
+          >
+            <SettingsRoundedIcon />
+          </IconButton>
+        </Stack>
       </Box>
-
-      {/* GRID POSTS */}
-      <Grid container spacing={2}>
-        {userPosts.map((post, i) => (
-          <Grid item xs={12} sm={6} md={4} key={post.id}>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <Card
-                sx={{
-                  position: "relative",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  bgcolor: "#111",
-                  cursor: "pointer",
-                  "&:hover .overlay": {
-                    opacity: 1,
-                  },
-                }}
-              >
-                <Box
-                  component="img"
-                  src={post.image}
-                  alt="post"
-                  sx={{
-                    width: "100%",
-                    height: 320,
-                    objectFit: "cover",
-                  }}
-                />
-
-                {/* HOVER OVERLAY */}
-                <Box
-                  className="overlay"
-                  sx={{
-                    position: "absolute",
-                    inset: 0,
-                    bgcolor: "rgba(0,0,0,0.55)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 3,
-                    opacity: 0,
-                    transition: "all 0.25s ease",
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap={0.5}>
-                    <FavoriteRoundedIcon />
-                    <Typography>{post.likes}</Typography>
-                  </Box>
-
-                  <Box display="flex" alignItems="center" gap={0.5}>
-                    <ChatBubbleRoundedIcon />
-                    <Typography>{post.comments}</Typography>
-                  </Box>
-                </Box>
-              </Card>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
     </Box>
   );
 }
-
-export default Profile;
