@@ -22,6 +22,7 @@ import WaterDropRoundedIcon from "@mui/icons-material/WaterDropRounded";
 import SpaRoundedIcon from "@mui/icons-material/SpaRounded";
 
 const MotionCard = motion(Card);
+const MotionBox = motion(Box);
 
 function RightPanelContent({
   loadingFood,
@@ -52,6 +53,27 @@ function RightPanelContent({
     backdropFilter: "blur(18px)",
     boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
     overflow: "hidden",
+  };
+
+  // 🔥 ANIMACIÓN GLOBAL TIPO SIDEBAR
+  const containerVariants = {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, x: 15 },
+    show: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.35,
+      },
+    },
   };
 
   const StatProgress = ({ label, value, target, icon, gradient, unit = "" }) => {
@@ -109,14 +131,17 @@ function RightPanelContent({
   };
 
   return (
-    <Box
+    <MotionBox
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
       sx={{
         width: { xs: "100%", md: 340 },
         maxWidth: "100%",
         minHeight: "100dvh",
         flexShrink: 0,
         p: { xs: 1.5, md: 2 },
-        pb: { xs: 10, md: 2 }, // FIX espacio gris abajo en móvil
+        pb: { xs: 10, md: 2 },
         overflowY: "auto",
         overflowX: "hidden",
         display: "flex",
@@ -132,7 +157,7 @@ function RightPanelContent({
       }}
     >
       {/* WEEKLY */}
-      <MotionCard sx={premiumCardStyle}>
+      <MotionCard variants={cardVariants} sx={premiumCardStyle}>
         <CardContent>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
             <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
@@ -187,17 +212,11 @@ function RightPanelContent({
       </MotionCard>
 
       {/* FOOD ENTRIES */}
-      <MotionCard sx={premiumCardStyle}>
+      <MotionCard variants={cardVariants} sx={premiumCardStyle}>
         <CardContent>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
             <RestaurantRoundedIcon sx={{ color: "#00ff88" }} />
-            <Typography
-              sx={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-              }}
-            >
+            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>
               Entradas del día
             </Typography>
           </Stack>
@@ -211,78 +230,78 @@ function RightPanelContent({
               Aún no hay comidas registradas.
             </Typography>
           ) : (
-            safeDailyFoodEntries.slice(0, 4).map((entry) => (
-              <Box
+            safeDailyFoodEntries.slice(0, 4).map((entry, index) => (
+              <motion.div
                 key={entry.id}
-                sx={{
-                  mb: 1,
-                  p: 1.2,
-                  borderRadius: 3,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  transition: "all 0.25s ease",
-                  "&:hover": {
-                    background: "rgba(255,255,255,0.08)",
-                    transform: "translateX(4px)",
-                  },
-                }}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
               >
-                <Box>
-                  <Typography
-                    sx={{
-                      color: "#fff",
-                      fontSize: 12,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {entry.descripcion || "Sin descripción"}
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      color: "#8b949e",
-                      fontSize: 11,
-                    }}
-                  >
-                    C: {entry.calorias} • P: {entry.proteina} • CH:{" "}
-                    {entry.carbohidratos}
-                  </Typography>
-                </Box>
-
-                <IconButton
-                  onClick={() => handleDeleteFoodEntry(entry.id)}
-                  size="small"
+                <Box
                   sx={{
-                    color: "#ff6b6b",
+                    mb: 1,
+                    p: 1.2,
+                    borderRadius: 3,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                     background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    transition: "all 0.25s ease",
                     "&:hover": {
                       background: "rgba(255,255,255,0.08)",
+                      transform: "translateX(4px)",
                     },
                   }}
                 >
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
-              </Box>
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: "#fff",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {entry.descripcion || "Sin descripción"}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        color: "#8b949e",
+                        fontSize: 11,
+                      }}
+                    >
+                      C: {entry.calorias} • P: {entry.proteina} • CH:{" "}
+                      {entry.carbohidratos}
+                    </Typography>
+                  </Box>
+
+                  <IconButton
+                    onClick={() => handleDeleteFoodEntry(entry.id)}
+                    size="small"
+                    sx={{
+                      color: "#ff6b6b",
+                      background: "rgba(255,255,255,0.04)",
+                      "&:hover": {
+                        background: "rgba(255,255,255,0.08)",
+                      },
+                    }}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </motion.div>
             ))
           )}
         </CardContent>
       </MotionCard>
 
       {/* DAILY CONSUMPTION */}
-      <MotionCard sx={premiumCardStyle}>
+      <MotionCard variants={cardVariants} sx={premiumCardStyle}>
         <CardContent>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
             <TrendingUpRoundedIcon sx={{ color: "#00ff88" }} />
-            <Typography
-              sx={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 16,
-              }}
-            >
+            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>
               Consumo del Día
             </Typography>
           </Stack>
@@ -308,13 +327,7 @@ function RightPanelContent({
           <Box sx={{ mb: 2 }}>
             <Stack direction="row" spacing={1} alignItems="center">
               <GrainRoundedIcon sx={{ color: "#ffd166" }} />
-              <Typography
-                sx={{
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
+              <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>
                 Carbohidratos:{" "}
                 <span style={{ color: "#ffd166" }}>{todayCarbs} g</span>
               </Typography>
@@ -323,24 +336,9 @@ function RightPanelContent({
 
           <Stack direction="row" justifyContent="space-between" sx={{ mb: 2.5 }}>
             {[
-              [
-                <WaterDropRoundedIcon sx={{ color: "#00c6ff" }} />,
-                "Grasas",
-                todayFats || 0,
-                "g",
-              ],
-              [
-                <SpaRoundedIcon sx={{ color: "#00ff88" }} />,
-                "Fibra",
-                todayFiber || 0,
-                "g",
-              ],
-              [
-                <WaterDropRoundedIcon sx={{ color: "#c084fc" }} />,
-                "Sodio",
-                todaySodium || 0,
-                "mg",
-              ],
+              [<WaterDropRoundedIcon sx={{ color: "#00c6ff" }} />, "Grasas", todayFats || 0, "g"],
+              [<SpaRoundedIcon sx={{ color: "#00ff88" }} />, "Fibra", todayFiber || 0, "g"],
+              [<WaterDropRoundedIcon sx={{ color: "#c084fc" }} />, "Sodio", todaySodium || 0, "mg"],
             ].map(([icon, label, val, unit]) => (
               <Box
                 key={label}
@@ -362,18 +360,8 @@ function RightPanelContent({
                 <Box sx={{ display: "flex", justifyContent: "center", mb: 0.5 }}>
                   {icon}
                 </Box>
-
-                <Typography sx={{ color: "#fff", fontSize: 12 }}>
-                  {label}
-                </Typography>
-
-                <Typography
-                  sx={{
-                    color: "#8b949e",
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
+                <Typography sx={{ color: "#fff", fontSize: 12 }}>{label}</Typography>
+                <Typography sx={{ color: "#8b949e", fontSize: 12, fontWeight: 700 }}>
                   {val} {unit}
                 </Typography>
               </Box>
@@ -407,7 +395,7 @@ function RightPanelContent({
           </Button>
         </CardContent>
       </MotionCard>
-    </Box>
+    </MotionBox>
   );
 }
 
