@@ -754,6 +754,7 @@ return (
         display: "flex",
         justifyContent: "center",
         px: { xs: 1, md: 3 },
+        pt: { xs: 8, md: 0 },
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
@@ -770,7 +771,7 @@ return (
               <FeedCenterPremium
                 isMobile={isMobile}
                 stories={stories}
-                setShowStoryPreview={setShowStoryPreview}
+                onCreateStory={() => setShowCreateStory(true)}
                 openUserStories={openUserStories}
                 getStoryRingColor={getStoryRingColor}
                 newPostsAvailable={newPostsAvailable}

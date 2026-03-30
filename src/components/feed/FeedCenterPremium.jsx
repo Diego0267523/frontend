@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 export default function FeedCenterPremium({
   isMobile,
   stories,
-  setShowStoryPreview,
+  onCreateStory,
   openUserStories,
   getStoryRingColor,
   newPostsAvailable,
@@ -46,28 +46,26 @@ export default function FeedCenterPremium({
           pb: 1,
         }}
       >
-        {isMobile && (
-          <motion.div whileHover={{ scale: 1.05 }}>
-            <Box onClick={() => setShowStoryPreview(true)}>
-              <Box
-                sx={{
-                  width: 70,
-                  height: 70,
-                  borderRadius: "50%",
-                  background: "linear-gradient(90deg,#00ff88,#00c6ff)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography sx={{ color: "#000", fontSize: 28 }}>+</Typography>
-              </Box>
-              <Typography sx={{ color: "#8b949e", fontSize: 12, textAlign: "center" }}>
-                Tu historia
-              </Typography>
+        <motion.div whileHover={{ scale: 1.05 }}>
+          <Box onClick={() => onCreateStory?.()}>
+            <Box
+              sx={{
+                width: 70,
+                height: 70,
+                borderRadius: "50%",
+                background: "linear-gradient(90deg,#00ff88,#00c6ff)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography sx={{ color: "#000", fontSize: 28 }}>+</Typography>
             </Box>
-          </motion.div>
-        )}
+            <Typography sx={{ color: "#8b949e", fontSize: 12, textAlign: "center" }}>
+              Tu historia
+            </Typography>
+          </Box>
+        </motion.div>
 
         {stories &&
           [...new Set(stories.map((s) => s.nombre))].map((userName, i) => {
