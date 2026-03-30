@@ -1,14 +1,15 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
-import  API_URL from "../utils/config"; 
+import API_URL from "../utils/config";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-
   const [token, setToken] = useState(() => {
     const stored = localStorage.getItem("token");
-    return stored && stored !== "null" && stored !== "undefined" ? stored : null;
+    return stored && stored !== "null" && stored !== "undefined"
+      ? stored
+      : null;
   });
 
   const [user, setUser] = useState(() => {
@@ -25,16 +26,26 @@ export function AuthProvider({ children }) {
   const [profileFetched, setProfileFetched] = useState(false);
   const profileRateLimitTimer = React.useRef(null);
   const isMounted = React.useRef(true);
+
   // ==========================
   // 🔐 LOGIN
   // ==========================
-  const login = (newToken) => {
+  const login = (newToken, newUser = null) => {
     setToken(newToken);
     setProfileError(null);
     setProfileFetched(false);
-    setUser(null);
+
     localStorage.setItem("token", newToken);
-    localStorage.removeItem("user");
+
+    // ✅ si backend devuelve usuario lo guardamos
+    if (newUser) {
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
+      setProfileFetched(true);
+    } else {
+      setUser(null);
+      localStorage.removeItem("user");
+    }
   };
 
   // ==========================
@@ -53,7 +64,7 @@ export function AuthProvider({ children }) {
   // 👤 GET PROFILE
   // ==========================
   const getProfile = React.useCallback(async () => {
-    if (!token || profileLoading || profileFetched || profileError === 'rate-limit') {
+    if (!token || profileLoading || profileFetched || profileError === "rate-limit") {
       return;
     }
 
@@ -61,7 +72,7 @@ export function AuthProvider({ children }) {
 
     try {
       const res = await axios.get(`${API_URL}/api/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!isMounted.current) return;
@@ -70,26 +81,28 @@ export function AuthProvider({ children }) {
       localStorage.setItem("user", JSON.stringify(res.data));
       setProfileFetched(true);
       setProfileError(null);
-
-      // Ya no volvemos a pedir profile mientras estemos logueados.
     } catch (error) {
       console.error("ERROR PROFILE:", error.response?.data || error.message);
 
       if (!isMounted.current) return;
 
       const status = error.response?.status;
+
       if (status === 401) {
         logout();
       } else if (status === 429) {
-        setProfileError('rate-limit');
+        setProfileError("rate-limit");
 
-        if (profileRateLimitTimer.current) clearTimeout(profileRateLimitTimer.current);
+        if (profileRateLimitTimer.current) {
+          clearTimeout(profileRateLimitTimer.current);
+        }
+
         profileRateLimitTimer.current = setTimeout(() => {
           if (!isMounted.current) return;
           setProfileError(null);
-        }, 60_000);
+        }, 60000);
       } else {
-        setProfileError('unknown');
+        setProfileError("unknown");
       }
     } finally {
       if (isMounted.current) setProfileLoading(false);
@@ -100,9 +113,13 @@ export function AuthProvider({ children }) {
   // 🔄 AUTO LOAD PROFILE
   // ==========================
   useEffect(() => {
-    if (!isMounted.current) return;
-
-    if (token && !user && !profileLoading && !profileFetched && profileError !== 'rate-limit') {
+    if (
+      token &&
+      !user &&
+      !profileLoading &&
+      !profileFetched &&
+      profileError !== "rate-limit"
+    ) {
       getProfile();
     }
   }, [token, user, profileLoading, profileFetched, profileError, getProfile]);
@@ -110,7 +127,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     return () => {
       isMounted.current = false;
-      if (profileRateLimitTimer.current) clearTimeout(profileRateLimitTimer.current);
+      if (profileRateLimitTimer.current) {
+        clearTimeout(profileRateLimitTimer.current);
+      }
     };
   }, []);
 

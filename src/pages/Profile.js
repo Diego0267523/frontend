@@ -1,12 +1,11 @@
 import React, { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import Grid from "@mui/material/Grid2";
 import {
   Box,
   Typography,
-  Avatar,
   IconButton,
   Card,
+  Grid,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -31,13 +30,19 @@ function Profile() {
 
   if (!user) {
     return (
-      <Box sx={{ color: "#fff", p: 3, minHeight: "100vh", bgcolor: "#0f0f0f" }}>
+      <Box
+        sx={{
+          color: "#fff",
+          p: 3,
+          minHeight: "100vh",
+          bgcolor: "#0f0f0f",
+        }}
+      >
         <Typography>Cargando perfil...</Typography>
       </Box>
     );
   }
 
-  // 🔥 MOCK TEMPORAL POSTS DEL USUARIO
   const userPosts = user.posts || [
     {
       id: 1,
@@ -68,7 +73,7 @@ function Profile() {
         p: { xs: 2, md: 4 },
       }}
     >
-      {/* 🔙 BACK */}
+      {/* BACK */}
       <IconButton
         onClick={() => navigate(-1)}
         sx={{
@@ -83,10 +88,11 @@ function Profile() {
         <ArrowBackIcon />
       </IconButton>
 
-      {/* 👤 HEADER INSTAGRAM STYLE */}
+      {/* HEADER */}
       <motion.div
         initial={{ opacity: 0, y: -25 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
       >
         <Box
           sx={{
@@ -109,7 +115,7 @@ function Profile() {
                 letterSpacing: "-0.03em",
               }}
             >
-              {user.nombre}
+              {user.nombre || "Usuario"}
             </Typography>
 
             <Typography
@@ -119,7 +125,7 @@ function Profile() {
                 mb: 2,
               }}
             >
-              {user.email}
+              {user.email || "Sin correo"}
             </Typography>
 
             {/* STATS */}
@@ -171,10 +177,10 @@ function Profile() {
         <Typography fontWeight={700}>Publicaciones</Typography>
       </Box>
 
-      {/* GRID POSTS */}
+      {/* POSTS GRID */}
       <Grid container spacing={2}>
         {userPosts.map((post, i) => (
-          <Grid xs={12} sm={6} md={4} key={post.id}>
+          <Grid item xs={12} sm={6} md={4} key={post.id}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -203,7 +209,6 @@ function Profile() {
                   }}
                 />
 
-                {/* HOVER OVERLAY */}
                 <Box
                   className="overlay"
                   sx={{

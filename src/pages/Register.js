@@ -93,63 +93,67 @@ function Register() {
 
   const handleBack = () => setStep((prev) => prev - 1);
 
-  const handleRegister = async () => {
-    try {
-      setLoading(true);
+const handleRegister = async () => {
+  try {
+    setLoading(true);
 
-      if (!navigator.onLine) {
-        setMsg("Sin conexión a internet");
-        setType("error");
-        return;
-      }
+    if (!navigator.onLine) {
+      setMsg("Sin conexión a internet");
+      setType("error");
+      return;
+    }
 
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+    // ✅ username limpio estilo Instagram
+    const rawUsername =
+      form.email?.split("@")[0] || form.nombre || "usuario";
+
+    const normalizedUsername = normalizeUsername(rawUsername);
+
+    // ✅ payload al backend
+    const payload = {
+      ...form,
+      username: normalizedUsername,
+    };
+
+    const res = await fetch(`${API_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // ✅ guardar perfil público local
+      createPublicProfile({
+        nombre: form.nombre,
+        email: form.email,
+        username: normalizedUsername,
+        bio: "Bienvenido a mi perfil",
+        categoria: form.objetivo || "General",
       });
 
-      const data = await res.json();
+      localStorage.removeItem("registerData");
 
-      if (res.ok) {
-        // 🌐 Crear perfil público automáticamente con username normalizado
-        const rawUsername = form.email ? form.email.split("@")[0] : form.nombre || "usuario";
-        const normalizedUsername = normalizeUsername(rawUsername);
+      setMsg("Cuenta creada correctamente ✅");
+      setType("success");
 
-        if (!normalizedUsername) {
-          setMsg("Error generando username público");
-          setType("error");
-          setLoading(false);
-          return;
-        }
+      // ✅ NO tocar localStorage user aquí
+      // eso lo maneja Login cuando el backend responde token
 
-        createPublicProfile({
-          nombre: form.nombre,
-          email: form.email,
-          username: normalizedUsername,
-          bio: "Bienvenido a mi perfil",
-          categoria: form.objetivo || "General"
-        });
-
-        localStorage.removeItem("registerData");
-        setMsg("Cuenta creada correctamente ✅");
-        setType("success");
-
-        // Redirigir directo al perfil público del usuario recién creado
-       setTimeout(() => navigate("/"), 1200); // opcional, redirige al home
-      } else {
-        setMsg(data.message || "Error al registrarse");
-        setType("error");
-      }
-    } catch (error) {
-      console.error("Error en registro:", error);
-      setMsg(error.message || "Error de conexión");
+      setTimeout(() => navigate("/login"), 1200);
+    } else {
+      setMsg(data.message || "Error al registrarse");
       setType("error");
-    } finally {
-      setLoading(false);
     }
-  };
-
+  } catch (error) {
+    console.error("Error en registro:", error);
+    setMsg(error.message || "Error de conexión");
+    setType("error");
+  } finally {
+    setLoading(false);
+  }
+};
   const inputStyle = {
     InputProps: { style: { color: "#fff" } },
     InputLabelProps: { style: { color: "#aaa" } }

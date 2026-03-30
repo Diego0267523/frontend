@@ -17,7 +17,7 @@ const MotionCard = motion(Card);
 
 function RightPanelContent({
   loadingFood,
-  dailyFoodEntries,
+  dailyFoodEntries = [],
   handleDeleteFoodEntry,
   todayTotal,
   targetCalories,
@@ -30,6 +30,7 @@ function RightPanelContent({
   resetFoodForm,
   setFoodModalOpen,
 }) {
+  const safeDailyFoodEntries = Array.isArray(dailyFoodEntries) ? dailyFoodEntries : [];
   const weekly = useMemo(() => [40, 60, 80, 50, 70, 90, 65], []);
   const days = useMemo(() => ["L", "M", "X", "J", "V", "S", "D"], []);
 
@@ -130,12 +131,12 @@ function RightPanelContent({
             <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
               <CircularProgress size={22} sx={{ color: "#00ff88" }} />
             </Box>
-          ) : dailyFoodEntries.length === 0 ? (
+          ) : safeDailyFoodEntries.length === 0 ? (
             <Typography sx={{ color: "#8b949e", fontSize: 12 }}>
               Aún no hay comidas registradas.
             </Typography>
           ) : (
-            dailyFoodEntries.slice(0, 4).map((entry) => (
+            safeDailyFoodEntries.slice(0, 4).map((entry) => (
               <Box
                 key={entry.id}
                 sx={{

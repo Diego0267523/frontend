@@ -23,7 +23,6 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔥 ESCAPE PARA REGISTRARSE
   useEffect(() => {
     const handleEscapeKey = (e) => {
       if (e.key === "Escape") {
@@ -39,13 +38,11 @@ function Login() {
     e.preventDefault();
     setError("");
 
-    // 🔥 VALIDACIÓN
     if (!email || !password) {
       setError("Completa todos los campos ⚠️");
       return;
     }
 
-    // Revisar conexión de internet
     if (!navigator.onLine) {
       setError("Sin conexión a internet 🌐");
       return;
@@ -59,21 +56,30 @@ function Login() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
-      // 🔥 VALIDACIÓN REAL
+      console.log("LOGIN RESPONSE:", data);
+
       if (res.ok && data.token) {
+        // ✅ guardar token
         localStorage.setItem("token", data.token);
-        login(data.token);
+
+        // ✅ guardar usuario completo
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        // ✅ actualizar contexto auth
+        login(data.token, data.user);
+
         navigate("/");
       } else {
         setError(data.message || "Credenciales incorrectas ❌");
       }
-
     } catch (err) {
       console.error("Error login:", err);
       setError(err.message || "Error de conexión 🚨");
@@ -93,7 +99,6 @@ function Login() {
       }}
     >
       <Container maxWidth="sm">
-
         <Card
           style={{
             background: "#121212",
@@ -103,7 +108,6 @@ function Login() {
           }}
         >
           <CardContent>
-
             <Typography
               variant="h4"
               align="center"
@@ -117,7 +121,6 @@ function Login() {
               GYM LOGIN
             </Typography>
 
-            {/* 🔥 ERROR */}
             {error && (
               <Alert severity="error" style={{ marginBottom: "10px" }}>
                 {error}
@@ -125,7 +128,6 @@ function Login() {
             )}
 
             <form onSubmit={handleLogin}>
-
               <TextField
                 fullWidth
                 label="Email"
@@ -165,7 +167,6 @@ function Login() {
                 {loading ? "Entrando..." : "ENTER GYM 💪"}
               </Button>
 
-              {/* 🔥 IR A REGISTER */}
               <Button
                 fullWidth
                 onClick={() => navigate("/register")}
@@ -179,12 +180,9 @@ function Login() {
               >
                 CREAR CUENTA 🚀
               </Button>
-
             </form>
-
           </CardContent>
         </Card>
-
       </Container>
     </Box>
   );

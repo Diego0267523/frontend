@@ -1,48 +1,63 @@
-/**
- * 🎣 HOOK: useUserProfile
- * Obtiene datos de perfil de usuario por nombre de usuario
- * Maneja estados de carga, errores y caché
- */
-
 import { useState, useEffect } from "react";
 import { getUserByUsername } from "../utils/mockUsers";
+import { getPublicProfile, normalizeUsername } from "../utils/publicProfilesDB";
 
-/**
- * Hook para cargar perfil de usuario
- * @param {string} username - Nombre del usuario (from URL params)
- * @returns {object} - { user, loading, error }
- */
 export const useUserProfile = (username) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!username) {
+    const cleanUsername = username?.toLowerCase()?.trim();
+
+    setLoading(true);
+    setError(null);
+    setUser(null);
+
+    if (!cleanUsername) {
       setError("Username no especificado");
       setLoading(false);
       return;
     }
 
-    // Simular delay de red (en producción sería una llamada HTTP)
     const timer = setTimeout(() => {
       try {
-        const userData = getUserByUsername(username);
+        let cachedUser = null;
+        try {
+          cachedUser = JSON.parse(localStorage.getItem("user") || "null");
+        } catch {
+          cachedUser = null;
+        }
+
+        const cachedUserSlug = normalizeUsername(
+          cachedUser?.username || cachedUser?.nombre || cachedUser?.email?.split("@")[0] || ""
+        );
+
+        const userData =
+          getUserByUsername(cleanUsername) ||
+          getPublicProfile(cleanUsername) ||
+          (cachedUser && cachedUserSlug === cleanUsername
+            ? {
+                ...cachedUser,
+                posts: Array.isArray(cachedUser.posts) ? cachedUser.posts : [],
+              }
+            : null);
 
         if (!userData) {
-          setError(`Usuario "${username}" no encontrado`);
+          setError(`Usuario "${cleanUsername}" no encontrado`);
           setUser(null);
         } else {
           setUser(userData);
           setError(null);
         }
       } catch (err) {
+        console.error("❌ Error profile hook:", err);
         setError("Error al cargar el perfil del usuario");
         setUser(null);
       } finally {
         setLoading(false);
       }
-    }, 300); // Simular latencia de red
+    }, 250);
 
     return () => clearTimeout(timer);
   }, [username]);

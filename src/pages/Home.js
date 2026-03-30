@@ -360,14 +360,17 @@ const handleUploadStory = async () => {
       ]);
 
       if (entriesResponse.data.success) {
-        setDailyFoodEntries(entriesResponse.data.entries);
+        const safeEntries = Array.isArray(entriesResponse.data?.entries)
+          ? entriesResponse.data.entries
+          : [];
+        setDailyFoodEntries(safeEntries);
       } else {
         console.warn("Error cargando entradas:", entriesResponse.data.message);
         setDailyFoodEntries([]);
       }
 
       if (totalsResponse.data.success) {
-        const totals = totalsResponse.data.totals;
+        const totals = totalsResponse.data?.totals || {};
         setTodayTotal(totals.total_calorias || 0);
         setTodayProtein(totals.total_proteina || 0);
         setTodayCarbs(totals.total_carbohidratos || 0);
@@ -382,13 +385,10 @@ const handleUploadStory = async () => {
         setTodayFats(0);
         setTodayFiber(0);
         setTodaySodium(0);
-        setTodayFats(0);
-        setTodayFiber(0);
-        setTodaySodium(0);
       }
 
       if (weeklyResponse.data.success) {
-        setWeeklyCalories(weeklyResponse.data.week || []);
+        setWeeklyCalories(Array.isArray(weeklyResponse.data?.week) ? weeklyResponse.data.week : []);
       } else {
         console.warn("Error cargando totales semanales:", weeklyResponse.data.message);
         setWeeklyCalories([]);
@@ -419,11 +419,11 @@ const handleUploadStory = async () => {
       ]);
 
       if (entriesResponse.data.success) {
-        setDailyFoodEntries(entriesResponse.data.entries);
+        setDailyFoodEntries(Array.isArray(entriesResponse.data?.entries) ? entriesResponse.data.entries : []);
       }
 
       if (totalsResponse.data.success) {
-        const totals = totalsResponse.data.totals;
+        const totals = totalsResponse.data?.totals || {};
         setTodayTotal(totals.total_calorias || 0);
         setTodayProtein(totals.total_proteina || 0);
         setTodayCarbs(totals.total_carbohidratos || 0);
@@ -433,7 +433,7 @@ const handleUploadStory = async () => {
       }
 
       if (weeklyResponse.data.success) {
-        setWeeklyCalories(weeklyResponse.data.week || []);
+        setWeeklyCalories(Array.isArray(weeklyResponse.data?.week) ? weeklyResponse.data.week : []);
       }
     } catch (error) {
       console.error("Error refrescando datos de comida:", error);
@@ -513,8 +513,9 @@ const handleUploadStory = async () => {
   // 🔥 STORY VIEWER FUNCTIONS
   const [seenStoryUsers, setSeenStoryUsers] = useState(new Set());
 const getStoryRingColor = (userName) => {
-  const userStories = stories.filter(s => s.nombre === userName);
-  const isSeen = userStories.every(s => s.visto);
+  const safeStories = Array.isArray(stories) ? stories : [];
+  const userStories = safeStories.filter((s) => s?.nombre === userName);
+  const isSeen = userStories.length > 0 && userStories.every((s) => s?.visto);
 
   return isSeen
     ? "#555"
@@ -522,10 +523,11 @@ const getStoryRingColor = (userName) => {
 };
 
   const openUserStories = (userName) => {
-    const userStoriesFiltered = stories.filter(s => s.nombre === userName);
+    const safeStories = Array.isArray(stories) ? stories : [];
+    const userStoriesFiltered = safeStories.filter((s) => s?.nombre === userName);
     if (!userStoriesFiltered.length) return;
 
-    const uniqueUsers = [...new Set(stories.map(s => s.nombre))];
+    const uniqueUsers = [...new Set(safeStories.map((s) => s?.nombre).filter(Boolean))];
     setStoryUsers(uniqueUsers);
     setCurrentUser(userName);
     setUserStories(userStoriesFiltered);

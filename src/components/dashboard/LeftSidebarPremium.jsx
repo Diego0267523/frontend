@@ -43,6 +43,9 @@ export default function LeftSidebarPremium({
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const profileSlug = normalizeUsername(
+    user?.username || user?.nombre || user?.email?.split("@")[0] || ""
+  );
   
 const menuItems = [
   { id: 'home', label: 'Inicio', icon: <HomeRoundedIcon />, type: 'page' },
@@ -104,12 +107,12 @@ const menuItems = [
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0 }}
           onClick={() => {
-                if (user?.nombre) {
-                    const username = normalizeUsername(user.nombre);
-                    navigate(`/app/u/${username}`);
-                    onChange?.("profile");
-                }
-                }}
+            if (profileSlug) {
+              navigate(`/app/u/${profileSlug}`);
+              return;
+            }
+            onChange?.("profile");
+          }}
           sx={{
             p: 1.5,
             mb: 3,

@@ -187,9 +187,9 @@ export function createPublicProfile(userData) {
   };
 
   // Guardar en la "base de datos"
-  publicProfilesDB[username] = publicProfile;
+  publicProfilesDB[normalizedUsername] = publicProfile;
   
-  console.log(`✅ Perfil público creado: ${username}`);
+  console.log(`✅ Perfil público creado: ${normalizedUsername}`);
   return publicProfile;
 }
 
@@ -224,7 +224,8 @@ export function updatePublicProfile(username, updates) {
     updatedAt: new Date()
   };
 
-  publicProfilesDB[username] = updated;
+  const normalizedUsername = normalizeUsername(username);
+  publicProfilesDB[normalizedUsername] = updated;
   return updated;
 }
 
