@@ -26,6 +26,7 @@ import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
@@ -37,6 +38,7 @@ export default function LeftSidebarPremium({
   onOpenAI,
   onOpenCreate,
   onOpenProgress,
+  onOpenStories,
 }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -49,7 +51,8 @@ const menuItems = [
   { id: 'progress', label: 'Progreso', icon: <TrendingUpRoundedIcon />, type: 'action', action: () => onOpenProgress?.() },
   { id: 'community', label: 'Comunidad', icon: <GroupsRoundedIcon />, type: 'page' },
   { id: 'coach', label: 'AI Coach', icon: <SmartToyRoundedIcon />, type: 'action', action: () => onOpenAI?.() },
-    { id: 'create', label: 'Crear Post', icon: <AddBoxRoundedIcon />, type: 'action', action: () => onOpenCreate?.() },
+  { id: 'stories', label: 'Historias', icon: <PhotoCameraRoundedIcon />, type: 'action', action: () => onOpenStories?.() },
+  { id: 'create', label: 'Crear Post', icon: <AddBoxRoundedIcon />, type: 'action', action: () => onOpenCreate?.() },
 ];
 
   const handleClick = (item) => {

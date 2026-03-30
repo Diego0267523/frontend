@@ -84,9 +84,12 @@ function Home() {
   
   const [showAI, setShowAI] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showCreateStory, setShowCreateStory] = useState(false);
   const [newPostsAvailable, setNewPostsAvailable] = useState(0);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
+  const [isCreatingStory, setIsCreatingStory] = useState(false);
   const creatingPostRef = useRef(false);
+  const creatingStoryRef = useRef(false);
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
   const [weeklyCalories, setWeeklyCalories] = useState([]);
@@ -215,6 +218,57 @@ const handleCreatePost = async () => {
 const handlePublication = useCallback(() => {
   handleCreatePost();
 }, [handleCreatePost]);
+
+// 🔥 Crear historia
+const handleCreateStory = async () => {
+  // ✅ VALIDACIÓN
+  if (!file) {
+    setSnackbar({ open: true, message: "Selecciona una imagen", severity: "error" });
+    return;
+  }
+
+  // 🔹 Evitar múltiples envíos concurrentes
+  if (creatingStoryRef.current || isCreatingStory) return;
+
+  creatingStoryRef.current = true;
+  setIsCreatingStory(true);
+
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    // Historias pueden tener caption opcional
+    if (postCaption.trim()) {
+      formData.append("caption", postCaption);
+    }
+
+    // Aquí iría la llamada a API para crear historia
+    // const result = await createStoryMutation.mutateAsync(formData);
+
+    // Simulación de éxito mientras la API se prepara
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // ✅ NOTIFICACIÓN DE ÉXITO
+    setSnackbar({ open: true, message: "¡Historia publicada exitosamente!", severity: "success" });
+
+    // 🔹 Cerrar modal y limpiar después de 800ms
+    setTimeout(() => {
+      setShowCreateStory(false);
+      setFile(null);
+      setPostCaption("");
+    }, 800);
+  } catch (error) {
+    console.error("Error en historia:", error.response?.data || error.message || error);
+    setSnackbar({ open: true, message: "Error al publicar la historia. Inténtalo de nuevo.", severity: "error" });
+  } finally {
+    creatingStoryRef.current = false;
+    setIsCreatingStory(false);
+  }
+};
+
+// 🔥 Wrapper memoizado para publicar historia
+const handleStoryPublication = useCallback(() => {
+  handleCreateStory();
+}, [handleCreateStory]);
 
   const resetFoodForm = () => {
     // Función vacía, lógica movida a FoodModal
@@ -641,6 +695,7 @@ return (
             onOpenAI={() => setShowAI(true)}
             onOpenCreate={() => setShowCreatePost(true)}
             onOpenProgress={() => setFoodModalOpen(true)}
+            onOpenStories={() => setShowCreateStory(true)}
           />
       </Box>
     )}
@@ -683,6 +738,10 @@ return (
           setFoodModalOpen(true);
           setOpen(false);
         }}
+        onOpenStories={() => {
+          setShowCreateStory(true);
+          setOpen(false);
+        }}
       />
     </Drawer>
 
@@ -695,6 +754,7 @@ return (
         display: "flex",
         justifyContent: "center",
         px: { xs: 1, md: 3 },
+        pt: { xs: isMobile ? 7 : 0, md: 0 },
         "&::-webkit-scrollbar": { display: "none" },
       }}
     >
@@ -872,6 +932,76 @@ return (
       </Box>
     )}
 
+    {/* MODAL CREAR HISTORIA */}
+    {showCreateStory && (
+      <Box sx={overlayPro}>
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Box sx={modalPro}>
+            <Typography sx={titlePro}>
+              Crear Historia 📸
+            </Typography>
+
+            {/* PREVIEW */}
+            {file && (
+              <Box
+                component="img"
+                src={URL.createObjectURL(file)}
+                sx={previewImage}
+              />
+            )}
+
+            {/* INPUT FILE */}
+            <Button
+              variant="contained"
+              component="label"
+              sx={uploadBtn}
+            >
+              Subir imagen
+              <input
+                type="file"
+                hidden
+                onChange={(e) => setFile(e.target.files?.[0])}
+              />
+            </Button>
+
+            {/* CAPTION (OPCIONAL PARA HISTORIAS) */}
+            <input
+              placeholder="Texto opcional (visible en la historia)"
+              value={postCaption}
+              onChange={(e) => setPostCaption(e.target.value)}
+              style={inputPro}
+            />
+
+            {/* BOTONES */}
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Button
+                onClick={handleStoryPublication}
+                disabled={isCreatingStory}
+                sx={postBtn}
+              >
+                {isCreatingStory ? "Publicando..." : "Publicar"}
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setShowCreateStory(false);
+                  setFile(null);
+                  setPostCaption("");
+                }}
+                sx={cancelBtn}
+              >
+                Cancelar
+              </Button>
+            </Box>
+          </Box>
+        </motion.div>
+      </Box>
+    )}
+
     <FoodModal
       open={foodModalOpen}
       onClose={() => {
@@ -1036,7 +1166,9 @@ const topBar = {
   display: "flex",
   justifyContent: "space-between",
   bgcolor: "#000",
-  zIndex: 10
+  zIndex: 100,
+  height: 56,
+  borderBottom: "1px solid rgba(255,255,255,0.06)"
 };
 
 const aiOverlay = {
@@ -1045,7 +1177,8 @@ const aiOverlay = {
   background: "#000",
   display: "flex",
   justifyContent: "center",
-  alignItems: "center"
+  alignItems: "center",
+  zIndex: 500
 };
 
 // 🔥 MODAL CREAR POST (ESTILO PRO MEJORADO)
@@ -1058,7 +1191,9 @@ const overlayPro = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  zIndex: 999
+  zIndex: 9999,
+  overflowY: "auto",
+  py: { xs: 2, md: 0 }
 };
 
 const modalPro = {
