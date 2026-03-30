@@ -11,6 +11,28 @@
 // En producción: Usar MongoDB, PostgreSQL, Firebase, etc.
 export let publicProfilesDB = {};
 
+/**
+ * Normaliza username para URL.
+ * - minúsculas
+ * - elimina acentos
+ * - convierte espacios a guion
+ * - elimina caracteres inválidos
+ */
+export function normalizeUsername(value) {
+  if (!value || typeof value !== "string") return null;
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9._-]/g, "")
+    .replace(/[._-]{2,}/g, "-")
+    .replace(/^[-._]+|[-._]+$/g, "");
+
+  return normalized || null;
+}
+
 // ============================================================
 // PROFILES SAMPLE DATA (Para testing)
 // ============================================================
@@ -120,17 +142,26 @@ export function createPublicProfile(userData) {
     categoria = "General"
   } = userData;
 
+  // Normalizar username y evitar vacío
+  const baseUsername = username || (email ? email.split("@")[0] : "");
+  const normalizedUsername = normalizeUsername(baseUsername);
+
+  if (!normalizedUsername) {
+    throw new Error("Username inválido o no especificado");
+  }
+
   // Evitar duplicados
-  if (publicProfilesDB[username]) {
-    console.warn(`⚠️ Perfil ${username} ya existe`);
-    return publicProfilesDB[username];
+  if (publicProfilesDB[normalizedUsername]) {
+    console.warn(`⚠️ Perfil ${normalizedUsername} ya existe`);
+    return publicProfilesDB[normalizedUsername];
   }
 
   // Crear perfil público
   const publicProfile = {
     // Identidad
-    username: username.toLowerCase().trim(),
-    nombre: nombre || email.split("@")[0],
+    id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    username: normalizedUsername,
+    nombre: nombre || baseUsername,
     email: email,
     bio: bio || "Bienvenido a mi perfil",
     categoria: categoria || "General",
@@ -169,7 +200,8 @@ export function createPublicProfile(userData) {
  */
 export function getPublicProfile(username) {
   if (!username) return null;
-  const normalizedUsername = username.toLowerCase().trim();
+  const normalizedUsername = normalizeUsername(username);
+  if (!normalizedUsername) return null;
   return publicProfilesDB[normalizedUsername] || null;
 }
 
@@ -209,7 +241,10 @@ export function addPostToProfile(username, postData) {
   const post = {
     id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     ...postData,
-    createdBy: username,
+    authorId: profile.id || null,
+    authorUsername: profile.username,
+    authorName: profile.nombre,
+    createdBy: profile.username,
     timestamp: new Date(),
     likes: 0,
     comments: [],

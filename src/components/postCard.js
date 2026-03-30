@@ -101,11 +101,38 @@ const PostCard = memo(({ post }) => {
     return null;
   }
 
+  const normalizeUsername = (value) => {
+    if (!value || typeof value !== "string") return null;
+    const normalized = value
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9._-]/g, "")
+      .replace(/[._-]{2,}/g, "-")
+      .replace(/^[-._]+|[-._]+$/g, "");
+
+    return normalized || null;
+  };
+
+  const resolvePostUsername = () => {
+    if (post?.authorUsername) return normalizeUsername(post.authorUsername);
+    if (post?.createdBy) return normalizeUsername(post.createdBy);
+    if (post?.author?.username) return normalizeUsername(post.author.username);
+    if (post?.user) return normalizeUsername(post.user);
+    if (post?.nombre) return normalizeUsername(post.nombre);
+    return null;
+  };
+
   // 📍 Navegar al perfil público del usuario cuando se hace clic en el nombre o avatar
   const handleNavigateToProfile = () => {
-    // Obtener username: primero intenta createdBy, luego user, luego nombre
-    const username = (post.createdBy || post.user || post.nombre || "usuario").toLowerCase().trim();
-    // Navegar a perfil PÚBLICO (sin requerir login)
+    const username = resolvePostUsername();
+    if (!username) {
+      console.warn("No se pudo resolver username del post", post);
+      return;
+    }
+
     navigate(`/perfil/${username}`);
   };
 

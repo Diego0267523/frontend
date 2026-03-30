@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import API_URL from "../utils/config";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { createPublicProfile } from "../utils/publicProfilesDB";
+import { createPublicProfile, normalizeUsername } from "../utils/publicProfilesDB";
 
 import {
   Container,
@@ -112,11 +112,21 @@ function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        // 🌐 Crear perfil público automáticamente
+        // 🌐 Crear perfil público automáticamente con username normalizado
+        const rawUsername = form.email ? form.email.split("@")[0] : form.nombre || "usuario";
+        const normalizedUsername = normalizeUsername(rawUsername);
+
+        if (!normalizedUsername) {
+          setMsg("Error generando username público");
+          setType("error");
+          setLoading(false);
+          return;
+        }
+
         createPublicProfile({
           nombre: form.nombre,
           email: form.email,
-          username: form.email.split("@")[0], // username basado en email
+          username: normalizedUsername,
           bio: "Bienvenido a mi perfil",
           categoria: form.objetivo || "General"
         });
@@ -124,7 +134,9 @@ function Register() {
         localStorage.removeItem("registerData");
         setMsg("Cuenta creada correctamente ✅");
         setType("success");
-        setTimeout(() => navigate("/"), 1500);
+
+        // Redirigir directo al perfil público del usuario recién creado
+        setTimeout(() => navigate(`/perfil/${normalizedUsername}`), 1200);
       } else {
         setMsg(data.message || "Error al registrarse");
         setType("error");
