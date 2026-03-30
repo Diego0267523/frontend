@@ -29,14 +29,14 @@ const modalPro = {
   color: "#fff",
 };
 
-export default function CreatePostModalPremium({
+export default function CreateStoryModalPremium({
   open,
   file,
   setFile,
   postCaption,
   setPostCaption,
-  isCreatingPost,
-  handlePublication,
+  isCreatingStory,
+  handleStoryPublication,
   onClose,
 }) {
   const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
@@ -65,7 +65,7 @@ export default function CreatePostModalPremium({
             transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.8 }}
           >
             <Typography sx={{ fontSize: 24, fontWeight: 800, mb: 2, letterSpacing: "-0.03em" }}>
-              Crear Post 🚀
+              Crear Historia 📸
             </Typography>
 
             <AnimatePresence mode="wait">
@@ -149,8 +149,8 @@ export default function CreatePostModalPremium({
               transition={{ delay: 0.15 }}
             >
               <Button
-                onClick={handlePublication}
-                disabled={isCreatingPost}
+                onClick={handleStoryPublication}
+                disabled={isCreatingStory}
                 fullWidth
                 sx={{
                   py: 1.4,
@@ -161,7 +161,7 @@ export default function CreatePostModalPremium({
                   background: "linear-gradient(90deg, #00ff88, #00c6ff)",
                 }}
               >
-                {isCreatingPost ? <CircularProgress size={20} sx={{ color: "#08110d" }} /> : "Publicar"}
+                {isCreatingStory ? <CircularProgress size={20} sx={{ color: "#08110d" }} /> : "Publicar Historia"}
               </Button>
 
               <Button
