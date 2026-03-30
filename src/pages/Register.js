@@ -136,7 +136,7 @@ function Register() {
         setType("success");
 
         // Redirigir directo al perfil público del usuario recién creado
-        setTimeout(() => navigate(`/perfil/${normalizedUsername}`), 1200);
+       setTimeout(() => navigate("/"), 1200); // opcional, redirige al home
       } else {
         setMsg(data.message || "Error al registrarse");
         setType("error");

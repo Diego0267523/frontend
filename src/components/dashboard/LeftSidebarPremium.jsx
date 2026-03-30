@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { normalizeUsername } from "../../utils/publicProfilesDB";
 import {
   Box,
   Typography,
@@ -99,23 +100,12 @@ const menuItems = [
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0 }}
           onClick={() => {
-            if (user?.nombre) {
-              const raw = user.nombre || user.username || "";
-              const normalized = raw
-                .trim()
-                .toLowerCase()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/\s+/g, "-")
-                .replace(/[^a-z0-9._-]/g, "")
-                .replace(/[._-]{2,}/g, "-")
-                .replace(/^[-._]+|[-._]+$/g, "");
-
-              if (!normalized) return;
-              navigate(`/perfil/${normalized}`);
-              onChange?.("profile");
-            }
-          }}
+                if (user?.nombre) {
+                    const username = normalizeUsername(user.nombre);
+                    navigate(`/app/u/${username}`);
+                    onChange?.("profile");
+                }
+                }}
           sx={{
             p: 1.5,
             mb: 3,
