@@ -345,6 +345,7 @@ const PostCard = memo(({ post }) => {
             {/* 👤 Avatar - Clickeable para ir al perfil del autor */}
             <Box 
               component="img"
+              data-testid="post-avatar"
               src={post.avatar || post.userAvatar || '/default-avatar.png'}
               alt={`Perfil de ${post.nombre || post.user}`}
               onClick={handleNavigateToProfile}
@@ -362,8 +363,9 @@ const PostCard = memo(({ post }) => {
                 }
               }}
             />
-            <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={handleNavigateToProfile}>
+            <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={handleNavigateToProfile} data-testid="post-username-wrapper">
               <Typography 
+                data-testid="post-username"
                 sx={{ 
                   color: "#fff", 
                   fontWeight: "bold",
