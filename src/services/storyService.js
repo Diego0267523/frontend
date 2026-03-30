@@ -206,7 +206,7 @@ function buildCurrentUser(user = {}) {
   return {
     name: fallbackName,
     username: user?.username || fallbackName,
-    avatar: user?.avatar || user?.image || "/default-avatar.png",
+    avatar: user?.avatar || user?.image || "https://ui-avatars.com/api/?name=U&background=08110d&color=00ff88",
   };
 }
 

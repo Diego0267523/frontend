@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import API_URL from '../utils/config';
+import { getAvatarFallback, getSafeAvatarSrc } from '../utils/avatar';
 
 const ProfileAvatar = ({ size = 100, editable = true }) => {
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -54,10 +55,12 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
     }
   };
 
+  const fallbackAvatar = getAvatarFallback('Usuario');
+
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <img
-        src={avatarUrl || 'https://ui-avatars.com/api/?name=Usuario&background=111827&color=00ff88'}
+        src={getSafeAvatarSrc(avatarUrl, 'Usuario') || fallbackAvatar}
         alt="Avatar"
         style={{
           width: size,
@@ -70,7 +73,7 @@ const ProfileAvatar = ({ size = 100, editable = true }) => {
         onClick={() => editable && fileInputRef.current?.click()}
         onError={(e) => {
           e.currentTarget.onerror = null;
-          e.currentTarget.src = '/default-avatar.png';
+          e.currentTarget.src = fallbackAvatar;
         }}
       />
       {loading && (

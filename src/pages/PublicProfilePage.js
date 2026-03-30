@@ -13,8 +13,9 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { usePublicProfile } from "../hooks/usePublicProfile";
+import { getSafeAvatarSrc } from "../utils/avatar";
 import {
   Box,
   Typography,
@@ -45,10 +46,14 @@ export default function PublicProfilePage() {
   // 📍 Obtener username de la URL
   const { username } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [hoveredPostId, setHoveredPostId] = useState(null);
 
   // 🎣 Hook para cargar perfil público
-  const { profile, loading, error, notFound } = usePublicProfile(username);
+  const { profile, loading, error, notFound } = usePublicProfile(
+    username,
+    location.state?.prefetchedProfile || null
+  );
 
   // 📊 Datos procesados (memoized)
   const posts = useMemo(
@@ -257,7 +262,7 @@ export default function PublicProfilePage() {
               }}
             >
               <MuiAvatar
-                src={profile.avatar}
+                src={getSafeAvatarSrc(profile.avatar, profile.nombre || profile.username || "Usuario")}
                 sx={{
                   width: { xs: 100, md: 140 },
                   height: { xs: 100, md: 140 },

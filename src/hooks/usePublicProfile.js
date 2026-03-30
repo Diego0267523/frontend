@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { getPublicProfile, normalizeUsername } from "../utils/publicProfilesDB";
+import { getPublicProfile, normalizeUsername, publicProfilesDB } from "../utils/publicProfilesDB";
 import { getUserByUsername } from "../utils/mockUsers";
 
 /**
@@ -15,7 +15,7 @@ import { getUserByUsername } from "../utils/mockUsers";
  * @param {string} username - Nombre de usuario (from URL params)
  * @returns {object} { profile, loading, error, notFound }
  */
-export function usePublicProfile(username) {
+export function usePublicProfile(username, seedProfile = null) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,12 +40,55 @@ export function usePublicProfile(username) {
           cachedUser = null;
         }
 
+        let sessionProfile = null;
+        try {
+          sessionProfile = JSON.parse(sessionStorage.getItem(`public-profile:${cleanUsername}`) || "null");
+        } catch {
+          sessionProfile = null;
+        }
+
         const cachedUserSlug = normalizeUsername(
           cachedUser?.username || cachedUser?.nombre || cachedUser?.email?.split("@")[0] || ""
         );
 
+        const normalizedSeedUsername = normalizeUsername(
+          seedProfile?.username || seedProfile?.nombre || seedProfile?.email?.split?.("@")[0] || ""
+        );
+
+        const hydratedSeedProfile =
+          seedProfile && normalizedSeedUsername === cleanUsername
+            ? {
+                ...seedProfile,
+                username: cleanUsername,
+                followers: seedProfile.followers || 0,
+                following: seedProfile.following || 0,
+                portada:
+                  seedProfile.portada ||
+                  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=300&fit=crop",
+                posts: Array.isArray(seedProfile.posts) ? seedProfile.posts : [],
+              }
+            : null;
+
+        if (hydratedSeedProfile) {
+          publicProfilesDB[cleanUsername] = {
+            ...(publicProfilesDB[cleanUsername] || {}),
+            ...hydratedSeedProfile,
+          };
+
+          try {
+            sessionStorage.setItem(
+              `public-profile:${cleanUsername}`,
+              JSON.stringify(publicProfilesDB[cleanUsername])
+            );
+          } catch {
+            // ignore storage write issues
+          }
+        }
+
         const profileData =
+          hydratedSeedProfile ||
           getPublicProfile(cleanUsername) ||
+          sessionProfile ||
           (cachedUser && cachedUserSlug === cleanUsername
             ? {
                 ...cachedUser,
@@ -88,7 +131,7 @@ export function usePublicProfile(username) {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [username]);
+  }, [seedProfile, username]);
 
   return { profile, loading, error, notFound };
 }

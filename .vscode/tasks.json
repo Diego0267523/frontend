@@ -302,6 +302,37 @@
 			],
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "lint-avatar-profile-fix",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/components/postCard.js",
+				"src/hooks/usePublicProfile.js",
+				"src/pages/PublicProfilePage.js",
+				"src/components/ProfileAvatar.js",
+				"src/components/DirectMessages.js",
+				"src/utils/avatar.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-avatar-profile-fix.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build-avatar-profile-fix",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"if exist node_modules\\.cache rmdir /s /q node_modules\\.cache & npm run build > build-avatar-profile-fix.txt 2>&1"
+			],
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

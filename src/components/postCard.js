@@ -12,6 +12,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import API_URL from "../utils/config";
+import { getAvatarFallback, getSafeAvatarSrc } from "../utils/avatar";
 
 const PostCard = memo(({ post }) => {
   // 🔥 CRITICAL: All hooks MUST be declared before any conditionals
@@ -32,6 +33,16 @@ const PostCard = memo(({ post }) => {
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingComment, setLoadingComment] = useState(false);
   const [visible, setVisible] = useState(true);
+
+  const authorLabel =
+    post?.nombre ||
+    post?.user?.nombre ||
+    post?.user?.name ||
+    post?.author?.nombre ||
+    post?.author?.username ||
+    (typeof post?.user === "string" ? post.user : null) ||
+    "Usuario";
+  const fallbackAvatarSrc = getAvatarFallback(authorLabel);
 
   // 🔥 Actualizar estado cuando el post cambia (ej: infinite scroll)
   useEffect(() => {
@@ -115,13 +126,64 @@ const PostCard = memo(({ post }) => {
   };
 
   const resolvePostUsername = () => {
-    if (post?.authorUsername) return normalizeUsername(post.authorUsername);
-    if (post?.createdBy) return normalizeUsername(post.createdBy);
-    if (post?.author?.username) return normalizeUsername(post.author.username);
-    if (post?.user) return normalizeUsername(post.user);
-    if (post?.nombre) return normalizeUsername(post.nombre);
+    const candidateValues = [
+      post?.authorUsername,
+      post?.username,
+      post?.createdBy,
+      post?.author?.username,
+      post?.user?.username,
+      post?.userUsername,
+      post?.user_name,
+      post?.email?.split?.("@")[0],
+      post?.userEmail?.split?.("@")[0],
+      post?.user?.email?.split?.("@")[0],
+      typeof post?.user === "string" ? post.user : null,
+      post?.nombre,
+      post?.user?.nombre,
+      post?.user?.name,
+      post?.author?.nombre,
+    ];
+
+    for (const candidate of candidateValues) {
+      const normalized = normalizeUsername(candidate);
+      if (normalized) return normalized;
+    }
+
     return null;
   };
+
+  const buildProfileSeed = (username) => ({
+    username,
+    nombre: authorLabel,
+    email: post?.email || post?.userEmail || post?.user?.email || "",
+    bio:
+      post?.author?.bio ||
+      post?.bio ||
+      `Explora el perfil y las publicaciones de ${authorLabel}.`,
+    categoria: post?.author?.categoria || post?.categoria || "Fitness",
+    avatar: getSafeAvatarSrc(
+      post?.avatar || post?.userAvatar || post?.author?.avatar || post?.user?.avatar,
+      authorLabel
+    ),
+    portada:
+      post?.author?.portada ||
+      post?.portada ||
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=300&fit=crop",
+    followers: Number(post?.author?.followers || post?.followers || 0),
+    following: Number(post?.author?.following || post?.following || 0),
+    isVerified: Boolean(post?.author?.isVerified || post?.verified || post?.isVerified),
+    posts: [
+      {
+        id: post?.id || `post-${username}`,
+        content: post?.caption || post?.content || "",
+        image: post?.image_url || post?.image || "",
+        likes: Number(likesCount || post?.likes || 0),
+        comments: commentsCount || (Array.isArray(post?.comments) ? post.comments.length : 0),
+        timestamp: post?.time || post?.createdAt || new Date().toISOString(),
+        createdBy: username,
+      },
+    ],
+  });
 
   // 📍 Navegar al perfil público del usuario cuando se hace clic en el nombre o avatar
   const handleNavigateToProfile = () => {
@@ -131,7 +193,17 @@ const PostCard = memo(({ post }) => {
       return;
     }
 
-    navigate(`/perfil/${username}`);
+    const profileSeed = buildProfileSeed(username);
+
+    try {
+      sessionStorage.setItem(`public-profile:${username}`, JSON.stringify(profileSeed));
+    } catch (error) {
+      console.warn("No se pudo guardar caché temporal del perfil", error);
+    }
+
+    navigate(`/perfil/${username}`, {
+      state: { prefetchedProfile: profileSeed },
+    });
   };
 
   const getTimeAgo = (timeString) => {
@@ -346,12 +418,12 @@ const PostCard = memo(({ post }) => {
             <Box 
               component="img"
               data-testid="post-avatar"
-              src={post.avatar || post.userAvatar || '/default-avatar.png'}
-              alt={`Perfil de ${post.nombre || post.user}`}
+              src={getSafeAvatarSrc(post?.avatar || post?.userAvatar || post?.author?.avatar || post?.user?.avatar, authorLabel)}
+              alt={`Perfil de ${authorLabel}`}
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = '/default-avatar.png';
+                e.currentTarget.src = fallbackAvatarSrc;
               }}
               onClick={handleNavigateToProfile}
               sx={{ 

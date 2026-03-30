@@ -5,6 +5,7 @@ import SendIcon from "@mui/icons-material/Send";
 import { slideInDownVariants, chatBubbleVariants } from "../utils/motion-variants";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../hooks/useAuth";
+import { getSafeAvatarSrc } from "../utils/avatar";
 
 /**
  * 🎯 DirectMessages - Chats directos entre usuarios
@@ -56,7 +57,7 @@ function DirectMessages({ onClose }) {
           return [...prev, {
             id: fromUser?.id,
             name: fromUser?.nombre || "Usuario",
-            avatar: fromUser?.avatar || "/default-avatar.png",
+            avatar: getSafeAvatarSrc(fromUser?.avatar, fromUser?.nombre || "Usuario"),
             lastMessage: message,
             timestamp,
             unread: true
