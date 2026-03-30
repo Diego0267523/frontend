@@ -7,7 +7,7 @@ import {
   Button,
   Skeleton,
 } from "@mui/material";
-import { motion } from "framer-motion";
+import StoriesCarousel from "../stories/StoriesCarousel";
 
 function FeedCenterPremium({
   isMobile,
@@ -35,54 +35,7 @@ function FeedCenterPremium({
     boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
   };
 
-  const getStoryUserName = (story) => {
-    return (
-      story.nombre ||
-      story.username ||
-      story.user?.nombre ||
-      story.user?.name ||
-      story.user?.username ||
-      "Usuario"
-    );
-  };
-
-  const getProfileImage = (story) => {
-    return (
-      story.avatar ||
-      story.avatarUrl ||
-      story.image_url ||
-      story.image ||
-      story.user?.avatar ||
-      story.user?.image ||
-      "https://via.placeholder.com/64?text=🙂"
-    );
-  };
-
   const safePages = useMemo(() => (Array.isArray(data?.pages) ? data.pages : []), [data]);
-
-  const { ownStory, otherUsers, storyByUser } = useMemo(() => {
-    const normalizedUser = String(currentUserName || "").trim().toLowerCase();
-    const nextStories = Array.isArray(stories) ? stories : [];
-    const nextStoryByUser = {};
-
-    nextStories.forEach((story) => {
-      const owner = String(getStoryUserName(story) || "").trim();
-      if (owner && !nextStoryByUser[owner]) {
-        nextStoryByUser[owner] = story;
-      }
-    });
-
-    const uniqueUsers = Object.keys(nextStoryByUser);
-    const nextOwnStory =
-      uniqueUsers.find((userName) => userName.toLowerCase() === normalizedUser) || null;
-
-    return {
-      safeStories: nextStories,
-      storyByUser: nextStoryByUser,
-      ownStory: nextOwnStory ? nextStoryByUser[nextOwnStory] : null,
-      otherUsers: uniqueUsers.filter((userName) => userName.toLowerCase() !== normalizedUser),
-    };
-  }, [stories, currentUserName]);
 
   const storyPanelSx = {
     ...glassCard,
@@ -100,168 +53,13 @@ function FeedCenterPremium({
     <Box sx={{ width: "100%", maxWidth: 500, py: { xs: 0.5, md: 1.5 }, mt: 0 }}>
       {/* STORIES */}
       <Box sx={storyPanelSx}>
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1.4,
-            overflowX: "auto",
-            pb: 0.4,
-            alignItems: "flex-start",
-            '&::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
-            <Box
-              onClick={() => (ownStory ? openUserStories(getStoryUserName(ownStory)) : onCreateStory?.())}
-              sx={{ width: 78, flexShrink: 0, cursor: "pointer", textAlign: "center" }}
-            >
-              <Box
-                sx={{
-                  position: "relative",
-                  width: 74,
-                  height: 74,
-                  mx: "auto",
-                  p: "2.5px",
-                  borderRadius: "50%",
-                  background: ownStory
-                    ? "linear-gradient(90deg, #00ff88, #00c6ff)"
-                    : "linear-gradient(90deg, #00ff88, #00c6ff)",
-                  boxShadow: ownStory
-                    ? "0 0 20px rgba(0,255,136,0.20)"
-                    : "0 0 18px rgba(0,255,136,0.18)",
-                }}
-              >
-                <Box
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    bgcolor: "#080b09",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                  }}
-                >
-                  {ownStory ? (
-                    <img
-                      src={getProfileImage(ownStory)}
-                      alt="Tu historia"
-                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
-                    />
-                  ) : (
-                    <Typography sx={{ color: "#08110d", fontSize: 28, fontWeight: 900 }}>+</Typography>
-                  )}
-                </Box>
-
-                {!ownStory && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      right: -1,
-                      bottom: -1,
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      bgcolor: "#00ff88",
-                      color: "#000",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 900,
-                      fontSize: 15,
-                      border: "2px solid #080b09",
-                    }}
-                  >
-                    +
-                  </Box>
-                )}
-              </Box>
-
-              <Typography
-                noWrap
-                sx={{ color: "#d7dde5", fontSize: 11.5, mt: 0.8, fontWeight: 600 }}
-              >
-                {ownStory ? "Tu historia" : "Crear"}
-              </Typography>
-            </Box>
-          </motion.div>
-
-          {otherUsers.length === 0 ? (
-            <Box
-              sx={{
-                minHeight: 74,
-                display: "flex",
-                alignItems: "center",
-                px: 1,
-                color: "#8b949e",
-                fontSize: 12,
-              }}
-            >
-              Aún no hay historias de otros usuarios.
-            </Box>
-          ) : (
-            otherUsers.map((userName) => {
-              const userStory = storyByUser[userName];
-              const profileImage = getProfileImage(userStory || {});
-              const ringColor = getStoryRingColor(userName);
-
-              return (
-                <motion.div key={userName} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }}>
-                  <Box
-                    onClick={() => openUserStories(userName)}
-                    sx={{ width: 78, flexShrink: 0, cursor: "pointer", textAlign: "center" }}
-                  >
-                    <Box
-                      sx={{
-                        width: 74,
-                        height: 74,
-                        mx: "auto",
-                        p: "2.5px",
-                        borderRadius: "50%",
-                        background: ringColor || "linear-gradient(90deg, #00ff88, #00c6ff)",
-                        boxShadow: "0 0 20px rgba(0,255,136,0.18)",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          borderRadius: "50%",
-                          bgcolor: "#080b09",
-                          p: "2px",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <img
-                          src={profileImage}
-                          alt={userName}
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "https://via.placeholder.com/64?text=🙂";
-                          }}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      </Box>
-                    </Box>
-
-                    <Typography
-                      noWrap
-                      sx={{ color: "#d7dde5", fontSize: 11.5, mt: 0.8, fontWeight: 600 }}
-                    >
-                      {userName}
-                    </Typography>
-                  </Box>
-                </motion.div>
-              );
-            })
-          )}
-        </Box>
+        <StoriesCarousel
+          stories={stories}
+          currentUserName={currentUserName}
+          onCreateStory={onCreateStory}
+          openUserStories={openUserStories}
+          getStoryRingColor={getStoryRingColor}
+        />
       </Box>
 
       {/* NUEVAS PUBLICACIONES */}

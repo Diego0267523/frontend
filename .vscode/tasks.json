@@ -249,6 +249,59 @@
 			],
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "lint-stories-premium",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/components/stories/StoryUploader.jsx",
+				"src/components/stories/StoryCameraFullscreen.jsx",
+				"src/components/stories/StoriesCarousel.jsx",
+				"src/hooks/useStoryUpload.js",
+				"src/services/storyService.js",
+				"src/components/feed/FeedCenterPremium.jsx",
+				"src/pages/Home.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-stories-premium.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "lint-stories-final",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"eslint",
+				"src/components/stories/StoryUploader.jsx",
+				"src/components/stories/StoryCameraFullscreen.jsx",
+				"src/components/stories/StoriesCarousel.jsx",
+				"src/hooks/useStoryUpload.js",
+				"src/services/storyService.js",
+				"src/components/feed/FeedCenterPremium.jsx",
+				"src/pages/Home.js",
+				"-f",
+				"json",
+				"-o",
+				"lint-stories-final.json"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build-stories-premium-final",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"if exist node_modules\\.cache rmdir /s /q node_modules\\.cache & npm run build > build-stories-premium-final.txt 2>&1"
+			],
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

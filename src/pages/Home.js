@@ -26,8 +26,9 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import FoodModal from "../components/FoodModal"; // 🔥 Agregado: componente separado
 import ChatAssistant from "../components/ChatAssistant"; // 🔥 Agregado: componente de chat IA
 
-import { createStory, getStories, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
+import { getStories, getFoodEntries, getDailyTotals, getWeeklyTotals, deleteFoodEntry } from "../api";
 import { useQueryClient } from '@tanstack/react-query';
+import { getStoryMediaType } from "../services/storyService";
 
 function Home() {
 
@@ -69,9 +70,8 @@ function Home() {
   const [showCreateStory, setShowCreateStory] = useState(false);
   const [newPostsAvailable, setNewPostsAvailable] = useState(0);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
-  const [isCreatingStory, setIsCreatingStory] = useState(false);
   const creatingPostRef = useRef(false);
-  const creatingStoryRef = useRef(false);
+  const storyUploaderRef = useRef(null);
 
   const [dailyFoodEntries, setDailyFoodEntries] = useState([]);
   const [, setWeeklyCalories] = useState([]);
@@ -210,50 +210,58 @@ const handleCreatePost = async () => {
   }
 };
 
-// 🔥 Crear historia
-const handleCreateStory = async () => {
-  if (!file) {
-    setSnackbar({ open: true, message: "Selecciona una imagen", severity: "error" });
+// 🔥 Crear historia premium: cámara nativa directa + fullscreen pro
+const handleStoryOptimisticInsert = useCallback((optimisticStory) => {
+  if (!optimisticStory) return;
+
+  setStories((prev) => {
+    const currentStories = Array.isArray(prev) ? prev : [];
+    return [
+      optimisticStory,
+      ...currentStories.filter((story) => String(story?.id) !== String(optimisticStory?.id)),
+    ];
+  });
+}, []);
+
+const handleStoryUploaded = useCallback((savedStory, optimisticId) => {
+  setStories((prev) => {
+    const currentStories = Array.isArray(prev) ? prev : [];
+    const withoutOptimistic = currentStories.filter(
+      (story) => String(story?.id) !== String(optimisticId)
+    );
+
+    if (!savedStory) {
+      return withoutOptimistic;
+    }
+
+    return [
+      savedStory,
+      ...withoutOptimistic.filter((story) => String(story?.id) !== String(savedStory?.id)),
+    ];
+  });
+}, []);
+
+const handleStoryUploadError = useCallback((_error, optimisticId) => {
+  if (!optimisticId) return;
+
+  setStories((prev) =>
+    (Array.isArray(prev) ? prev : []).filter(
+      (story) => String(story?.id) !== String(optimisticId)
+    )
+  );
+}, []);
+
+const handleOpenStoryCreator = useCallback((options = {}) => {
+  const { facingMode = "environment", proCamera = false } = options;
+  setShowCreateStory(true);
+
+  if (proCamera) {
+    storyUploaderRef.current?.openProCamera?.(facingMode);
     return;
   }
 
-  if (creatingStoryRef.current || isCreatingStory) return;
-
-  creatingStoryRef.current = true;
-  setIsCreatingStory(true);
-
-  try {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    if (postCaption.trim()) {
-      formData.append("caption", postCaption.trim());
-    }
-
-    const response = await createStory(formData);
-
-    if (!response.data?.success) {
-      throw new Error(response.data?.message || "No se pudo publicar la historia");
-    }
-
-    if (response.data?.story) {
-      setStories((prev) => [response.data.story, ...(Array.isArray(prev) ? prev : [])]);
-    }
-
-    await loadStories();
-
-    setSnackbar({ open: true, message: "¡Historia publicada exitosamente!", severity: "success" });
-    setShowCreateStory(false);
-    setFile(null);
-    setPostCaption("");
-  } catch (error) {
-    console.error("Error en historia:", error.response?.data || error.message || error);
-    setSnackbar({ open: true, message: error.response?.data?.message || "Error al publicar la historia. Inténtalo de nuevo.", severity: "error" });
-  } finally {
-    creatingStoryRef.current = false;
-    setIsCreatingStory(false);
-  }
-};
+  storyUploaderRef.current?.openNativeCapture?.(facingMode);
+}, []);
 
   const resetFoodForm = () => {
     // Función vacía, lógica movida a FoodModal
@@ -462,6 +470,9 @@ React.useEffect(() => {
 
   const getStoryMediaUrl = useCallback((story) => {
     return (
+      story?.video_url ||
+      story?.video ||
+      story?.videoUrl ||
       story?.image_url ||
       story?.image ||
       story?.media_url ||
@@ -473,6 +484,8 @@ React.useEffect(() => {
     );
   }, []);
 
+  const getStoryMediaKind = useCallback((story) => getStoryMediaType(story), []);
+
   const getStoryCaption = useCallback((story) => {
     return story?.caption || story?.texto || story?.description || story?.content || "";
   }, []);
@@ -483,8 +496,8 @@ const getStoryRingColor = (userName) => {
   const isSeen = userStoriesByName.length > 0 && userStoriesByName.every((s) => Boolean(s?.visto || s?.seen));
 
   return isSeen
-    ? "#555"
-    : "linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)";
+    ? "linear-gradient(90deg, #4a5058, #69707b)"
+    : "linear-gradient(90deg, #00ff88, #00c6ff)";
 };
 
   const openUserStories = (userName) => {
@@ -647,7 +660,7 @@ return (
             onOpenAI={() => setShowAI(true)}
             onOpenCreate={() => setShowCreatePost(true)}
             onOpenProgress={() => setFoodModalOpen(true)}
-            onOpenStories={() => setShowCreateStory(true)}
+            onOpenStories={() => handleOpenStoryCreator({ facingMode: "environment" })}
           />
       </Box>
     )}
@@ -691,7 +704,7 @@ return (
           setOpen(false);
         }}
         onOpenStories={() => {
-          setShowCreateStory(true);
+          handleOpenStoryCreator({ facingMode: "environment" });
           setOpen(false);
         }}
       />
@@ -724,7 +737,7 @@ return (
                 isMobile={isMobile}
                 stories={stories}
                 currentUserName={user?.nombre || user?.username || user?.email?.split("@")[0] || ""}
-                onCreateStory={() => setShowCreateStory(true)}
+                onCreateStory={handleOpenStoryCreator}
                 openUserStories={openUserStories}
                 getStoryRingColor={getStoryRingColor}
                 newPostsAvailable={newPostsAvailable}
@@ -887,13 +900,14 @@ return (
 
     {/* MODAL CREAR HISTORIA */}
     <CreateStoryModalPremium
+      ref={storyUploaderRef}
       open={showCreateStory}
-      file={file}
-      setFile={setFile}
-      postCaption={postCaption}
-      setPostCaption={setPostCaption}
-      isCreatingStory={isCreatingStory}
-      handleStoryPublication={handleCreateStory}
+      user={user}
+      preferredCamera="environment"
+      onOptimisticStory={handleStoryOptimisticInsert}
+      onStoryUploaded={handleStoryUploaded}
+      onStoryUploadError={handleStoryUploadError}
+      onRefreshStories={loadStories}
       onClose={() => setShowCreateStory(false)}
     />
 
@@ -1020,12 +1034,24 @@ return (
               ›
             </Box>
 
-            <Box
-              component="img"
-              src={getStoryMediaUrl(currentViewedStory) || "https://via.placeholder.com/900x1600?text=Historia"}
-              alt={getStoryCaption(currentViewedStory) || "Historia"}
-              sx={storyImage}
-            />
+            {getStoryMediaKind(currentViewedStory) === "video" ? (
+              <Box
+                component="video"
+                src={getStoryMediaUrl(currentViewedStory) || ""}
+                autoPlay
+                controls
+                muted
+                playsInline
+                sx={storyImage}
+              />
+            ) : (
+              <Box
+                component="img"
+                src={getStoryMediaUrl(currentViewedStory) || "https://via.placeholder.com/900x1600?text=Historia"}
+                alt={getStoryCaption(currentViewedStory) || "Historia"}
+                sx={storyImage}
+              />
+            )}
 
             <Box
               sx={{
