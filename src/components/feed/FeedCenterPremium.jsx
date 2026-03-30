@@ -72,8 +72,8 @@ export default function FeedCenterPremium({
   const storyPanelSx = {
     ...glassCard,
     mb: 2.2,
-    px: { xs: 1.25, md: 1.5 },
-    py: { xs: 1.2, md: 1.4 },
+    px: { xs: 1.15, md: 1.35 },
+    py: { xs: 1.05, md: 1.15 },
     borderRadius: "22px",
     background:
       "linear-gradient(180deg, rgba(16,16,16,0.98) 0%, rgba(21,21,21,0.94) 100%)",
@@ -85,29 +85,6 @@ export default function FeedCenterPremium({
     <Box sx={{ width: "100%", maxWidth: 500, py: { xs: 0.5, md: 1.5 }, mt: 0 }}>
       {/* STORIES */}
       <Box sx={storyPanelSx}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 1.2,
-            px: 0.3,
-          }}
-        >
-          <Box>
-            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>
-              Historias
-            </Typography>
-            <Typography sx={{ color: "#8b949e", fontSize: 11.5 }}>
-              Comparte tu día con el mismo estilo premium del feed.
-            </Typography>
-          </Box>
-
-          <Typography sx={{ color: "#00ff88", fontSize: 11.5, fontWeight: 700 }}>
-            {otherUsers.length > 0 ? `${otherUsers.length} activas` : "Sé el primero"}
-          </Typography>
-        </Box>
-
         <Box
           sx={{
             display: "flex",
@@ -132,10 +109,10 @@ export default function FeedCenterPremium({
                   p: "2.5px",
                   borderRadius: "50%",
                   background: ownStory
-                    ? getStoryRingColor(getStoryUserName(ownStory))
-                    : "linear-gradient(135deg, #00ff88, #00c6ff)",
+                    ? "linear-gradient(90deg, #00ff88, #00c6ff)"
+                    : "linear-gradient(90deg, #00ff88, #00c6ff)",
                   boxShadow: ownStory
-                    ? "0 0 20px rgba(214,41,118,0.18)"
+                    ? "0 0 20px rgba(0,255,136,0.20)"
                     : "0 0 18px rgba(0,255,136,0.18)",
                 }}
               >
@@ -227,8 +204,8 @@ export default function FeedCenterPremium({
                         mx: "auto",
                         p: "2.5px",
                         borderRadius: "50%",
-                        background: ringColor,
-                        boxShadow: "0 0 20px rgba(214,41,118,0.16)",
+                        background: "linear-gradient(90deg, #00ff88, #00c6ff)",
+                        boxShadow: "0 0 20px rgba(0,255,136,0.18)",
                       }}
                     >
                       <Box
